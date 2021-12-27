@@ -24,28 +24,30 @@
  *
  * @module Parser
  */
-import defaults from './config/config';
-import parserCss from './model/ParserCss';
-import parserHtml from './model/ParserHtml';
+import { defaultConfig } from "editor/config/config";
+import parserCss from "./model/ParserCss";
+import parserHtml from "./model/ParserHtml";
 
 export default () => {
   let conf = {};
-  let pHtml, pCss;
+  let pHtml: any, pCss: any;
 
   return {
-    compTypes: '',
+    compTypes: "",
 
     parserCss: null,
 
     parserHtml: null,
 
-    name: 'Parser',
+    name: "Parser",
 
     init(config = {}) {
-      conf = { ...defaults, ...config };
+      conf = { ...defaultConfig, ...config };
+      //@ts-ignore
       conf.Parser = this;
       pHtml = new parserHtml(conf);
-      pCss = new parserCss(conf);
+      pCss = parserCss(conf);
+      //@ts-ignore
       this.em = conf.em;
       this.parserCss = pCss;
       this.parserHtml = pHtml;
@@ -79,9 +81,10 @@ export default () => {
      * });
      * // This will preserve the original format as, from the XML point of view, is a valid format
      */
-    parseHtml(input, options = {}) {
+    parseHtml(input: string, options = {}) {
+      //@ts-ignore
       const { em, compTypes } = this;
-      pHtml.compTypes = em ? em.get('DomComponents').getTypes() : compTypes;
+      pHtml.compTypes = em ? em.get("DomComponents").getTypes() : compTypes;
       return pHtml.parse(input, pCss, options);
     },
 
@@ -93,13 +96,14 @@ export default () => {
      * const res = Parser.parseCss('.cls { color: red }');
      * // [{ ... }]
      */
-    parseCss(input) {
+    parseCss(input: string) {
       return pCss.parse(input);
     },
 
     destroy() {
       [conf, pHtml, pCss].forEach(i => (i = {}));
-      ['em', 'parserCss', 'parserHtml'].forEach(i => (this[i] = {}));
+      //@ts-ignore
+      ["em", "parserCss", "parserHtml"].forEach(i => (this[i] = {}));
     }
   };
 };

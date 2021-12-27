@@ -6,6 +6,7 @@ const rootDir = path.resolve(__dirname);
 
 export default ({ config }) => ({
   ...config,
+  entry: 'index.ts',
   output: {
     ...config.output,
     filename: 'grapes.min.js',
@@ -22,6 +23,7 @@ export default ({ config }) => ({
   },
   resolve: {
     modules: ['src', 'node_modules'],
+    extensions: ['.ts', '.js', '.json'],
     alias: {
       jquery: 'utils/cash-dom',
       backbone: `${rootDir}/node_modules/backbone`,

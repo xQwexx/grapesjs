@@ -1,17 +1,19 @@
-import { isElement, isFunction } from 'underscore';
-import $ from 'utils/cash-dom';
-import Editor from './editor';
-import polyfills from 'utils/polyfills';
-import { getGlobal } from 'utils/mixins';
-import PluginManager from './plugin_manager';
+import { any, isElement, isFunction } from "underscore";
+import $ from "utils/cash-dom";
+import Editor from "editor";
+import polyfills from "utils/polyfills";
+import { getGlobal } from "utils/mixins";
+import PluginManager from "plugin_manager";
+import { EditorConfig } from "editor/config/config";
 
 polyfills();
 
-const plugins = new PluginManager();
+const plugins = PluginManager();
+//@ts-ignore
 const editors = [];
 const defaultConfig = {
   // If true renders editor on init
-  autorender: 1,
+  autorender: true,
 
   // Array of plugins to init
   plugins: [],
@@ -23,11 +25,13 @@ const defaultConfig = {
 export default {
   $,
 
+  //@ts-ignore
   editors,
 
   plugins,
 
   // Will be replaced on build
+  // @ts-ignore
   version: __GJS_VERSION__,
 
   /**
@@ -46,23 +50,31 @@ export default {
    *   style: '.hello{color: red}',
    * })
    */
-  init(config = {}) {
+  init(config: EditorConfig) {
     const { headless } = config;
     const els = config.container;
-    if (!els && !headless) throw new Error("'container' is required");
+    // @ts-ignore
     config = { ...defaultConfig, ...config, grapesjs: this };
-    config.el =
-      !headless && (isElement(els) ? els : document.querySelector(els));
-    const editor = new Editor(config, { $ }).init();
+
+    if (!headless) {
+      if (!els) throw new Error("'container' is required");
+      else
+        config.el = isElement(els)
+          ? els
+          : document.querySelector(els) ?? undefined;
+    }
+
+    const editor = Editor(config, { $ }).init();
     const em = editor.getModel();
 
     // Load plugins
-    config.plugins.forEach(pluginId => {
+    config.plugins?.forEach(pluginId => {
       let plugin = isFunction(pluginId) ? pluginId : plugins.get(pluginId);
-      const plgOptions = config.pluginsOpts[pluginId] || {};
+      const plgOptions = config.pluginsOpts ? [pluginId] ?? {} : any;
 
       // Try to search in global context
       if (!plugin) {
+        // @ts-ignore
         const wplg = getGlobal()[pluginId];
         plugin = wplg?.default || wplg;
       }
@@ -73,7 +85,7 @@ export default {
         pluginId(editor, plgOptions);
       } else {
         em.logWarning(`Plugin ${pluginId} not found`, {
-          context: 'plugins',
+          context: "plugins",
           plugin: pluginId
         });
       }

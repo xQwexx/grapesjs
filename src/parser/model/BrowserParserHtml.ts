@@ -1,12 +1,12 @@
-import { each } from 'underscore';
+import { each } from "underscore";
+import { ParserConfig, HtmlType } from "../config/config";
 
-const htmlType = 'text/html';
-const defaultType = htmlType; // 'application/xml';
+const defaultType = HtmlType.textHtml; // HtmlType.appXml;
 
-export default (str, config = {}) => {
+export default (str: string, config: ParserConfig = {}) => {
   const parser = new DOMParser();
   const mimeType = config.htmlType || defaultType;
-  const toHTML = mimeType === htmlType;
+  const toHTML = mimeType === HtmlType.textHtml;
   const strF = toHTML ? str : `<div>${str}</div>`;
   const doc = parser.parseFromString(strF, mimeType);
   let res;
@@ -15,10 +15,10 @@ export default (str, config = {}) => {
     // Replicate the old parser in order to avoid breaking changes
     const { head, body } = doc;
     // Move all scripts at the bottom of the page
-    const scripts = head.querySelectorAll('script');
+    const scripts = head.querySelectorAll("script");
     each(scripts, node => body.appendChild(node));
     // Move inside body all head children
-    const hEls = [];
+    const hEls: Element[] = [];
     each(head.children, n => hEls.push(n));
     each(hEls, (node, i) => body.insertBefore(node, body.children[i]));
     res = body;

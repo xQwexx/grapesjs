@@ -117,7 +117,7 @@ export default Backbone.Model.extend({
   buildFromRule(rule, dump, opts = {}) {
     let result = '';
     const { model } = this;
-    const selectorStrNoAdd = rule.selectorsToString({ skipAdd: 1 });
+    const selectorStrNoAdd = rule.getSelectorsString({ skipAdd: 1 });
     const selectorsAdd = rule.get('selectorsAdd');
     const singleAtRule = rule.get('singleAtRule');
     let found;
