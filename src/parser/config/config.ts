@@ -1,9 +1,17 @@
-export default {
-  textTags: ['br', 'b', 'i', 'u', 'a', 'ul', 'ol'],
+export enum HtmlType {
+  textHtml = "text/html",
+  textXml = "text/xml",
+  appXml = "application/xml",
+  appXhtml = "application/xhtml+xml",
+  imgSvgXml = "image/svg+xml"
+}
+
+export interface ParserConfig {
+  textTags?: string[];
 
   // Custom CSS parser
   // @see https://grapesjs.com/docs/guides/Custom-CSS-parser.html
-  parserCss: null,
+  parserCss?: any;
 
   // Custom HTML parser
   // At the moment, the custom HTML parser should rely on DOM Node instance as the result
@@ -12,10 +20,16 @@ export default {
   // https://developer.mozilla.org/en-US/docs/Web/API/Node
   // parserHtml: (input, opts = {}) => (new DOMParser()).parseFromString(input, 'text/xml')
   // Here the result will be XMLDocument, which extends Node
-  parserHtml: null,
+  parserHtml?: any;
 
   // DOMParser mime type (default 'text/html')
   // @see https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString
   // If you use the `text/html` parser, it will fix the invalid syntax automatically
-  htmlType: null
+  htmlType?: HtmlType;
+}
+
+export const defaultParserConfig: ParserConfig = {
+  textTags: ["br", "b", "i", "u", "a", "ul", "ol"],
+
+  htmlType: HtmlType.textHtml
 };

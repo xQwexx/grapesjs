@@ -97,7 +97,7 @@
  *
  * @module Editor
  */
-import defaults from './config/config';
+import { defaultConfig } from './config/config';
 import EditorModel from './model/Editor';
 import EditorView from './view/EditorView';
 import html from 'utils/html';
@@ -105,7 +105,7 @@ import html from 'utils/html';
 export default (config = {}, opts = {}) => {
   const { $ } = opts;
   const c = {
-    ...defaults,
+    ...defaultConfig,
     ...config
   };
 

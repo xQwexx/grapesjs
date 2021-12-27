@@ -96,7 +96,7 @@ export const keyUpdateInside = `${keyUpdate}-inside`;
  * By default, when `toolbar` property is falsy the editor will add automatically commands like `move`, `delete`, etc. based on its properties.
  * @property {Collection<Component>} [components=null] Children components. Default: `null`
  */
-export default class Component extends Model.extend(Styleable) {
+export default class Component extends Styleable {
   /**
    * Hook method, called once the model is created
    */
@@ -494,7 +494,7 @@ export default class Component extends Model.extend(Styleable) {
       }
     }
 
-    return Styleable.getStyle.call(this, prop);
+    return super.getStyle(this, prop);
   }
 
   /**

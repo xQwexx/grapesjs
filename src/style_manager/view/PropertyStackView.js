@@ -159,7 +159,9 @@ export default PropertyCompositeView.extend({
     const targetsDevice = em
       .get('CssComposer')
       .getAll()
-      .filter(rule => rule.selectorsToString() === target.getSelectorsString());
+      .filter(
+        rule => rule.getSelectorsString() === target.getSelectorsString()
+      );
     const map = targetsDevice.reduce((acc, rule) => {
       acc[rule.getAtRule()] = rule;
       return acc;

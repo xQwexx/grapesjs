@@ -173,7 +173,7 @@ describe('Css Composer', () => {
       obj.setIdRule(name, { color: 'red' });
       expect(obj.getAll().length).toEqual(1);
       const rule = obj.getIdRule(name);
-      expect(rule.selectorsToString()).toEqual(`#${name}`);
+      expect(rule.getSelectorsString()).toEqual(`#${name}`);
       expect(rule.styleToString()).toEqual(`color:red;`);
       expect(rule.styleToString({ important: 1 })).toEqual(
         `color:red !important;`
@@ -189,7 +189,7 @@ describe('Css Composer', () => {
       obj.setIdRule(name, { color: 'red' }, { state });
       expect(obj.getAll().length).toEqual(1);
       const rule = obj.getIdRule(name, { state });
-      expect(rule.selectorsToString()).toEqual(`#${name}:${state}`);
+      expect(rule.getSelectorsString()).toEqual(`#${name}:${state}`);
     });
 
     test('Create a rule with class selector by using setClassRule()', () => {
@@ -197,7 +197,7 @@ describe('Css Composer', () => {
       obj.setClassRule(name, { color: 'red' });
       expect(obj.getAll().length).toEqual(1);
       const rule = obj.getClassRule(name);
-      expect(rule.selectorsToString()).toEqual(`.${name}`);
+      expect(rule.getSelectorsString()).toEqual(`.${name}`);
       expect(rule.styleToString()).toEqual(`color:red;`);
     });
 
@@ -207,7 +207,7 @@ describe('Css Composer', () => {
       obj.setClassRule(name, { color: 'red' }, { state });
       expect(obj.getAll().length).toEqual(1);
       const rule = obj.getClassRule(name, { state });
-      expect(rule.selectorsToString()).toEqual(`.${name}:${state}`);
+      expect(rule.getSelectorsString()).toEqual(`.${name}:${state}`);
     });
 
     test('Create a simple class-based rule with setRule', () => {
@@ -215,7 +215,7 @@ describe('Css Composer', () => {
       const result = obj.setRule(selector, { color: 'red' });
       expect(obj.getAll().length).toEqual(1);
       const rule = obj.getRule(selector);
-      expect(rule.selectorsToString()).toEqual(selector);
+      expect(rule.getSelectorsString()).toEqual(selector);
       expect(rule.styleToString()).toEqual(`color:red;`);
     });
 
@@ -225,7 +225,7 @@ describe('Css Composer', () => {
       obj.setRule(selector, { color: 'blue' });
       expect(obj.getAll().length).toEqual(1);
       const rule = obj.getRule(selector);
-      expect(rule.selectorsToString()).toEqual(selector);
+      expect(rule.getSelectorsString()).toEqual(selector);
       expect(rule.styleToString()).toEqual(`color:blue;`);
     });
 
@@ -234,7 +234,7 @@ describe('Css Composer', () => {
       const result = obj.setRule(selector, { color: 'red' });
       expect(obj.getAll().length).toEqual(1);
       const rule = obj.getRule(selector);
-      expect(rule.selectorsToString()).toEqual(selector);
+      expect(rule.getSelectorsString()).toEqual(selector);
       expect(rule.styleToString()).toEqual(`color:red;`);
     });
 
@@ -243,7 +243,7 @@ describe('Css Composer', () => {
       const result = obj.setRule(selector, { color: 'red' });
       expect(obj.getAll().length).toEqual(1);
       const rule = obj.getRule(selector);
-      expect(rule.selectorsToString()).toEqual(selector);
+      expect(rule.getSelectorsString()).toEqual(selector);
       expect(rule.styleToString()).toEqual(`color:red;`);
     });
 
@@ -252,7 +252,7 @@ describe('Css Composer', () => {
       obj.setRule(selector, { color: 'red' });
       expect(obj.getAll().length).toEqual(1);
       const rule = obj.getRule(selector);
-      expect(rule.selectorsToString()).toEqual(selector);
+      expect(rule.getSelectorsString()).toEqual(selector);
       expect(rule.styleToString()).toEqual(`color:red;`);
     });
 
@@ -262,7 +262,7 @@ describe('Css Composer', () => {
       expect(obj.getAll().length).toEqual(1);
       const rule = obj.getRule(selector);
       expect(rule.get('selectors').length).toEqual(0);
-      expect(rule.selectorsToString()).toEqual(selector);
+      expect(rule.getSelectorsString()).toEqual(selector);
       expect(rule.styleToString()).toEqual(`color:red;`);
     });
 
@@ -293,7 +293,7 @@ describe('Css Composer', () => {
         expect(rule.getAtRule()).toEqual(
           `@${opts.atRuleType} ${opts.atRuleParams}`
         );
-        expect(rule.selectorsToString()).toEqual(selector);
+        expect(rule.getSelectorsString()).toEqual(selector);
         expect(rule.getStyle()).toEqual(style);
       });
     });
@@ -318,7 +318,7 @@ describe('Css Composer', () => {
         const atRule = `${opt.atRuleType || ''} ${opt.atRuleParams ||
           ''}`.trim();
         expect(rule.getAtRule()).toEqual(atRule ? `@${atRule}` : '');
-        expect(rule.selectorsToString()).toEqual(selector);
+        expect(rule.getSelectorsString()).toEqual(selector);
         expect(rule.getStyle()).toEqual(style);
       });
       expect(obj.getAll().length).toEqual(toTest.length);
@@ -335,8 +335,8 @@ describe('Css Composer', () => {
       const ruleClass = all.at(0);
       const ruleId = all.at(1);
       // Pre-check
-      expect(ruleClass.selectorsToString()).toBe(selClass);
-      expect(ruleId.selectorsToString()).toBe(selId);
+      expect(ruleClass.getSelectorsString()).toBe(selClass);
+      expect(ruleId.getSelectorsString()).toBe(selId);
       expect(ruleClass.toCSS()).toBe(`${selClass}${decl}`);
       expect(ruleId.toCSS()).toBe(`${selId}${decl}`);
       // Check the get with the right rule

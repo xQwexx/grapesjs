@@ -18,7 +18,7 @@ const { CSS } = hasWin() ? window : {};
  * @property {Boolean|Array<String>} [important=false] If true, sets `!important` on all properties. You can also pass an array to specify properties on which use important
  * @property {Boolean} [stylable=true] Indicates if the rule is stylable from the editor
  */
-export default class CssRule extends Model.extend(Styleable) {
+export default class CssRule extends Styleable {
   defaults() {
     return {
       selectors: [],
@@ -104,10 +104,10 @@ export default class CssRule extends Model.extend(Styleable) {
    * @returns {String}
    * @example
    * const cssRule = editor.Css.setRule('.class1:hover', { color: 'red' });
-   * cssRule.selectorsToString(); // ".class1:hover"
-   * cssRule.selectorsToString({ skipState: true }); // ".class1"
+   * cssRule.getSelectorsString(); // ".class1:hover"
+   * cssRule.getSelectorsString({ skipState: true }); // ".class1"
    */
-  selectorsToString(opts = {}) {
+  getSelectorsString(opts = {}) {
     const result = [];
     const state = this.get('state');
     const wrapper = this.get('wrapper');
@@ -127,7 +127,7 @@ export default class CssRule extends Model.extend(Styleable) {
 
   /**
    * Get declaration block (without the at-rule statement)
-   * @param {Object} [opts={}] Options (same as in `selectorsToString`)
+   * @param {Object} [opts={}] Options (same as in `getSelectorsString`)
    * @returns {String}
    * @example
    * const cssRule = editor.Css.setRule('.class1', { color: 'red' }, {
@@ -138,7 +138,7 @@ export default class CssRule extends Model.extend(Styleable) {
    */
   getDeclaration(opts = {}) {
     let result = '';
-    const selectors = this.selectorsToString(opts);
+    const selectors = this.getSelectorsString(opts);
     const style = this.styleToString(opts);
     const singleAtRule = this.get('singleAtRule');
 

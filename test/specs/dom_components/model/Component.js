@@ -643,13 +643,14 @@ describe('Components', () => {
     // Let's check if everthing is working as expected
     expect(Object.keys(dcomp.componentsById).length).toBe(3); // + 1 wrapper
     expect(added.getId()).toBe(id);
+    đ;
     expect(addComps.at(0).getId()).toBe(idB);
     const cc = em.get('CssComposer');
     const rules = cc.getAll();
     expect(rules.length).toBe(3);
-    expect(rules.at(0).selectorsToString()).toBe(`#${id}`);
-    expect(rules.at(1).selectorsToString()).toBe(`#${id}:hover`);
-    expect(rules.at(2).selectorsToString()).toBe(`#${idB}`);
+    expect(rules.at(0).getSelectorsString()).toBe(`#${id}`);
+    expect(rules.at(1).getSelectorsString()).toBe(`#${id}:hover`);
+    expect(rules.at(2).getSelectorsString()).toBe(`#${idB}`);
     // Now let's add the same block
     const added2 = dcomp.addComponent(block);
     const addComps2 = added2.components();
@@ -659,8 +660,8 @@ describe('Components', () => {
     expect(id2).toBe(newId);
     expect(addComps2.at(0).getId()).toBe(newIdB);
     expect(rules.length).toBe(6);
-    expect(rules.at(3).selectorsToString()).toBe(`#${newId}`);
-    expect(rules.at(4).selectorsToString()).toBe(`#${newId}:hover`);
-    expect(rules.at(5).selectorsToString()).toBe(`#${newIdB}`);
+    expect(rules.at(3).getSelectorsString()).toBe(`#${newId}`);
+    expect(rules.at(4).getSelectorsString()).toBe(`#${newId}:hover`);
+    expect(rules.at(5).getSelectorsString()).toBe(`#${newIdB}`);
   });
 });
