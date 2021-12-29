@@ -3,7 +3,7 @@ import BrowserParserHtml from "./BrowserParserHtml";
 import { ParserConfig, defaultParserConfig } from "../config/config";
 import { Collection } from "backbone";
 import { EditorConfig } from "editor/config/config";
-interface IComponent {
+export interface IComponent {
   //Component type, eg. `text`, `image`, `video`, etc.
   type: string;
   //HTML tag of the component, eg. `span`. Default: `div`

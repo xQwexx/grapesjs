@@ -9,8 +9,7 @@ import { EditorConfig } from "editor/config/config";
 polyfills();
 
 const plugins = PluginManager();
-//@ts-ignore
-const editors = [];
+const editors: Editor[] = [];
 const defaultConfig = {
   // If true renders editor on init
   autorender: true,
@@ -25,7 +24,6 @@ const defaultConfig = {
 export default {
   $,
 
-  //@ts-ignore
   editors,
 
   plugins,
@@ -63,8 +61,9 @@ export default {
           ? els
           : document.querySelector(els) ?? undefined;
     }
+    console.log(config.el);
 
-    const editor = Editor(config, { $ }).init();
+    const editor = new Editor(config, { $ }).init();
     const em = editor.getModel();
 
     // Load plugins

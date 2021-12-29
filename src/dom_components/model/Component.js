@@ -525,7 +525,7 @@ export default class Component extends Styleable {
       this.set('style', '', { silent: 1 });
       keys(diff).forEach(pr => this.trigger(`change:style:${pr}`));
     } else {
-      prop = Styleable.setStyle.apply(this, arguments);
+      prop = super.setStyle.apply(this, arguments);
     }
 
     return prop;
