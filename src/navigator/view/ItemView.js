@@ -23,7 +23,7 @@ export default Backbone.View.extend({
     'mouseout [data-toggle-select]': 'handleHoverOut',
     'dblclick [data-name]': 'handleEdit',
     'keydown [data-name]': 'handleEditKey',
-    'focusout [data-name]': 'handleEditEnd',
+    'focusout [data-name]': 'handleEditEnd'
   },
 
   template(model) {
@@ -89,8 +89,8 @@ export default Backbone.View.extend({
       ['change:open', this.updateOpening],
       ['change:layerable', this.updateLayerable],
       ['change:style:display', this.updateVisibility],
-      ['rerender:layer', this.render],
-    ].forEach((item) => this.listenTo(model, item[0], item[1]));
+      ['rerender:layer', this.render]
+    ].forEach(item => this.listenTo(model, item[0], item[1]));
     this.className = `${pfx}layer ${pfx}layer__t-${type} no-select ${ppfx}two-color`;
     this.inputNameCls = `${ppfx}layer-name`;
     this.clsTitleC = `${pfx}layer-title-c`;
@@ -108,7 +108,7 @@ export default Backbone.View.extend({
     onInit.bind(this)({
       component: model,
       render: this.__render,
-      listenTo: this.listenTo,
+      listenTo: this.listenTo
     });
   },
 
@@ -172,8 +172,11 @@ export default Backbone.View.extend({
     inputEl[inputProp] = true;
     inputEl.focus();
     document.execCommand('selectAll', false, null);
-    em && em.setEditing(1);
-    $el.find(`.${this.inputNameCls}`).removeClass(clsNoEdit).addClass(clsEdit);
+    em && (em.editing = true);
+    $el
+      .find(`.${this.inputNameCls}`)
+      .removeClass(clsNoEdit)
+      .addClass(clsEdit);
   },
 
   handleEditKey(ev) {
@@ -192,8 +195,11 @@ export default Backbone.View.extend({
     inputEl.scrollLeft = 0;
     inputEl[inputProp] = false;
     this.setName(name, { component: this.model, propName: 'custom-name' });
-    em && em.setEditing(0);
-    $el.find(`.${this.inputNameCls}`).addClass(clsNoEdit).removeClass(clsEdit);
+    em && (em.editing = false);
+    $el
+      .find(`.${this.inputNameCls}`)
+      .addClass(clsNoEdit)
+      .removeClass(clsEdit);
   },
 
   setName(name, { propName }) {
@@ -257,7 +263,7 @@ export default Backbone.View.extend({
     if (em) {
       em.setSelected(model, { fromLayers: 1, event: e });
       const scroll = config.scrollCanvas;
-      scroll && model.views.forEach((view) => view.scrollIntoView(scroll));
+      scroll && model.views.forEach(view => view.scrollIntoView(scroll));
     }
   },
 
@@ -287,8 +293,8 @@ export default Backbone.View.extend({
     if (e.button && e.button !== 0) return;
 
     if (sorter) {
-      sorter.onStart = (data) => em.trigger(`${eventDrag}:start`, data);
-      sorter.onMoveClb = (data) => em.trigger(eventDrag, data);
+      sorter.onStart = data => em.trigger(`${eventDrag}:start`, data);
+      sorter.onMoveClb = data => em.trigger(eventDrag, data);
       sorter.startSort(e.target);
     }
   },
@@ -318,8 +324,8 @@ export default Backbone.View.extend({
     ComponentView.prototype.updateStatus.apply(this, [
       {
         avoidHover: !this.config.highlightHover,
-        noExtHl: 1,
-      },
+        noExtHl: 1
+      }
     ]);
   },
 
@@ -363,7 +369,7 @@ export default Backbone.View.extend({
    */
   countChildren(model) {
     var count = 0;
-    model.get('components').each(function (m) {
+    model.get('components').each(function(m) {
       var isCountable = this.opt.isCountable;
       var hide = this.config.hideTextnode;
       if (isCountable && !isCountable(m, hide)) return;
@@ -431,7 +437,7 @@ export default Backbone.View.extend({
       opened: this.opt.opened,
       parentView: this,
       parent: model,
-      level,
+      level
     });
     const children = this.items.render().$el;
 
@@ -463,5 +469,5 @@ export default Backbone.View.extend({
     const opt = { component: model, el };
     onRender.bind(this)(opt);
     this.em.trigger('layer:render', opt);
-  },
+  }
 });

@@ -2,6 +2,7 @@ import { isString, isArray, keys } from "underscore";
 import { shallowDiff } from "utils/mixins";
 import ParserHtml from "parser/model/ParserHtml";
 import { Model } from "backbone";
+import { IEditorModel } from "editor/model/Editor";
 
 const parseStyle = new ParserHtml().parseStyle;
 
@@ -17,7 +18,7 @@ interface IStyleOps {
 }
 
 export default class Styleable extends Model implements IStyleable {
-  em?: any;
+  em?: IEditorModel;
 
   get Style(): { [id: string]: string } {
     return this.get("style");

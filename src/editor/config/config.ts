@@ -45,7 +45,7 @@ export interface EditorConfig {
   // Type of logs to print with the logger (by default is used the devtool console).
   // Available by default: debug, info, warning, error
   // You can use `false` to disable all of them or `true` to print all of them
-  log?: string[];
+  log?: boolean | string[];
 
   // By default Grapes injects base CSS into the canvas. For example, it sets body margin to 0
   // and sets a default background color of white. This CSS is desired in most cases.
@@ -135,7 +135,7 @@ export interface EditorConfig {
   // 'absolute' - Move components absolutely (design tools way)
   // 'translate' - Use translate CSS from transform property
   // To get more about this feature read: https://github.com/artf/grapesjs/issues/1936
-  dragMode?: boolean;
+  dragMode?: boolean | string;
 
   // When the editor is placed in a scrollable container (eg. modals) this might
   // cause elements inside the canvas (eg. floating toolbars) to be misaligned.
@@ -149,7 +149,7 @@ export interface EditorConfig {
   cssIcons?: string;
 
   // Dom element
-  el?: Element | string;
+  el?: Element;
 
   // Configurations for I18n
   i18n?: any;
@@ -221,6 +221,10 @@ export interface EditorConfig {
   // Experimental: don't use.
   // Avoid default UI styles
   customUI?: boolean;
+
+  grapesjs?: any;
+
+  colorPicker?: any;
 }
 
 export const defaultConfig: EditorConfig = {
@@ -392,7 +396,7 @@ export const defaultConfig: EditorConfig = {
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
 
   // Dom element
-  el: "",
+  //el: document.querySelector(''),
 
   // Configurations for I18n
   i18n: {},

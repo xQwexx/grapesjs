@@ -55,7 +55,7 @@ export default Backbone.View.extend({
     const inputEl = this.getInputEl();
     inputEl[inputProp] = true;
     inputEl.focus();
-    em && em.setEditing(1);
+    em && (em.editing = true);
   },
 
   /**
@@ -70,7 +70,7 @@ export default Backbone.View.extend({
     const em = this.em;
     const sm = em && em.get('SelectorManager');
     inputEl[inputProp] = false;
-    em && em.setEditing(0);
+    em && (em.editing = false);
 
     if (sm) {
       const name = sm.escapeName(label);

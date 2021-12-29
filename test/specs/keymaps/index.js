@@ -58,7 +58,7 @@ describe('Keymaps', () => {
 
     describe('Given the edit is not on edit mode', () => {
       beforeEach(() => {
-        em.setEditing(0);
+        em.editing = false;
       });
 
       it('Should run the handler', () => {
@@ -80,7 +80,7 @@ describe('Keymaps', () => {
 
     describe('Given the edit is on edit mode', () => {
       beforeEach(() => {
-        em.setEditing(1);
+        em.editing = true;
       });
 
       it('Should not run the handler', () => {
