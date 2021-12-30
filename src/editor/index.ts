@@ -188,7 +188,7 @@ export default class Editor {
       //@ts-ignore
       this.UndoManager.clear();
       this.em.modules.forEach(module => {
-        module && module.postRender(this.editorView);
+        module.postRender && module.postRender(this.editorView);
       });
     });
 
@@ -201,8 +201,8 @@ export default class Editor {
    * @returns {any} Returns the configuration object or
    *  the value of the specified property
    */
-  getConfig(prop?: keyof EditorConfig) {
-    return this.em.getConfig(prop);
+  getConfig() {
+    return this.em.getConfig();
   }
 
   /**

@@ -1,5 +1,5 @@
-import { Model } from 'common';
-import { isFunction } from 'underscore';
+import { Model } from "common";
+import { isFunction } from "underscore";
 
 /**
  * @property {String} label Block label, eg. `My block`
@@ -16,10 +16,10 @@ import { isFunction } from 'underscore';
 export default class Block extends Model {
   defaults() {
     return {
-      label: '',
-      content: '',
-      media: '',
-      category: '',
+      label: "",
+      content: "",
+      media: "",
+      category: "",
       activate: false,
       select: null,
       resetId: false,
@@ -42,7 +42,7 @@ export default class Block extends Model {
    * @returns {String}
    */
   getLabel() {
-    return this.get('label');
+    return this.get("label");
   }
 
   /**
@@ -50,7 +50,7 @@ export default class Block extends Model {
    * @returns {String}
    */
   getMedia() {
-    return this.get('media');
+    return this.get("media");
   }
 
   /**
@@ -58,7 +58,7 @@ export default class Block extends Model {
    * @returns {Object|String|Array<Object|String>} Component definition | HTML string
    */
   getContent() {
-    return this.get('content');
+    return this.get("content");
   }
 
   /**
@@ -66,7 +66,7 @@ export default class Block extends Model {
    * @returns {String}
    */
   getCategoryLabel() {
-    const ctg = this.get('category');
-    return isFunction(ctg.get) ? ctg.get('label') : ctg.label ? ctg.label : ctg;
+    const ctg = this.get("category");
+    return isFunction(ctg.get) ? ctg.get("label") : ctg.label ? ctg.label : ctg;
   }
 }

@@ -1,5 +1,6 @@
 import { Model } from 'common';
-import { result, forEach, keys } from 'underscore';
+import SelectorUtils from 'selector_manager/utils/SelectorUtils';
+import { result, forEach, keys, isUndefined } from 'underscore';
 
 const TYPE_CLASS = 1;
 const TYPE_ID = 2;
@@ -161,12 +162,6 @@ Selector.prototype.idAttribute = 'name';
 Selector.TYPE_CLASS = TYPE_CLASS;
 Selector.TYPE_ID = TYPE_ID;
 
-/**
- * Escape string
- * @param {string} name
- * @return {string}
- * @private
- */
 Selector.escapeName = name => {
   return `${name}`.trim().replace(/([^a-z0-9\w-\:]+)/gi, '-');
 };

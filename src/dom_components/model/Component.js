@@ -24,6 +24,7 @@ import Components from './Components';
 import Selector from 'selector_manager/model/Selector';
 import Selectors from 'selector_manager/model/Selectors';
 import Traits from 'trait_manager/model/Traits';
+import { SelectorType } from 'selector_manager/utils/SelectorUtils';
 
 const escapeRegExp = str => {
   return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
@@ -565,7 +566,7 @@ export default class Component extends Styleable {
       // If we don't rely on inline styling we have to check
       // for the ID selector
       if (avoidInline(em)) {
-        addId = sm && sm.get(id, sm.Selector.TYPE_ID);
+        addId = sm && sm.get(id, SelectorType.id);
       } else if (!isEmpty(this.getStyle())) {
         addId = 1;
       }
@@ -627,7 +628,7 @@ export default class Component extends Styleable {
     const removed = [];
     classes = isArray(classes) ? classes : [classes];
     const selectors = this.get('classes');
-    const type = Selector.TYPE_CLASS;
+    const type = SelectorType.class;
 
     classes.forEach(classe => {
       const classes = classe.split(' ');

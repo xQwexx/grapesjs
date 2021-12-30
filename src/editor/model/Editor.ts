@@ -14,6 +14,8 @@ import { getModel, hasWin } from "utils/mixins";
 import Selected from "./Selected";
 import { EditorConfig } from "../config/config";
 import tr from "i18n/locale/tr";
+import { IModule, IStorableModule } from "common/module";
+import Editor from "editor";
 
 //@ts-ignore
 Backbone.$ = $;
@@ -59,26 +61,10 @@ const logs: { [id: string]: (...args: any[]) => void } = {
 export type DragMode = boolean | "absolute" | "translate";
 export type DeviceMode = "Desktop" | "Tablet" | "Mobile";
 
-export interface IStorableModule extends IModule {
-  storageKey: string[];
-  store(result: any): any;
-  load(keys: string[]): void;
-  postLoad(key: any): any;
-}
-
-export interface IModule {
-  name: string;
-  private: boolean;
-  onLoad: boolean;
-  init(cfg: any): void;
-  destroy(): void;
-  postLoad(key: any): any;
-  postRender(view: any): void;
-}
-
 export interface IEditorModel extends ModelBase {
   config: EditorConfig;
   editing: any;
+  editor?: Editor;
   selected: Selected;
   //clipboard: null;
   dmode: boolean | any;
@@ -152,6 +138,9 @@ export default class EditorModel extends Backbone.Model
         });
       }
     );
+
+    //@ts-ignore
+    console.log(this);
   }
   cacheLoad: any;
   attrsOrig: any;
@@ -169,6 +158,15 @@ export default class EditorModel extends Backbone.Model
 
   set editing(value: boolean | any) {
     this.set("editing", value);
+  }
+
+  get editor() {
+    const res = this.get("Editor");
+    return (res && res.model) || null;
+  }
+
+  set editor(value: Editor) {
+    this.set("Editor", value);
   }
 
   get selected(): Selected {
@@ -246,13 +244,11 @@ export default class EditorModel extends Backbone.Model
 
   /**
    * Get configurations
-   * @param  {string} [prop] Property name
    * @return {any} Returns the configuration object or
    *  the value of the specified property
    */
-  getConfig(prop?: keyof EditorConfig) {
-    const config = this.config;
-    return isUndefined(prop) ? config : config[prop];
+  getConfig() {
+    return this.config;
   }
 
   /**
@@ -312,7 +308,7 @@ export default class EditorModel extends Backbone.Model
    */
   loadModule(Module: any) {
     const { config } = this;
-    const Mod = new Module() as IModule;
+    const Mod = new Module(this) as IModule;
     const name = (Mod.name.charAt(0).toLowerCase() +
       Mod.name.slice(1)) as keyof EditorConfig;
     const cfgParent = !isUndefined(config[name])
@@ -334,6 +330,7 @@ export default class EditorModel extends Backbone.Model
       this.storables[mth](Mod as IStorableModule);
     }
 
+    console.log(Mod.name);
     cfg.em = this;
     Mod.init({ ...cfg });
 
@@ -355,11 +352,11 @@ export default class EditorModel extends Backbone.Model
       this.initialize(opts);
       this.destroyed = false;
     }
-    this.set("Editor", editor);
+    this.editor = editor;
   }
 
   getEditor() {
-    return this.get("Editor");
+    return this.editor;
   }
 
   /**
@@ -433,7 +430,7 @@ export default class EditorModel extends Backbone.Model
     const multiple = isArray(el);
     const els = (multiple ? el : [el]).map(el => getModel(el, $));
     const selected = this.getSelectedAll();
-    const mltSel = this.getConfig("multipleSelection");
+    const mltSel = this.getConfig().multipleSelection;
     let added;
 
     // If an array is passed remove all selected
