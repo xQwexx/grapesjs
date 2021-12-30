@@ -50,7 +50,7 @@ export default {
       // Add all containers to the panel
       this.panel.set('appendContent', this.$cn).trigger(trgEvCnt);
 
-      this.target = em.editor;
+      this.target = em.em;
       this.listenTo(this.target, 'component:toggled', this.toggleSm);
     }
 

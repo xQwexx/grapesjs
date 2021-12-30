@@ -1,0 +1,103 @@
+import { View } from "backbone";
+import EditorModel from "editor/model/Editor";
+import html from "utils/html";
+
+export default class CategoryView extends View {
+  private pfx: string;
+  className: string;
+  private activeClass: string;
+  private iconClass: string;
+  private caretR = "fa fa-caret-right";
+  private caretD = "fa fa-caret-down";
+
+  em: EditorModel;
+  events: any;
+
+  private blocksEl: any;
+  private iconEl: any;
+
+  template(pfx: string, label: string): string {
+    //@ts-ignore
+    return html`
+      <div class="${pfx}title">
+        <i class="${pfx}caret-icon"></i>
+        ${label}
+      </div>
+      <div class="${pfx}blocks-c"></div>
+    `;
+  }
+  //@ts-ignore
+  attributes() {
+    return this.model.get("attributes");
+  }
+
+  constructor(o = {}, config: any = {}) {
+    super(o);
+    const pfx = config.pStylePrefix || "";
+    this.em = config.em;
+    this.pfx = pfx;
+
+    this.iconClass = `${pfx}caret-icon`;
+    this.activeClass = `${pfx}open`;
+    this.className = `${pfx}block-category`;
+    this.events = {};
+    this.events[`click .${pfx}title`] = "toggle";
+    this.listenTo(this.model, "change:open", this.updateVisibility);
+    this.delegateEvents();
+    //this.model.view = this;
+  }
+
+  updateVisibility() {
+    if (this.model.get("open")) this.open();
+    else this.close();
+  }
+
+  open() {
+    this.$el.addClass(this.activeClass);
+    this.getIconEl().className = `${this.iconClass} ${this.caretD}`;
+    this.getBlocksEl().style.display = "";
+  }
+
+  close() {
+    this.$el.removeClass(this.activeClass);
+    this.getIconEl().className = `${this.iconClass} ${this.caretR}`;
+    this.getBlocksEl().style.display = "none";
+  }
+
+  toggle() {
+    var model = this.model;
+    model.set("open", !model.get("open"));
+  }
+
+  getIconEl() {
+    if (!this.iconEl) {
+      this.iconEl = this.el.querySelector("." + this.iconClass);
+    }
+
+    return this.iconEl;
+  }
+
+  getBlocksEl() {
+    if (!this.blocksEl) {
+      this.blocksEl = this.el.querySelector("." + this.pfx + "blocks-c");
+    }
+
+    return this.blocksEl;
+  }
+
+  append(el: any) {
+    this.getBlocksEl().appendChild(el);
+  }
+
+  render() {
+    const { em, el, $el, model, pfx } = this;
+    const label =
+      em.t(`blockManager.categories.${model.id}`) || model.get("label");
+    el.innerHTML = this.template(pfx, label);
+    $el.addClass(this.className);
+    $el.css({ order: model.get("order") });
+    this.updateVisibility();
+
+    return this;
+  }
+}

@@ -35,6 +35,7 @@ import CssRules from './model/CssRules';
 import CssRulesView from './view/CssRulesView';
 import Selectors from 'selector_manager/model/Selectors';
 import Selector from 'selector_manager/model/Selector';
+import { SelectorType } from 'selector_manager/utils/SelectorUtils';
 
 export default () => {
   let em;
@@ -413,7 +414,7 @@ export default () => {
       const state = opts.state || '';
       const media = !isUndefined(mediaText) ? mediaText : em.getCurrentMedia();
       const sm = em.get('SelectorManager');
-      const selector = sm.add({ name, type: Selector.TYPE_ID }, addOpts);
+      const selector = sm.add({ name, type: SelectorType.id }, addOpts);
       const rule = this.add(selector, state, media, {}, addOpts);
       rule.setStyle(style, { ...opts, ...addOpts });
       return rule;
@@ -433,7 +434,7 @@ export default () => {
       const { mediaText } = opts;
       const state = opts.state || '';
       const media = !isUndefined(mediaText) ? mediaText : em.getCurrentMedia();
-      const selector = em.get('SelectorManager').get(name, Selector.TYPE_ID);
+      const selector = em.get('SelectorManager').get(name, SelectorType.id);
       return selector && this.get(selector, state, media);
     },
 
@@ -455,7 +456,7 @@ export default () => {
       const state = opts.state || '';
       const media = opts.mediaText || em.getCurrentMedia();
       const sm = em.get('SelectorManager');
-      const selector = sm.add({ name, type: Selector.TYPE_CLASS });
+      const selector = sm.add({ name, type: SelectorType.class });
       const rule = this.add(selector, state, media);
       rule.setStyle(style, opts);
       return rule;
@@ -474,7 +475,7 @@ export default () => {
     getClassRule(name, opts = {}) {
       const state = opts.state || '';
       const media = opts.mediaText || em.getCurrentMedia();
-      const selector = em.get('SelectorManager').get(name, Selector.TYPE_CLASS);
+      const selector = em.get('SelectorManager').get(name, SelectorType.class);
       return selector && this.get(selector, state, media);
     },
 

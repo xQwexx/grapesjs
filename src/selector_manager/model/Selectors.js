@@ -1,10 +1,11 @@
 import { filter } from 'underscore';
 import { Collection } from 'common';
 import Selector from './Selector';
+import { SelectorType } from 'selector_manager/utils/SelectorUtils';
 
 export default class Selectors extends Collection {
   modelId(attr) {
-    return `${attr.name}_${attr.type || Selector.TYPE_CLASS}`;
+    return `${attr.name}_${attr.type || SelectorType.class}`;
   }
 
   getStyleable() {

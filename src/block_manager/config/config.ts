@@ -1,7 +1,9 @@
-export default {
+import { ModuleConfig } from "common/module";
+
+export default class BlockManagerConfig extends ModuleConfig {
   // Specify the element to use as a container, string (query) or HTMLElement
   // With the empty value, nothing will be rendered
-  appendTo: '',
+  appendTo = "";
 
   // Append blocks to canvas on click.
   // With the `true` value, it will try to append the block to the selected component.
@@ -14,11 +16,11 @@ export default {
   //   else
   //    editor.getWrapper().append(block.get('content'))
   // }
-  appendOnClick: false,
+  appendOnClick = false;
 
   // Default blocks
-  blocks: [],
+  blocks = [];
 
   // Avoid rendering the default block manager.
-  custom: false
-};
+  custom = false;
+}
