@@ -33,7 +33,7 @@ export default {
   },
 
   run(editor) {
-    const bm = editor.Blocks;
+    const bm = editor.BlockManager;
     this.config = bm.getConfig();
     this.firstRender = !this.container;
     this.container = this.container || createEl('div');

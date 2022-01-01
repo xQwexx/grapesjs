@@ -24,86 +24,66 @@
  *
  * @module Parser
  */
-import { defaultConfig } from "editor/config/config";
+import { Module } from "common/module";
+import EditorModel from "editor/model/Editor";
+import ParserConfig from "./config/config";
 import parserCss from "./model/ParserCss";
 import parserHtml from "./model/ParserHtml";
 
-export default () => {
-  let conf = {};
-  let pHtml: any, pCss: any;
+export default class ParserModule extends Module<ParserConfig> {
+  pHtml: parserHtml;
+  pCss: any;
+  compTypes = "";
 
-  return {
-    compTypes: "",
+  constructor(em: EditorModel) {
+    super(em, ParserConfig);
 
-    parserCss: null,
+    //@ts-ignore
+    this.config.Parser = this;
+    this.pHtml = new parserHtml(this.config);
+    this.pCss = parserCss(this.config);
+  }
 
-    parserHtml: null,
+  init(config = {}) {
+    return this;
+  }
 
-    name: "Parser",
+  /**
+   * Parse HTML string and return the object containing the Component Definition
+   * @param  {String} input HTML string to parse
+   * @param  {Object} [options] Options
+   * @param  {String} [options.htmlType] [HTML mime type](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString#Argument02) to parse
+   * @returns {Object} Object containing the result `{ html: ..., css: ... }`
+   * @example
+   * const resHtml = Parser.parseHtml(`<table><div>Hi</div></table>`, {
+   *   htmlType: 'text/html', // default
+   * });
+   * // By using the `text/html`, this will fix automatically all the HTML syntax issues
+   * // Indeed the final representation, in this case, will be `<div>Hi</div><table></table>`
+   * const resXml = Parser.parseHtml(`<table><div>Hi</div></table>`, {
+   *   htmlType: 'application/xml',
+   * });
+   * // This will preserve the original format as, from the XML point of view, is a valid format
+   */
+  parseHtml(input: string, options = {}) {
+    const { em, compTypes } = this;
+    this.pHtml.compTypes = em ? em.get("DomComponents").getTypes() : compTypes;
+    return this.pHtml.parse(input, this.pCss, options);
+  }
 
-    init(config = {}) {
-      conf = { ...defaultConfig, ...config };
-      //@ts-ignore
-      conf.Parser = this;
-      pHtml = new parserHtml(conf);
-      pCss = parserCss(conf);
-      //@ts-ignore
-      this.em = conf.em;
-      this.parserCss = pCss;
-      this.parserHtml = pHtml;
-      return this;
-    },
+  /**
+   * Parse CSS string and return an array of valid definition objects for CSSRules
+   * @param  {String} input CSS string to parse
+   * @returns {Array<Object>} Array containing the result
+   * @example
+   * const res = Parser.parseCss('.cls { color: red }');
+   * // [{ ... }]
+   */
+  parseCss(input: string) {
+    return this.pCss.parse(input);
+  }
 
-    /**
-     * Get the configuration object
-     * @returns {Object} Configuration object
-     * @example
-     * console.log(Parser.getConfig())
-     */
-    getConfig() {
-      return conf;
-    },
-
-    /**
-     * Parse HTML string and return the object containing the Component Definition
-     * @param  {String} input HTML string to parse
-     * @param  {Object} [options] Options
-     * @param  {String} [options.htmlType] [HTML mime type](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString#Argument02) to parse
-     * @returns {Object} Object containing the result `{ html: ..., css: ... }`
-     * @example
-     * const resHtml = Parser.parseHtml(`<table><div>Hi</div></table>`, {
-     *   htmlType: 'text/html', // default
-     * });
-     * // By using the `text/html`, this will fix automatically all the HTML syntax issues
-     * // Indeed the final representation, in this case, will be `<div>Hi</div><table></table>`
-     * const resXml = Parser.parseHtml(`<table><div>Hi</div></table>`, {
-     *   htmlType: 'application/xml',
-     * });
-     * // This will preserve the original format as, from the XML point of view, is a valid format
-     */
-    parseHtml(input: string, options = {}) {
-      //@ts-ignore
-      const { em, compTypes } = this;
-      pHtml.compTypes = em ? em.get("DomComponents").getTypes() : compTypes;
-      return pHtml.parse(input, pCss, options);
-    },
-
-    /**
-     * Parse CSS string and return an array of valid definition objects for CSSRules
-     * @param  {String} input CSS string to parse
-     * @returns {Array<Object>} Array containing the result
-     * @example
-     * const res = Parser.parseCss('.cls { color: red }');
-     * // [{ ... }]
-     */
-    parseCss(input: string) {
-      return pCss.parse(input);
-    },
-
-    destroy() {
-      [conf, pHtml, pCss].forEach(i => (i = {}));
-      //@ts-ignore
-      ["em", "parserCss", "parserHtml"].forEach(i => (this[i] = {}));
-    }
-  };
-};
+  destroy() {
+    [this.config, this.pHtml, this.pCss].forEach(i => (i = {}));
+  }
+}

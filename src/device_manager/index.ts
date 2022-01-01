@@ -33,7 +33,7 @@
  * @module Devices
  */
 import { isString } from "underscore";
-import Module from "common/module";
+import CollectionModule from "common/module";
 import defaults from "./config/config";
 import Device from "./model/Device";
 import Devices from "./model/Devices";
@@ -63,17 +63,17 @@ const events = {
   removeBefore: evRemoveBefore
 };
 
-export default class DeviceManagerModule extends Module {
+export default class DeviceManagerCollectionModule extends CollectionModule<
+  DeviceManagerConfig
+> {
   postRender(view: any): void {}
-
-  name = "DeviceManager";
 
   view: any;
 
   devices: Devices;
 
   constructor(em: EditorModel) {
-    super(new DeviceManagerConfig(em), new Devices(), events);
+    super(em, DeviceManagerConfig, new Devices(), events);
     this.devices = new Devices();
     const c = this.getConfig();
     c.devices.forEach((dv: any) => this.add(dv));

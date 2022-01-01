@@ -46,7 +46,7 @@
  */
 
 import { debounce, isFunction } from "underscore";
-import Module from "common/module";
+import CollectionModule, { IStorableModule } from "common/module";
 import defaults from "./config/config";
 import Asset from "./model/Assets";
 import Assets from "./model/Assets";
@@ -80,10 +80,12 @@ const events = {
   close: evClose
 };
 
-export default class AssetManagerModule extends Module {
-  name = "AssetManager";
-
-  storageKey = "assets";
+export default class AssetManagerCollectionModule
+  extends CollectionModule<AssetManagerConfig>
+  implements IStorableModule {
+  get storageKey() {
+    return "assets";
+  }
 
   assets: any;
   assetsVis: any;
@@ -91,7 +93,7 @@ export default class AssetManagerModule extends Module {
   fu: any;
   _bhv: any;
   constructor(em: EditorModel) {
-    super(new AssetManagerConfig(em), new Assets([]), events);
+    super(em, AssetManagerConfig, new Assets([]), events);
     // Global assets collection
     this.assets = new Assets([]);
     this.assetsVis = new Assets([]);
@@ -403,10 +405,6 @@ export default class AssetManagerModule extends Module {
    */
   getTypes() {
     return this.getAll().getTypes();
-  }
-
-  getConfig() {
-    return super.getConfig() as AssetManagerConfig;
   }
 
   //-------

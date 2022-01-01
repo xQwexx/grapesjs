@@ -45,7 +45,7 @@
  * @module BlockManager
  */
 import { isElement, isArray } from "underscore";
-import Module from "common/module";
+import CollectionModule from "common/module";
 import defaults from "./config/config";
 import Block from "./model/Block";
 import Blocks from "./model/Blocks";
@@ -79,13 +79,14 @@ const events = {
   dragEnd: evDragStop,
   custom: evCustom
 };
-export class ModuleConfig {
+export class CollectionCollectionModuleConfig {
   em?: EditorModel;
 }
-export default class BlockManagerModule extends Module {
-  //...Module,
+export default class BlockManagerCollectionModule extends CollectionModule<
+  BlockManagerConfig
+> {
+  //...CollectionModule,
 
-  name = "BlockManager";
   /*
     Block?: any;
 
@@ -106,7 +107,7 @@ export default class BlockManagerModule extends Module {
   private _dragBlock?: Block;
 
   constructor(em: EditorModel) {
-    super(new BlockManagerConfig(em), new Blocks([]), events);
+    super(em, BlockManagerConfig, new Blocks([]), events);
 
     // Global blocks collection
     this.blocks = new Blocks([]);
@@ -119,7 +120,7 @@ export default class BlockManagerModule extends Module {
     this.blocks.on("reset", coll => this.blocksVisible.reset(coll.models));
   }
 
-  init(config?: ModuleConfig) {
+  init(config?: CollectionCollectionModuleConfig) {
     /*c: defaults = { ...new defaults(), ...config };
       const { em } = c;
       this.em = em;

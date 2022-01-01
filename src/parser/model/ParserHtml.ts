@@ -1,6 +1,6 @@
 import { each, isString, isFunction } from "underscore";
 import BrowserParserHtml from "./BrowserParserHtml";
-import { ParserConfig, defaultParserConfig } from "../config/config";
+import ParserConfig, { IParserConfig } from "../config/config";
 import { Collection } from "backbone";
 import { EditorConfig } from "editor/config/config";
 export interface IComponent {
@@ -84,10 +84,10 @@ const modelAttrStart = "data-gjs-";
 const event = "parse:html";
 
 export default class ParserHtml {
-  c: EditorConfig;
+  c: ParserConfig;
   compTypes: any[] = [];
 
-  constructor(config: EditorConfig = {}) {
+  constructor(config: any = {}) {
     this.c = config;
   }
   private parseAttrValue(value: string): string | boolean {
@@ -352,10 +352,10 @@ export default class ParserHtml {
    * @param  {ParserCss} parserCss In case there is style tags inside HTML
    * @return {Object}
    */
-  parse(str: string, parserCss: any, opts: ParserConfig = {}) {
+  parse(str: string, parserCss: any, opts: IParserConfig = {}) {
     //@ts-ignore
     const { em } = this.c;
-    opts = { ...defaultParserConfig, ...opts };
+    opts = { ...this.c, ...opts };
     const conf = (em && em.get("Config")) || {};
     const res: { html?: IComponent[]; css?: string } = {};
     const el = isFunction(opts.parserHtml)

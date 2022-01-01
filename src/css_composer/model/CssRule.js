@@ -199,7 +199,6 @@ export default class CssRule extends Styleable {
    * @param {String} width For which device this style is oriented
    * @param {Object} ruleProps Other rule props
    * @returns  {Boolean}
-   * @private
    */
   compare(selectors, state, width, ruleProps = {}) {
     const st = state || '';

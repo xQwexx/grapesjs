@@ -106,7 +106,34 @@ import EditorModel, {
 import EditorView from "./view/EditorView";
 import html from "utils/html";
 import { EventHandler } from "backbone";
+//import Commands from "commands/model/Commands";
+import CommandsModule from "commands";
+import CommandsConfig from "commands/config/config";
+import CanvasModule from "canvas";
+import UtilsModule from "utils";
+import PanelsModule from "panels";
+import ParserModule from "parser";
+import BlockManagerCollectionModule from "block_manager";
+import AssetManagerCollectionModule from "asset_manager";
+import StorageManagerModule from "storage_manager";
+import PageManagerModule from "pages";
+import DeviceManagerCollectionModule from "device_manager";
+import SelectorManagerCollectionModule from "selector_manager";
+import TraitManagerModule from "trait_manager";
+import UndoManagerModule from "undo_manager";
+import RichTextEditorModule from "rich_text_editor";
+import CodeManagerModule from "code_manager";
+import DomComponentsModule from "dom_components";
+import CssComposerModule from "css_composer";
+import StyleManagerModule from "style_manager";
+import LayerManagerModule from "navigator";
+import I18nModule from "i18n";
+import KeymapsModule from "keymaps";
+import ModalModule from "modal_dialog";
 
+interface IEditor {
+  Commands: CommandsModule;
+}
 export default class Editor {
   constructor(config = {}, opts: any = {}) {
     const { $ } = opts;
@@ -130,6 +157,76 @@ export default class Editor {
 
   private editorView?: any;
 
+  get I18n(): I18nModule {
+    return this.em.get("I18n");
+  }
+  get Utils(): UtilsModule {
+    return this.em.get("Utils");
+  }
+  get Config(): any {
+    return this.em.getConfig();
+  }
+  get Commands(): CommandsModule {
+    return this.em.get("Commands");
+  }
+  get Keymaps(): KeymapsModule {
+    return this.em.get("Keymaps");
+  }
+  get Modal(): ModalModule {
+    return this.em.get("Modal");
+  }
+  get Panels(): PanelsModule {
+    return this.em.get("Panels");
+  }
+  get Canvas(): CanvasModule {
+    return this.em.get("Canvas");
+  }
+  get Parser(): ParserModule {
+    return this.em.get("Parser");
+  }
+  get CodeManager(): CodeManagerModule {
+    return this.em.get("CodeManager");
+  }
+  get UndoManager(): UndoManagerModule {
+    return this.em.get("UndoManager");
+  }
+  get RichTextEditor(): RichTextEditorModule {
+    return this.em.get("RichTextEditor");
+  }
+  get Pages(): PageManagerModule {
+    return this.em.get("PageManager");
+  }
+  get Components(): DomComponentsModule {
+    return this.em.get("DomComponents");
+  }
+  get LayerManager(): LayerManagerModule {
+    return this.em.get("LayerManager");
+  }
+  get CssComposer(): CssComposerModule {
+    return this.em.get("CssComposer");
+  }
+  get StorageManager(): StorageManagerModule {
+    return this.em.get("StorageManager");
+  }
+  get AssetManager(): AssetManagerCollectionModule {
+    return this.em.get("AssetManager");
+  }
+  get BlockManager(): BlockManagerCollectionModule {
+    return this.em.get("BlockManager");
+  }
+  get TraitManager(): TraitManagerModule {
+    return this.em.get("TraitManager");
+  }
+  get SelectorManager(): SelectorManagerCollectionModule {
+    return this.em.get("SelectorManager");
+  }
+  get StyleManager(): StyleManagerModule {
+    return this.em.get("StyleManager");
+  }
+  get DeviceManager(): DeviceManagerCollectionModule {
+    return this.em.get("DeviceManager");
+  }
+
   /**
    * Initialize editor model
    * @return {this}
@@ -137,7 +234,7 @@ export default class Editor {
    */
   init(opts = {}) {
     this.em.init(this, { ...this.em.config, ...opts });
-
+    /*
     [
       "I18n",
       "Utils",
@@ -188,16 +285,16 @@ export default class Editor {
       //@ts-ignore
       this.UndoManager.clear();
       this.em.modules.forEach(module => {
-        module.postRender && module.postRender(this.editorView);
+        //@ts-ignore
+        module?.postRender(this.editorView);
       });
-    });
+    });*/
 
     return this;
   }
 
   /**
    * Returns configuration object
-   * @param  {string} [prop] Property name
    * @returns {any} Returns the configuration object or
    *  the value of the specified property
    */
@@ -375,7 +472,7 @@ export default class Editor {
    *  editor.select(model);
    * });
    */
-  select(el: any, opts: any) {
+  select(el: any, opts?: any) {
     this.em.setSelected(el, opts);
     return this;
   }
@@ -695,9 +792,9 @@ export default class Editor {
    * @param  {string} event Event to trigger
    * @return {this}
    */
-  trigger(event: string) {
-    //@ts-ignore
-    this.em.trigger.apply(this.em, arguments);
+  trigger(event: string, ...args: any) {
+    //this.em.trigger.apply(this.em, event, args);
+    this.em.trigger.apply(event, args);
     return this;
   }
 

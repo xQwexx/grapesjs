@@ -3,14 +3,79 @@ import EditorModel from "editor/model/Editor";
 import { isString, isElement } from "underscore";
 import { createId } from "utils/mixins";
 
+export interface IModule {
+  init(cfg: any): void;
+  destroy(): void;
+  postLoad(key: any): any;
+  getConfig(): ModuleConfig;
+  onLoad?(): void;
+  name: string;
+}
+export interface IViewableModule extends IModule {
+  onLoad(): void;
+  init(cfg: any): void;
+  destroy(): void;
+  postLoad(key: any): any;
+  postRender(view: any): void;
+}
+export abstract class ModuleConfig {
+  stylePrefix: string;
+  private: boolean = false;
+  abstract name: string;
+  module: Module;
+  em: EditorModel;
+
+  constructor(em: EditorModel, module: Module) {
+    const config = em.getConfig();
+    this.stylePrefix = config.stylePrefix || "";
+    this.module = module;
+    this.em = em;
+  }
+}
+
+export abstract class Module<T extends ModuleConfig = ModuleConfig>
+  implements IModule {
+  //conf: CollectionCollectionModuleConfig;
+  em: EditorModel;
+
+  cls: any[] = [];
+  events: any;
+  config: T;
+  constructor(
+    em: EditorModel,
+    confClass: { new (em: EditorModel, module: Module<T>): T }
+  ) {
+    this.em = em;
+    console.log(confClass);
+    this.config = new confClass(em, this);
+    console.log(this.config);
+  }
+  //abstract name: string;
+  private: boolean = false;
+  onLoad?(): void;
+  init(cfg: any) {}
+  abstract destroy(): void;
+  postLoad(key: any): void {}
+
+  get name(): string {
+    return this.getConfig().name;
+  }
+  getConfig() {
+    return this.config || {};
+  }
+
+  __logWarn(str: string) {
+    this.em.logWarning(`[${this.name}]: ${str}`);
+  }
+}
 export interface IStorableModule extends IModule {
-  storageKey: string[];
+  storageKey: string[] | string;
   store(result: any): any;
   load(keys: string[]): void;
   postLoad(key: any): any;
 }
 
-export interface IModule {
+export interface ICollectionModule {
   name: string;
   private: boolean;
   onLoad: boolean | any;
@@ -20,44 +85,31 @@ export interface IModule {
   postRender(view: any): void;
 }
 
-export class ModuleConfig {
-  em: EditorModel;
-  pStylePrefix: string;
-
-  constructor(em: EditorModel) {
-    const config = em.getConfig();
-    this.pStylePrefix = config.stylePrefix || "";
-    this.em = em;
-  }
-}
-
-export default abstract class Module implements IModule {
-  conf: ModuleConfig;
-
+export default abstract class CollectionModule<
+  T extends ModuleConfig
+> extends Module<T> {
   cls: any[] = [];
-  private all: any;
+  protected all: any;
   events: any;
-  get em() {
-    return this.conf.em;
-  }
-  constructor(config: ModuleConfig, all: any, events: any) {
-    this.conf = config;
+
+  constructor(
+    em: EditorModel,
+    confClass: { new (em: EditorModel, module: Module<T>): T },
+    all: any,
+    events: any
+  ) {
+    super(em, confClass);
     this.all = all;
     this.events = events;
     this.__initListen();
   }
-  abstract name: string;
+
   private: boolean = false;
-  onLoad: boolean = false;
   abstract init(cfg: any): void;
   abstract destroy(): void;
   postLoad(key: any): void {}
   abstract postRender(view: any): void;
   abstract render(): any;
-
-  getConfig() {
-    return this.conf || {};
-  }
 
   getAll() {
     return this.all ? this.all : [];
@@ -127,10 +179,6 @@ export default abstract class Module implements IModule {
   }
 
   __onAllEvent() {}
-
-  __logWarn(str: string) {
-    this.em.logWarning(`[${this.name}]: ${str}`);
-  }
 
   _createId(len = 16) {
     const all = this.getAll();

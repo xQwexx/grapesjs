@@ -1,9 +1,9 @@
 import { each } from "underscore";
-import { ParserConfig, HtmlType } from "../config/config";
+import { IParserConfig, HtmlType } from "../config/config";
 
 const defaultType = HtmlType.textHtml; // HtmlType.appXml;
 
-export default (str: string, config: ParserConfig = {}) => {
+export default (str: string, config: IParserConfig = {}) => {
   const parser = new DOMParser();
   const mimeType = config.htmlType || defaultType;
   const toHTML = mimeType === HtmlType.textHtml;
