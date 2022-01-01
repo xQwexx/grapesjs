@@ -92,7 +92,7 @@ module.exports = {
         ['/getting-started', 'Getting Started'],
         // ['/faq', 'FAQ'],
         {
-          title: 'Modules',
+          title: 'CollectionModules',
           collapsable: false,
           children: [
             ['/modules/Components', 'Components'],

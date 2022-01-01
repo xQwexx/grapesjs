@@ -1,15 +1,16 @@
-import { ModuleConfig } from "common/module";
+import { Module, ModuleConfig } from "common/module";
 import EditorModel from "editor/model/Editor";
 
 export default class AssetManagerConfig extends ModuleConfig {
-  constructor(em: EditorModel) {
-    super(em);
+  constructor(em: EditorModel, module: Module) {
+    super(em, module);
     const config = em.getConfig();
-    const ppfx = config.pStylePrefix;
+    const ppfx = config.stylePrefix;
     if (ppfx) {
-      this.pStylePrefix = ppfx + "am-";
+      this.stylePrefix = ppfx + "am-";
     }
   }
+  name = "AssetManager";
 
   // Default assets
   // eg. [

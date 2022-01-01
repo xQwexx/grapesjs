@@ -21,7 +21,7 @@ export default Backbone.View.extend({
     this.listenTo(model, 'change', this.render);
   },
 
-  __getModule() {
+  __getCollectionModule() {
     return this.em.get('BlockManager');
   },
 
@@ -84,15 +84,15 @@ export default Backbone.View.extend({
   },
 
   handleDragStart(ev) {
-    this.__getModule().__startDrag(this.model, ev);
+    this.__getCollectionModule().__startDrag(this.model, ev);
   },
 
   handleDrag(ev) {
-    this.__getModule().__drag(ev);
+    this.__getCollectionModule().__drag(ev);
   },
 
   handleDragEnd() {
-    this.__getModule().__endDrag();
+    this.__getCollectionModule().__endDrag();
   },
 
   /**

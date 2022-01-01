@@ -1,3 +1,6 @@
+import { Module, ModuleConfig } from "common/module";
+import EditorModel from "editor/model/Editor";
+
 export enum HtmlType {
   textHtml = "text/html",
   textXml = "text/xml",
@@ -6,7 +9,7 @@ export enum HtmlType {
   imgSvgXml = "image/svg+xml"
 }
 
-export interface ParserConfig {
+export interface IParserConfig {
   textTags?: string[];
 
   // Custom CSS parser
@@ -28,8 +31,18 @@ export interface ParserConfig {
   htmlType?: HtmlType;
 }
 
-export const defaultParserConfig: ParserConfig = {
-  textTags: ["br", "b", "i", "u", "a", "ul", "ol"],
+export default class ParserConfig extends ModuleConfig
+  implements IParserConfig {
+  constructor(em: EditorModel, module: Module) {
+    super(em, module);
+    const config = em.getConfig();
+    this.keepEmptyTextNodes = config.keepEmptyTextNodes;
+  }
+  name = "Parser";
 
-  htmlType: HtmlType.textHtml
-};
+  keepEmptyTextNodes: any;
+
+  textTags = ["br", "b", "i", "u", "a", "ul", "ol"];
+
+  htmlType = HtmlType.textHtml;
+}

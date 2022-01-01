@@ -1,6 +1,7 @@
 import { ModuleConfig } from "common/module";
 
 export default class DeviceManagerConfig extends ModuleConfig {
+  name = "DeviceManager";
   // The device `id` to select on start, if not indicated, the first available from `devices` will be used.
   default?: string;
 

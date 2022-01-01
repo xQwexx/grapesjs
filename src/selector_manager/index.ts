@@ -75,7 +75,7 @@
 import { isString, debounce, isObject, isArray } from "underscore";
 import { isComponent, isRule } from "utils/mixins";
 import { Model, Collection } from "common";
-import Module from "common/module";
+import CollectionModule from "common/module";
 import defaults from "./config/config";
 import Selector from "./model/Selector";
 import Selectors from "./model/Selectors";
@@ -107,16 +107,16 @@ const events = {
   custom: evCustom
 };
 
-export default class SelectorManagerModule extends Module {
-  name = "SelectorManager";
-
+export default class SelectorManagerCollectionModule extends CollectionModule<
+  SelectorManagerConfig
+> {
   selectorTags: any;
   states: Collection;
   selected: Selectors;
   model: Model;
   constructor(em: EditorModel) {
-    super(new SelectorManagerConfig(em), new Selectors([]), events);
-    const config = this.getConfig() as SelectorManagerConfig;
+    super(em, SelectorManagerConfig, new Selectors([]), events);
+    const config = this.config;
 
     // Global selectors container
     //this.all = new Selectors(config.selectors);

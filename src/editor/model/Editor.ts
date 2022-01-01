@@ -216,11 +216,11 @@ export default class EditorModel extends Backbone.Model
     this.set("hasPages", value);
   }
 
-  get config() {
+  get config(): EditorConfig {
     return this.get("config");
   }
 
-  set config(value: any) {
+  set config(value: EditorConfig) {
     this.set("config", value);
   }
 
@@ -268,7 +268,8 @@ export default class EditorModel extends Backbone.Model
 
     // Stuff to do post load
     const postLoad = () => {
-      this.modules.forEach(module => module.postLoad && module.postLoad(this));
+      console.log(module);
+      this.modules.forEach(module => module?.postLoad(this));
       this.set("readyLoad", 1);
       clb && clb();
     };
@@ -303,13 +304,14 @@ export default class EditorModel extends Backbone.Model
 
   /**
    * Load generic module
-   * @param {String} moduleName Module name
+   * @param {String} moduleName CollectionModule name
    * @return {this}
    * @private
    */
-  loadModule(Module: any) {
+  loadModule(module: any) {
     const { config } = this;
-    const Mod = new Module(this) as IModule;
+    const Mod = new module(this) as IModule;
+    console.log(module);
     const name = (Mod.name.charAt(0).toLowerCase() +
       Mod.name.slice(1)) as keyof EditorConfig;
     const cfgParent = !isUndefined(config[name])
@@ -328,6 +330,7 @@ export default class EditorModel extends Backbone.Model
       cfg.stm = sm;
       // DomComponents should be load before CSS Composer
       const mth = name == "domComponents" ? "unshift" : "push";
+      console.log(Mod);
       this.storables[mth](Mod as IStorableModule);
     }
 
@@ -336,7 +339,8 @@ export default class EditorModel extends Backbone.Model
     Mod.init({ ...cfg });
 
     // Bind the module to the editor model if public
-    !Mod.private && this.set(Mod.name, Mod);
+    !Mod.getConfig().private && this.set(Mod.name, Mod);
+
     Mod.onLoad && this.toLoad.push(Mod);
     this.modules.push(Mod);
     return this;
@@ -424,12 +428,13 @@ export default class EditorModel extends Backbone.Model
    * @param  {Object} [opts={}] Options, optional
    * @private
    */
-  setSelected(el: any[], opts: any = {}) {
+  setSelected(el?: any[], opts: any = {}) {
     const { event } = opts;
     const ctrlKey = event && (event.ctrlKey || event.metaKey);
     const { shiftKey } = event || {};
     const multiple = isArray(el);
     const els = (multiple ? el : [el]).map((el) => getModel(el, $));
+
     const selected = this.getSelectedAll();
     const mltSel = this.getConfig().multipleSelection;
     let added;
@@ -437,9 +442,8 @@ export default class EditorModel extends Backbone.Model
     // If an array is passed remove all selected
     // expect those yet to be selected
     multiple && this.removeSelected(selected.filter((s) => !contains(els, s)));
-
     let min: number, max: number;
-    els.forEach(el => {
+    els?.forEach(el => {
       const model = getModel(el, $);
       if (model && !model.get("selectable")) return;
 
@@ -744,8 +748,9 @@ export default class EditorModel extends Backbone.Model
     const result = sm.__clearKeys(data);
 
     this.storables.forEach(module => {
+      console.log(module);
       module.load(result);
-      module.postLoad && module.postLoad(this);
+      module?.postLoad(this);
     });
 
     return result;
@@ -758,7 +763,7 @@ export default class EditorModel extends Backbone.Model
    * @return {Object}
    * @private
    */
-  getCacheLoad(force: boolean, clb: Function) {
+  getCacheLoad(force?: boolean, clb?: Function) {
     if (this.cacheLoad && !force) return this.cacheLoad;
     const sm = this.get("StorageManager");
     const load: string[] = [];
@@ -767,7 +772,6 @@ export default class EditorModel extends Backbone.Model
 
     this.storables.forEach(m => {
       let key = m.storageKey;
-      key = isFunction(key) ? key() : key;
       const keys = isArray(key) ? key : [key];
       keys.forEach((k) => load.push(k));
     });

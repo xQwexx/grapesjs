@@ -1,16 +1,17 @@
-import { ModuleConfig } from "common/module";
+import { Module, ModuleConfig } from "common/module";
 import EditorModel from "editor/model/Editor";
 
 export default class SelectorManagerConfig extends ModuleConfig {
-  constructor(em: EditorModel) {
-    super(em);
+  constructor(em: EditorModel, module: Module) {
+    super(em, module);
     const config = em.getConfig();
-    const ppfx = config.pStylePrefix;
+    const ppfx = config.stylePrefix;
 
     if (ppfx) {
-      config.pStylePrefix = ppfx + "clm-";
+      this.stylePrefix = ppfx + "clm-";
     }
   }
+  name = "SelectorManager";
 
   // Specify the element to use as a container, string (query) or HTMLElement
   // With the empty value, nothing will be rendered
