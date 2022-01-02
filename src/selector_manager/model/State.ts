@@ -1,4 +1,4 @@
-import { Model } from 'common';
+import { Model } from "common";
 
 /**
  * @typedef State
@@ -8,8 +8,8 @@ import { Model } from 'common';
 export default class State extends Model {
   defaults() {
     return {
-      name: '',
-      label: ''
+      name: "",
+      label: ""
     };
   }
 
@@ -17,17 +17,17 @@ export default class State extends Model {
    * Get state name
    * @returns {String}
    */
-  getName() {
-    return this.get('name');
+  get name(): string {
+    return this.get("name");
   }
 
   /**
    * Get state label. If label was not provided, the name will be returned.
    * @returns {String}
    */
-  getLabel() {
-    return this.get('label') || this.getName();
+  get label(): string {
+    return this.get("label") || this.name;
   }
 }
 
-State.prototype.idAttribute = 'name';
+State.prototype.idAttribute = "name";

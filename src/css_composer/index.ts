@@ -86,7 +86,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
    * @private
    */
   postLoad() {
-    const um = this.em.get("UndoManager");
+    const um = this.em.UndoManager;
     um && um.add(this.getAll());
   }
 
@@ -112,7 +112,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
         obj = JSON.parse(d.styles);
       } catch (err) {}
     } else if (d.css) {
-      obj = this.em.get("Parser").parseCss(d.css);
+      obj = this.em.Parser.parseCss(d.css);
     }
 
     if (isArray(obj)) {
@@ -211,11 +211,11 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
   get(selectors: any, state: string, width: string, ruleProps?: any) {
     let slc = selectors;
     if (isString(selectors)) {
-      const sm = this.em.get("SelectorManager");
+      const sm = this.em.SelectorManager;
       const singleSel = selectors.split(",")[0].trim();
-      const node = this.em
-        .get("Parser")
-        .parserCss.checkNode({ selectors: singleSel })[0];
+      const node = this.em.Parser.parserCss.checkNode({
+        selectors: singleSel
+      })[0];
       slc = sm.get(node.selectors);
     }
     return (
@@ -241,7 +241,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
     const result = [];
 
     if (isString(data)) {
-      data = this.em.get("Parser").parseCss(data);
+      data = this.em.Parser.parseCss(data);
     }
 
     const d = data instanceof Array ? data : [data];
@@ -249,7 +249,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
     for (var i = 0, l = d.length; i < l; i++) {
       var rule = d[i] || {};
       if (!rule.selectors) continue;
-      var sm = this.em.get("SelectorManager");
+      var sm = this.em.SelectorManager;
       if (!sm) console.warn("Selector Manager not found");
       var sl = rule.selectors;
       var sels = sl instanceof Array ? sl : [sl];
@@ -317,12 +317,12 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
    */
   setRule(selectors: string, style: string, opts: any = {}) {
     const { atRuleType, atRuleParams } = opts;
-    const node = this.em.get("Parser").parserCss.checkNode({
+    const node = this.em.Parser.parserCss.checkNode({
       selectors,
       style
     })[0];
     const { state, selectorsAdd } = node;
-    const sm = this.em.get("SelectorManager");
+    const sm = this.em.SelectorManager;
     const selector = sm.add(node.selectors);
     const rule = this.add(selector, state, atRuleParams, {
       selectorsAdd,
@@ -348,8 +348,8 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
    * });
    */
   getRule(selectors: string, opts: any = {}) {
-    const sm = this.em.get("SelectorManager");
-    const node = this.em.get("Parser").parserCss.checkNode({ selectors })[0];
+    const sm = this.em.SelectorManager;
+    const node = this.em.Parser.parserCss.checkNode({ selectors })[0];
     const selector = sm.get(node.selectors);
     const { state, selectorsAdd } = node;
     const { atRuleType, atRuleParams } = opts;
@@ -404,7 +404,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
     const media = !isUndefined(mediaText)
       ? mediaText
       : this.em.getCurrentMedia();
-    const sm = this.em.get("SelectorManager");
+    const sm = this.em.SelectorManager;
     const selector = sm.add({ name, type: SelectorType.id }, addOpts);
     const rule = this.add(selector, state, media, {}, addOpts);
     rule.setStyle(style, { ...opts, ...addOpts });
@@ -427,7 +427,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
     const media = !isUndefined(mediaText)
       ? mediaText
       : this.em.getCurrentMedia();
-    const selector = this.em.get("SelectorManager").get(name, SelectorType.id);
+    const selector = this.em.SelectorManager.get(name, SelectorType.id);
     return selector && this.get(selector, state, media);
   }
 
@@ -448,7 +448,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
   setClassRule(name: string, style = {}, opts: any = {}) {
     const state = opts.state || "";
     const media = opts.mediaText || this.em.getCurrentMedia();
-    const sm = this.em.get("SelectorManager");
+    const sm = this.em.SelectorManager;
     const selector = sm.add({ name, type: SelectorType.class });
     const rule = this.add(selector, state, media);
     rule.setStyle(style, opts);
@@ -468,9 +468,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
   getClassRule(name: string, opts: any = {}) {
     const state = opts.state || "";
     const media = opts.mediaText || this.em.getCurrentMedia();
-    const selector = this.em
-      .get("SelectorManager")
-      .get(name, SelectorType.class);
+    const selector = this.em.SelectorManager.get(name, SelectorType.class);
     return selector && this.get(selector, state, media);
   }
 

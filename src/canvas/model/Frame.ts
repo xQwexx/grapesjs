@@ -36,9 +36,9 @@ export default class Frame extends Model {
     const { styles, component } = this.attributes;
     const { em } = attr;
     console.log(em);
-    const domc = em.get("DomComponents");
+    const domc = em.DomComponents;
     const conf = domc.getConfig();
-    const allRules = em.get("CssComposer").getAll();
+    const allRules = em.CssComposer.getAll();
     const idMap: any = {};
     this.em = em;
     const modOpts = { em, config: conf, frame: this, idMap };
@@ -193,7 +193,7 @@ export default class Frame extends Model {
   toJSON(opts: any = {}) {
     const obj = Model.prototype.toJSON.call(this, opts);
     const { em } = this;
-    const sm = em && em.get("StorageManager");
+    const sm = em && em.StorageManager;
     const smc = sm && sm.getConfig();
     const defaults = result(this, "defaults");
 

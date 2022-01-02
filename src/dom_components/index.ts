@@ -181,13 +181,13 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
   Component = Component;
   component: any;
 
-  componentsById: { [id: string]: any } = {};
+  componentsById: { [id: string]: Component } = {};
   componentTypes: any[];
   componentView: any;
   constructor(em: EditorModel) {
     super(em, DomComponentsConfig);
 
-    em.get("Parser").compTypes = componentTypes;
+    em.Parser.compTypes = componentTypes;
     this.componentTypes = componentTypes;
     em.on("change:componentHovered", this.componentHovered, this);
 
@@ -317,7 +317,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    * @private
    */
   getComponent() {
-    const sel = this.em.get("PageManager").getSelected();
+    const sel = this.em.PageManager.getSelected();
     const frame = sel && sel.getMainFrame();
     return frame && frame.getComponent();
   }

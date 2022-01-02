@@ -1,4 +1,7 @@
-import Backbone from 'backbone';
+import Backbone from "backbone";
+import DomComponentsModule from "dom_components";
+import DomComponentsConfig from "dom_components/config/config";
+import EditorModel from "editor/model/Editor";
 import {
   isEmpty,
   isArray,
@@ -8,39 +11,57 @@ import {
   extend,
   flatten,
   debounce
-} from 'underscore';
-import Component, { keySymbol, keySymbols } from './Component';
+} from "underscore";
+import Component, { keySymbol, keySymbols } from "./Component";
 
-const getIdsToKeep = (prev, res = []) => {
+const getIdsToKeep = (prev?: Components, res = []) => {
   const pr = prev || [];
   pr.forEach(comp => {
     res.push(comp.getId());
-    getIdsToKeep(comp.components(), res);
+    getIdsToKeep(comp.components, res);
   });
   return res;
 };
 
-const getNewIds = (items, res = []) => {
+const getNewIds = (items: Components, res = []) => {
   items.map(item => {
     res.push(item.getId());
-    getNewIds(item.components(), res);
+    getNewIds(item.components, res);
   });
   return res;
 };
 
-export default Backbone.Collection.extend({
-  initialize(models, opt = {}) {
+interface removeOpts {
+  previousModels?: Components;
+  keepIds?: string[];
+  temporary?: boolean;
+}
+export default class Components extends Backbone.Collection<Component> {
+  //model = Component;
+  domc: DomComponentsModule;
+  em: EditorModel;
+  config: DomComponentsConfig;
+
+  constructor(
+    models: any,
+    opt: {
+      domc?: DomComponentsModule;
+      config: DomComponentsConfig;
+      em: EditorModel;
+    }
+  ) {
+    super(models, opt);
     this.opt = opt;
-    this.listenTo(this, 'add', this.onAdd);
-    this.listenTo(this, 'remove', this.removeChildren);
-    this.listenTo(this, 'reset', this.resetChildren);
+    this.listenTo(this, "add", this.onAdd);
+    this.listenTo(this, "remove", this.removeChildren);
+    this.listenTo(this, "reset", this.resetChildren);
     const { em, config } = opt;
     this.config = config;
     this.em = em;
-    this.domc = opt.domc || (em && em.get('DomComponents'));
-  },
+    this.domc = opt.domc || (em && em.get("DomComponents"));
+  }
 
-  resetChildren(models, opts = {}) {
+  resetChildren(models: Components, opts: removeOpts = {}) {
     const coll = this;
     const prev = opts.previousModels || [];
     const toRemove = prev.filter(prev => !models.get(prev.cid));
@@ -48,9 +69,9 @@ export default Backbone.Collection.extend({
     opts.keepIds = getIdsToKeep(prev).filter(pr => newIds.indexOf(pr) >= 0);
     toRemove.forEach(md => this.removeChildren(md, coll, opts));
     models.each(model => this.onAdd(model));
-  },
+  }
 
-  removeChildren(removed, coll, opts = {}) {
+  removeChildren(removed, coll, opts: removeOpts = {}) {
     // Removing a parent component can cause this function
     // to be called with an already removed child element
     if (!removed) {
@@ -65,8 +86,8 @@ export default Backbone.Collection.extend({
     if (!isTemp) {
       // Remove the component from the global list
       const id = removed.getId();
-      const sels = em.get('SelectorManager').getAll();
-      const rules = em.get('CssComposer').getAll();
+      const sels = em.get("SelectorManager").getAll();
+      const rules = em.get("CssComposer").getAll();
       const canRemoveStyle = (opts.keepIds || []).indexOf(id) < 0;
       delete allByID[id];
 
@@ -82,12 +103,12 @@ export default Backbone.Collection.extend({
       sels.remove(rulesRemoved.map(rule => rule.getSelectors().at(0)));
 
       if (!removed.opt.temporary) {
-        em.get('Commands').run('core:component-style-clear', {
+        em.get("Commands").run("core:component-style-clear", {
           target: removed
         });
         removed.removed();
-        removed.trigger('removed');
-        em.trigger('component:remove', removed);
+        removed.trigger("removed");
+        em.trigger("component:remove", removed);
       }
 
       const inner = removed.components();
@@ -99,15 +120,15 @@ export default Backbone.Collection.extend({
     const inner = removed.components();
     em.stopListening(inner);
     em.stopListening(removed);
-    em.stopListening(removed.get('classes'));
+    em.stopListening(removed.get("classes"));
     removed.__postRemove();
-  },
+  }
 
-  model(attrs, options) {
+  model(attrs: any, options: any): Component {
     const { opt } = options.collection;
     const { em } = opt;
     let model;
-    const df = em.get('DomComponents').componentTypes;
+    const df = em.DomComponents.componentTypes;
     options.em = em;
     options.config = opt.config;
     options.componentTypes = df;
@@ -133,12 +154,12 @@ export default Backbone.Collection.extend({
     }
 
     return new model(attrs, options);
-  },
+  }
 
-  parseString(value, opt = {}) {
+  parseString(value: string, opt: removeOpts = {}) {
     const { em, domc } = this;
-    const cssc = em.get('CssComposer');
-    const parsed = em.get('Parser').parseHtml(value);
+    const cssc = em.get("CssComposer");
+    const parsed = em.get("Parser").parseHtml(value);
     // We need this to avoid duplicate IDs
     Component.checkId(parsed.html, parsed.css, domc.componentsById, opt);
 
@@ -151,39 +172,45 @@ export default Backbone.Collection.extend({
     }
 
     return parsed.html;
-  },
+  }
+  __firstAdd?: Component | Component[];
 
-  add(models, opt = {}) {
-    const { parent } = this;
+  add(models: Component, opt?: removeOpts): Component;
+  add(models: (Component | string)[], opt?: removeOpts): Component[];
+  add(models: string, opt?: removeOpts): Component | Component[];
+  add(models: unknown, opt: removeOpts = {}): any {
     opt.keepIds = getIdsToKeep(opt.previousModels);
 
     if (isString(models)) {
       models = this.parseString(models, opt);
     } else if (isArray(models)) {
       models = [...models];
-      models.forEach((item, index) => {
+      (models as Component[]).forEach((item, index) => {
         if (isString(item)) {
           const nodes = this.parseString(item, opt);
-          models[index] = isArray(nodes) && !nodes.length ? null : nodes;
+          (models as Component[])[index] =
+            isArray(nodes) && !nodes.length ? null : nodes;
         }
       });
     }
 
     const isMult = isArray(models);
-    models = (isMult ? models : [models])
+    const rm: any[] = (isMult ? (models as Component[]) : [models as Component])
       .filter(i => i)
       .map(model => this.processDef(model));
-    models = isMult ? flatten(models, 1) : models[0];
 
-    const result = Backbone.Collection.prototype.add.apply(this, [models, opt]);
+    const result = Backbone.Collection.prototype.add.apply(this, [
+      isMult ? flatten(rm, 1) : rm[0],
+      opt
+    ]);
     this.__firstAdd = result;
     return result;
-  },
+  }
 
   /**
    * Process component definition.
    */
-  processDef(mdl) {
+  processDef(mdl: Component) {
     // Avoid processing Models
     if (mdl.cid && mdl.ccid) return mdl;
     const { em, config = {} } = this;
@@ -200,15 +227,15 @@ export default Backbone.Collection.extend({
     }
 
     // React JSX preset
-    if (model.$$typeof && typeof model.props == 'object') {
+    if (model.$$typeof && typeof model.props == "object") {
       model = { ...model };
       model.props = { ...model.props };
-      const domc = em.get('DomComponents');
-      const parser = em.get('Parser');
+      const domc = em.get("DomComponents");
+      const parser = em.get("Parser");
       const { parserHtml } = parser;
 
       each(model, (value, key) => {
-        if (!includes(['props', 'type'], key)) delete model[key];
+        if (!includes(["props", "type"], key)) delete model[key];
       });
       const { props } = model;
       const comps = props.children;
@@ -221,7 +248,7 @@ export default Backbone.Collection.extend({
         model.components = comps;
       }
       if (!model.type) {
-        model.type = 'textnode';
+        model.type = "textnode";
       } else if (!domc.getType(model.type)) {
         model.tagName = model.type;
         delete model.type;
@@ -231,12 +258,12 @@ export default Backbone.Collection.extend({
     }
 
     return model;
-  },
+  }
 
-  onAdd(model, c, opts = {}) {
+  onAdd(model: Component, c = {}, opts: removeOpts = {}) {
     const { domc, em } = this;
     const style = model.getStyle();
-    const avoidInline = em && em.getConfig('avoidInlineStyle');
+    const avoidInline = em && em.getConfig().avoidInlineStyle;
     domc && domc.Component.ensureInList(model);
 
     if (
@@ -244,20 +271,20 @@ export default Backbone.Collection.extend({
       !avoidInline &&
       em &&
       em.get &&
-      em.getConfig('forceClass') &&
+      em.getConfig("forceClass") &&
       !opts.temporary
     ) {
       const name = model.cid;
-      const rule = em.get('CssComposer').setClassRule(name, style);
+      const rule = em.get("CssComposer").setClassRule(name, style);
       model.setStyle({});
       model.addClass(name);
     }
 
     model.__postAdd({ recursive: 1 });
     this.__onAddEnd();
-  },
+  }
 
-  __onAddEnd: debounce(function() {
+  __onAddEnd = debounce(function() {
     // TODO to check symbols on load, probably this might be removed as symbols
     // are always recovered from the model
     // const { domc } = this;
@@ -283,5 +310,5 @@ export default Backbone.Collection.extend({
     //   });
     // };
     // onAll(toCheck);
-  })
-});
+  }, 10);
+}

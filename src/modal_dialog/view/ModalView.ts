@@ -1,7 +1,9 @@
-import { View } from 'backbone';
+import { View } from "backbone";
+import ModalDialogConfig from "modal_dialog/config/config";
+import Modal from "modal_dialog/model/Modal";
 
-export default class ModalView extends View {
-  template({ pfx, ppfx, content, title }) {
+export default class ModalView extends View<Modal> {
+  template({ pfx, ppfx, content, title }: any = {}) {
     return `<div class="${pfx}dialog ${ppfx}one-bg ${ppfx}two-color">
       <div class="${pfx}header">
         <div class="${pfx}title">${title}</div>
@@ -17,24 +19,32 @@ export default class ModalView extends View {
 
   events() {
     return {
-      click: 'onClick',
-      'click [data-close-modal]': 'hide'
+      click: "onClick",
+      "click [data-close-modal]": "hide"
     };
   }
+  config: ModalDialogConfig;
+  pfx: string;
+  ppfx: string;
 
-  initialize(o) {
+  $collector?: JQuery<HTMLElement>;
+  $content?: JQuery<HTMLElement>;
+  $title?: JQuery<HTMLElement>;
+
+  constructor(o: any) {
+    super(o);
     const model = this.model;
     const config = o.config || {};
-    const pfx = config.stylePrefix || '';
+    const pfx = config.stylePrefix || "";
     this.config = config;
     this.pfx = pfx;
-    this.ppfx = config.pStylePrefix || '';
-    this.listenTo(model, 'change:open', this.updateOpen);
-    this.listenTo(model, 'change:title', this.updateTitle);
-    this.listenTo(model, 'change:content', this.updateContent);
+    this.ppfx = config.pStylePrefix || "";
+    this.listenTo(model, "change:open", this.updateOpen);
+    this.listenTo(model, "change:title", this.updateTitle);
+    this.listenTo(model, "change:content", this.updateContent);
   }
 
-  onClick(e) {
+  onClick(e: any) {
     const bkd = this.config.backdrop;
     bkd && e.target === this.el && this.hide();
   }
@@ -46,7 +56,7 @@ export default class ModalView extends View {
    */
   getCollector() {
     if (!this.$collector)
-      this.$collector = this.$el.find('.' + this.pfx + 'collector');
+      this.$collector = this.$el.find("." + this.pfx + "collector");
     return this.$collector;
   }
 
@@ -70,8 +80,8 @@ export default class ModalView extends View {
    * @return {HTMLElement}
    * @private
    */
-  getTitle(opts = {}) {
-    if (!this.$title) this.$title = this.$el.find('.' + this.pfx + 'title');
+  getTitle(opts: { $?: boolean } = {}) {
+    if (!this.$title) this.$title = this.$el.find("." + this.pfx + "title");
     return opts.$ ? this.$title : this.$title.get(0);
   }
 
@@ -83,7 +93,7 @@ export default class ModalView extends View {
     var content = this.getContent();
     const children = content.children();
     const coll = this.getCollector();
-    const body = this.model.get('content');
+    const body = this.model.get("content");
     children.length && coll.append(children);
     content.empty().append(body);
   }
@@ -93,8 +103,8 @@ export default class ModalView extends View {
    * @private
    * */
   updateTitle() {
-    const title = this.getTitle({ $: true });
-    title && title.empty().append(this.model.get('title'));
+    const title = this.getTitle({ $: true }) as JQuery<HTMLElement>;
+    title?.empty().append(this.model.get("title"));
   }
 
   /**
@@ -102,7 +112,7 @@ export default class ModalView extends View {
    * @private
    * */
   updateOpen() {
-    this.el.style.display = this.model.get('open') ? '' : 'none';
+    this.el.style.display = this.model.get("open") ? "" : "none";
   }
 
   /**
@@ -121,13 +131,13 @@ export default class ModalView extends View {
     this.model.open();
   }
 
-  updateAttr(attr) {
+  updateAttr(attr?: any) {
     const { pfx, $el, el } = this;
-    const currAttr = [].slice.call(el.attributes).map(i => i.name);
-    $el.removeAttr(currAttr.join(' '));
+    const currAttr = [].slice.call(el.attributes).map((i: any) => i.name);
+    $el.removeAttr(currAttr.join(" "));
     $el.attr({
       ...(attr || {}),
-      class: `${pfx}container ${(attr && attr.class) || ''}`.trim()
+      class: `${pfx}container ${attr?.class || ""}`.trim()
     });
   }
 

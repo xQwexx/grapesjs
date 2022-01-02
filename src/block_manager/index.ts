@@ -202,10 +202,7 @@ export default class BlockManagerCollectionModule extends CollectionModule<
   }
 
   __getFrameViews(): any[] {
-    return this.em
-      .get("Canvas")
-      .getFrames()
-      .map((frame: any) => frame.view);
+    return this.em.Canvas.getFrames().map((frame: any) => frame.view);
   }
 
   __behaviour(opts = {}) {

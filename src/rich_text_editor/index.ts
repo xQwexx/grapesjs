@@ -97,8 +97,8 @@ export default class RichTextEditorModule extends Module<RichTextEditorConfig> {
    * @param  {View} ev
    * @private
    */
-  postRender(ev: View) {
-    const canvas = ev.model.get("Canvas");
+  postRender(ev: any) {
+    const canvas = ev.model.Canvas;
     this.toolbar.style.pointerEvents = "all";
     this.hideToolbar();
     canvas.getToolsEl().appendChild(toolbar);
@@ -270,7 +270,7 @@ export default class RichTextEditorModule extends Module<RichTextEditorConfig> {
    */
   updatePosition() {
     const un = "px";
-    const canvas = this.config.em.get("Canvas");
+    const canvas = this.config.em.Canvas;
     const { style } = this.toolbar;
     const pos = canvas.getTargetToElementFixed(this.lastEl, toolbar, {
       event: "rteToolbarPosUpdate",
@@ -290,7 +290,7 @@ export default class RichTextEditorModule extends Module<RichTextEditorConfig> {
     this.lastEl = view.el;
     const { customRte } = this;
     const { em } = this.config;
-    const canvas = em.get("Canvas");
+    const canvas = em.Canvas;
 
     const el = view.getChildrenContainer();
     this.lastElPos = canvas.getElementPos(this.lastEl);

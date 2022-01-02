@@ -21,7 +21,7 @@ export default class CommandAbstract extends Model {
     this.plhClass = this.pfx + "placeholder";
     this.freezClass = this.ppfx + "freezed";
 
-    this.canvas = this.em?.get("Canvas");
+    this.canvas = this.em?.Canvas;
     this.init(this.config);
   }
   canvas?: any;
@@ -129,7 +129,7 @@ export default class CommandAbstract extends Model {
    * Stop current command
    */
   stopCommand() {
-    this.em?.get("Commands").stop(this.id);
+    this.em?.Commands.stop(this.id);
   }
 
   /**

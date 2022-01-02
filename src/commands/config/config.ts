@@ -6,7 +6,7 @@ export default class CommandsConfig extends ModuleConfig {
     super(em, module);
     this.stylePrefix += "com-";
 
-    this.model = em.get("Canvas");
+    this.model = em.Canvas;
   }
   name = "Commands";
   model: any;

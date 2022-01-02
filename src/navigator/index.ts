@@ -91,7 +91,7 @@ export default class LayerManagerModule extends Module<LayerManagerConfig> {
       config: this.config,
       //@ts-ignore
       opened: this.config.opened || {},
-      model: this.em.get("DomComponents").getWrapper()
+      model: this.em.DomComponents.getWrapper()
     });
     return this.layers.render().el;
   }

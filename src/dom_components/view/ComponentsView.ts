@@ -1,7 +1,9 @@
-import Backbone from 'backbone';
+import Backbone, { Model } from 'backbone';
+import Component from 'dom_components/model/Component';
+import Components from 'dom_components/model/Components';
 import { isUndefined } from 'underscore';
 
-export default Backbone.View.extend({
+export default class ComponentsView extends Backbone.View{
   initialize(o) {
     this.opts = o || {};
     this.config = o.config || {};
@@ -10,9 +12,11 @@ export default Backbone.View.extend({
     this.listenTo(coll, 'add', this.addTo);
     this.listenTo(coll, 'reset', this.resetChildren);
     this.listenTo(coll, 'remove', this.removeChildren);
-  },
+  }
+  parentEl?: HTMLElement;
+  compView?: ComponentView;
 
-  removeChildren(removed, coll, opts = {}) {
+  removeChildren(removed: Component, coll, opts = {}) {
     removed.views.forEach(view => {
       if (!view) return;
       const { childrenView, scriptContainer } = view;
@@ -23,7 +27,7 @@ export default Backbone.View.extend({
 
     const inner = removed.components();
     inner.forEach(it => this.removeChildren(it, coll, opts));
-  },
+  }
 
   /**
    * Add to collection
@@ -32,10 +36,10 @@ export default Backbone.View.extend({
    * @param {Object} opts
    * @private
    * */
-  addTo(model, coll = {}, opts = {}) {
+  addTo(model: Component, coll = {}, opts = {}) {
     const em = this.config.em;
     const i = this.collection.indexOf(model);
-    this.addToCollection(model, null, i);
+    this.addToCollection(model, undefined, i);
 
     if (em && !opts.temporary) {
       const triggerAdd = model => {
@@ -55,7 +59,7 @@ export default Backbone.View.extend({
    * @return   {Object}   Object rendered
    * @private
    * */
-  addToCollection(model, fragmentEl, index) {
+  addToCollection(model: Component, fragmentEl?: DocumentFragment, index?: number) {
     if (!this.compView) this.compView = require('./ComponentView').default;
     const { config, opts, em } = this;
     const fragment = fragmentEl || null;
@@ -116,15 +120,15 @@ export default Backbone.View.extend({
     }
 
     return rendered;
-  },
+  }
 
-  resetChildren(models, { previousModels = [] } = {}) {
+  resetChildren(models: Components, { previousModels = [] } = {}) {
     this.parentEl.innerHTML = '';
     previousModels.forEach(md => this.removeChildren(md, this.collection));
     models.each(model => this.addToCollection(model));
-  },
+  }
 
-  render(parent) {
+  render(parent?: HTMLElement) {
     const el = this.el;
     const frag = document.createDocumentFragment();
     this.parentEl = parent || this.el;
@@ -133,4 +137,4 @@ export default Backbone.View.extend({
     el.appendChild(frag);
     return this;
   }
-});
+};

@@ -169,7 +169,7 @@ export default class AssetManagerCollectionModule
    **/
 
   open(options: any = {}) {
-    const cmd = this.em.get("Commands");
+    const cmd = this.em.Commands;
     cmd.run(assetCmd, {
       types: ["image"],
       select: () => {},
@@ -183,7 +183,7 @@ export default class AssetManagerCollectionModule
    * assetManager.close();
    */
   close() {
-    const cmd = this.em.get("Commands");
+    const cmd = this.em.Commands;
     cmd.stop(assetCmd);
   }
 
@@ -194,7 +194,7 @@ export default class AssetManagerCollectionModule
    * assetManager.isOpen(); // true | false
    */
   isOpen() {
-    const cmd = this.em.get("Commands");
+    const cmd = this.em.Commands;
     return !!(cmd && cmd.isActive(assetCmd));
   }
 

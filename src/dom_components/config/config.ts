@@ -8,9 +8,9 @@ export default class DomComponentsConfig extends ModuleConfig {
     //@ts-ignore
     this.components = em.config.components || this.components;
 
-    this.modal = em.get("Modal") || "";
-    this.am = em.get("AssetManager") || "";
-    this.stm = em.get("StorageManager");
+    this.modal = em.ModalDialog || "";
+    this.am = em.AssetManager || "";
+    this.stm = em.StorageManager;
     if (em.get("hasPages")) {
       this.components = [];
     }

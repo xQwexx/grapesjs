@@ -176,7 +176,7 @@ export default class I18nModule extends Module<I18nConfig> {
    * obj.t('msg2', { l: 'it', params: { test: 'hello' } });  // custom local
    * // -> outputs `Msg hello it`
    */
-  t(key: string, opts: any = {}) {
+  t(key: string, opts: { l?: string; params?: any; lFlb?: string } = {}) {
     const { config } = this;
     const param = opts.params || {};
     const locale = opts.l || this.getLocale();

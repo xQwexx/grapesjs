@@ -10,7 +10,7 @@ export default class CssComposerConfig extends ModuleConfig {
     var elStyle = em.config.style || "";
     //@ts-ignore
     this.rules = elStyle || this.rules;
-    this.stm = em.get("StorageManager");
+    this.stm = em.StorageManager;
   }
 
   name = "CssComposer";

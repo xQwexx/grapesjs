@@ -1,5 +1,8 @@
-import Backbone from 'backbone';
-import { bindAll } from 'underscore';
+import Backbone, { View } from "backbone";
+import CanvasConfig from "canvas/config/config";
+import Frames from "canvas/model/Frames";
+import { HtmlType } from "parser/config/config";
+import { bindAll } from "underscore";
 import {
   on,
   off,
@@ -8,16 +11,16 @@ import {
   isTextNode,
   getElRect,
   getUiClass
-} from 'utils/mixins';
-import FramesView from './FramesView';
+} from "utils/mixins";
+import FramesView from "./FramesView";
 
 const $ = Backbone.$;
 let timerZoom;
 
-export default Backbone.View.extend({
-  events: {
-    wheel: 'onWheel'
-  },
+export default class CanvasView extends Backbone.View {
+  events = {
+    wheel: "onWheel"
+  };
 
   template() {
     const { pfx } = this;
@@ -25,36 +28,47 @@ export default Backbone.View.extend({
       <div class="${pfx}canvas__frames" data-frames></div>
       <div id="${pfx}tools" class="${pfx}canvas__tools" data-tools></div>
     `;
-  },
+  }
+  config: CanvasConfig;
+  get em() {
+    return this.config.em || {};
+  }
+  pfx;
+  ppfx;
+  frames?: Frames;
+
+  constructor(o: any = {}) {
+    super(o);
+    this.config = o.config || {};
+  }
 
   initialize(o) {
-    bindAll(this, 'clearOff', 'onKeyPress', 'onCanvasMove');
+    bindAll(this, "clearOff", "onKeyPress", "onCanvasMove");
     const { model } = this;
     this.config = o.config || {};
-    this.em = this.config.em || {};
-    this.pfx = this.config.stylePrefix || '';
-    this.ppfx = this.config.pStylePrefix || '';
-    this.className = this.config.stylePrefix + 'canvas';
+    this.pfx = this.config.stylePrefix || "";
+    this.ppfx = this.config.pStylePrefix || "";
+    this.className = this.config.stylePrefix + "canvas";
     const { em } = this;
     this._initFrames();
-    this.listenTo(em, 'change:canvasOffset', this.clearOff);
-    this.listenTo(em, 'component:selected', this.checkSelected);
-    this.listenTo(model, 'change:zoom change:x change:y', this.updateFrames);
-    this.listenTo(model, 'change:frames', this._onFramesUpdate);
-    this.toggleListeners(1);
-  },
+    this.listenTo(em, "change:canvasOffset", this.clearOff);
+    this.listenTo(em, "component:selected", this.checkSelected);
+    this.listenTo(model, "change:zoom change:x change:y", this.updateFrames);
+    this.listenTo(model, "change:frames", this._onFramesUpdate);
+    this.toggleListeners(true);
+  }
 
   _onFramesUpdate() {
     this._initFrames();
     this._renderFrames();
-  },
+  }
 
   _initFrames() {
     const { frames, model, config, em } = this;
-    const collection = model.get('frames');
-    em.set('readyCanvas', 0);
-    collection.once('loaded:all', () => em.set('readyCanvas', 1));
-    frames && frames.remove();
+    const collection = model.get("frames");
+    em.set("readyCanvas", 0);
+    collection.once("loaded:all", () => em.set("readyCanvas", 1));
+    frames?.remove();
     this.frames = new FramesView({
       collection,
       config: {
@@ -62,70 +76,70 @@ export default Backbone.View.extend({
         canvasView: this
       }
     });
-  },
+  }
 
-  checkSelected(component, opts = {}) {
+  checkSelected(component, opts: { scroll: boolean }) {
     const { scroll } = opts;
-    const currFrame = this.em.get('currentFrame');
+    const currFrame = this.em.get("currentFrame");
 
     scroll &&
       component.views.forEach(view => {
         view._getFrame() === currFrame && view.scrollIntoView(scroll);
       });
-  },
+  }
 
   remove() {
     this.frames.remove();
     this.frames = {};
     Backbone.View.prototype.remove.apply(this, arguments);
     this.toggleListeners();
-  },
+  }
 
   preventDefault(ev) {
     if (ev) {
       ev.preventDefault();
       ev._parentEvent && ev._parentEvent.preventDefault();
     }
-  },
+  }
 
   onCanvasMove(ev) {
     // const data = { x: ev.clientX, y: ev.clientY };
     // const data2 = this.em.get('Canvas').getMouseRelativeCanvas(ev);
     // const data3 = this.em.get('Canvas').getMouseRelativePos(ev);
     // this.em.trigger('canvas:over', data, data2, data3);
-  },
+  }
 
-  toggleListeners(enable) {
+  toggleListeners(enable: boolean) {
     const { el } = this;
     const fn = enable ? on : off;
-    fn(document, 'keypress', this.onKeyPress);
-    fn(window, 'scroll resize', this.clearOff);
+    fn(document, "keypress", this.onKeyPress);
+    fn(window, "scroll resize", this.clearOff);
     // fn(el, 'mousemove dragover', this.onCanvasMove);
-  },
+  }
 
   onKeyPress(ev) {
     const { em } = this;
     const key = getKeyChar(ev);
 
     if (
-      key === ' ' &&
+      key === " " &&
       em.getZoomDecimal() !== 1 &&
-      !em.get('Canvas').isInputFocused()
+      !em.get("Canvas").isInputFocused()
     ) {
       this.preventDefault(ev);
-      em.get('Editor').runCommand('core:canvas-move');
+      em.get("Editor").runCommand("core:canvas-move");
     }
-  },
+  }
 
   onWheel(ev) {
-    if ((ev.ctrlKey || ev.metaKey) && this.em.getConfig('multiFrames')) {
+    if ((ev.ctrlKey || ev.metaKey) && this.em.getConfig("multiFrames")) {
       this.preventDefault(ev);
       const { model } = this;
       const delta = Math.max(-1, Math.min(1, ev.wheelDelta || -ev.detail));
-      const zoom = model.get('zoom');
-      model.set('zoom', zoom + delta * 2);
+      const zoom = model.get("zoom");
+      model.set("zoom", zoom + delta * 2);
     }
-  },
+  }
 
   updateFrames(ev) {
     const { em, model } = this;
@@ -137,21 +151,21 @@ export default Backbone.View.extend({
       mpl}px, ${y * mpl}px)`;
     this.clearOff();
     em.stopDefault(defOpts);
-    em.trigger('canvas:update', ev);
+    em.trigger("canvas:update", ev);
     timerZoom && clearTimeout(timerZoom);
     timerZoom = setTimeout(() => em.runDefault(defOpts), 300);
-  },
+  }
 
   getZoom() {
     return this.em.getZoomDecimal();
-  },
+  }
 
   /**
    * Checks if the element is visible in the canvas's viewport
    * @param  {HTMLElement}  el
    * @return {Boolean}
    */
-  isElInViewport(el) {
+  isElInViewport(el: HTMLElement) {
     const elem = getElement(el);
     const rect = getElRect(elem);
     const frameRect = this.getFrameOffset(elem);
@@ -163,14 +177,14 @@ export default Backbone.View.extend({
       rTop <= frameRect.height &&
       rLeft <= frameRect.width
     );
-  },
+  }
 
   /**
    * Get the offset of the element
    * @param  {HTMLElement} el
    * @return {Object}
    */
-  offset(el, opts = {}) {
+  offset(el: HTMLElement, opts: { noScroll: boolean }) {
     const rect = getElRect(el);
     const docBody = el.ownerDocument.body;
     const { noScroll } = opts;
@@ -181,7 +195,7 @@ export default Backbone.View.extend({
       width: rect.width,
       height: rect.height
     };
-  },
+  }
 
   /**
    * Cleare cached offsets
@@ -190,14 +204,14 @@ export default Backbone.View.extend({
   clearOff() {
     this.frmOff = null;
     this.cvsOff = null;
-  },
+  }
 
   /**
    * Return frame offset
    * @return {Object}
    * @private
    */
-  getFrameOffset(el) {
+  getFrameOffset(el: HTMLElement) {
     if (!this.frmOff || el) {
       const frame = this.frame.el;
       const winEl = el && el.ownerDocument.defaultView;
@@ -205,7 +219,7 @@ export default Backbone.View.extend({
       this.frmOff = this.offset(frEl || frame);
     }
     return this.frmOff;
-  },
+  }
 
   /**
    * Return canvas offset
@@ -215,7 +229,7 @@ export default Backbone.View.extend({
   getCanvasOffset() {
     if (!this.cvsOff) this.cvsOff = this.offset(this.el);
     return this.cvsOff;
-  },
+  }
 
   /**
    * Returns element's rect info
@@ -223,7 +237,7 @@ export default Backbone.View.extend({
    * @return {Object}
    * @private
    */
-  getElementPos(el, opts) {
+  getElementPos(el: HTMLElement, opts: { avoidFrameOffset: boolean }) {
     const zoom = this.getZoom();
     var opt = opts || {};
     var frmOff = this.getFrameOffset(el);
@@ -239,7 +253,7 @@ export default Backbone.View.extend({
     const width = eo.width * zoom;
 
     return { top, left, height, width, zoom, rect: eo };
-  },
+  }
 
   /**
    * Returns element's offsets like margins and paddings
@@ -247,25 +261,25 @@ export default Backbone.View.extend({
    * @return {Object}
    * @private
    */
-  getElementOffsets(el) {
+  getElementOffsets(el: HTMLElement) {
     if (!el || isTextNode(el)) return {};
-    const result = {};
+    const result: { [id: string]: number } = {};
     const styles = window.getComputedStyle(el);
     [
-      'marginTop',
-      'marginRight',
-      'marginBottom',
-      'marginLeft',
-      'paddingTop',
-      'paddingRight',
-      'paddingBottom',
-      'paddingLeft'
+      "marginTop",
+      "marginRight",
+      "marginBottom",
+      "marginLeft",
+      "paddingTop",
+      "paddingRight",
+      "paddingBottom",
+      "paddingLeft"
     ].forEach(offset => {
       result[offset] = parseFloat(styles[offset]) * this.getZoom();
     });
 
     return result;
-  },
+  }
 
   /**
    * Returns position data of the canvas element
@@ -287,14 +301,14 @@ export default Backbone.View.extend({
       width: co.width,
       height: co.height
     };
-  },
+  }
 
   /**
    * Update javascript of a specific component passed by its View
    * @param {View} view Component's View
    * @private
    */
-  updateScript(view) {
+  updateScript(view: ComponentsView) {
     const model = view.model;
     const id = model.getId();
 
@@ -304,12 +318,12 @@ export default Backbone.View.extend({
     }
 
     view.el.id = id;
-    view.scriptContainer.html('');
+    view.scriptContainer.html("");
     // In editor, I make use of setTimeout as during the append process of elements
     // those will not be available immediately, therefore 'item' variable
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     const scriptFn = model.getScriptString();
-    const scriptFnStr = model.get('script-props')
+    const scriptFnStr = model.get("script-props")
       ? scriptFn
       : `function(){\n${scriptFn}\n;}`;
     const scriptProps = JSON.stringify(model.__getScriptProps());
@@ -325,25 +339,25 @@ export default Backbone.View.extend({
       const scr = view.scriptContainer;
       scr && scr.get(0).appendChild(script);
     }, 0);
-  },
+  }
 
   /**
    * Get javascript container
    * @private
    */
-  getJsContainer(view) {
+  getJsContainer(view?: View) {
     const frameView = this.getFrameView(view);
     return frameView && frameView.getJsContainer();
-  },
+  }
 
-  getFrameView(view) {
-    return (view && view._getFrame()) || this.em.get('currentFrame');
-  },
+  getFrameView(view?: View) {
+    return (view && view._getFrame()) || this.em.get("currentFrame");
+  }
 
   _renderFrames() {
     if (!this.ready) return;
     const { model, frames, em, framesArea } = this;
-    const frms = model.get('frames');
+    const frms = model.get("frames");
     frms.listenToLoad();
     frames.render();
     const mainFrame = frms.at(0);
@@ -351,15 +365,15 @@ export default Backbone.View.extend({
     em.setCurrentFrame(currFrame);
     framesArea && framesArea.appendChild(frames.el);
     this.frame = currFrame;
-  },
+  }
 
   render() {
     const { el, $el, ppfx, config, em } = this;
     $el.html(this.template());
-    const $frames = $el.find('[data-frames]');
+    const $frames = $el.find("[data-frames]");
     this.framesArea = $frames.get(0);
 
-    const toolsWrp = $el.find('[data-tools]');
+    const toolsWrp = $el.find("[data-tools]");
     this.toolsWrapper = toolsWrp.get(0);
     toolsWrp.append(`
       <div class="${ppfx}tools ${ppfx}tools-gl" style="pointer-events:none">
@@ -368,7 +382,7 @@ export default Backbone.View.extend({
         </div>
       </div>
       <div id="${ppfx}tools" style="pointer-events:none">
-        ${config.extHl ? `<div class="${ppfx}highlighter-sel"></div>` : ''}
+        ${config.extHl ? `<div class="${ppfx}highlighter-sel"></div>` : ""}
         <div class="${ppfx}badge"></div>
         <div class="${ppfx}ghost"></div>
         <div class="${ppfx}toolbar" style="pointer-events:all"></div>
@@ -394,4 +408,4 @@ export default Backbone.View.extend({
 
     return this;
   }
-});
+}

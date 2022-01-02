@@ -33,7 +33,7 @@ export default class Canvas extends Model {
 
   init() {
     const { em } = this;
-    const mainPage = em.get("PageManager").getMain();
+    const mainPage = em.PageManager.getMain();
     const frame = mainPage.getMainFrame();
     this.set("frames", mainPage.getFrames());
     this.updateDevice({ frame });

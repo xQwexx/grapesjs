@@ -2,14 +2,15 @@ import { isString, isArray, keys } from "underscore";
 import { shallowDiff } from "utils/mixins";
 import ParserHtml from "parser/model/ParserHtml";
 import { Model } from "backbone";
-import { IEditorModel } from "editor/model/Editor";
+import EditorModel, { IEditorModel } from "editor/model/Editor";
+import Selectors from "selector_manager/model/Selectors";
 
 const parseStyle = new ParserHtml().parseStyle;
 
 interface IStyleable {
-  Style: { [id: string]: string };
-  Selectors: string;
-  Classes: string;
+  style: { [id: string]: string };
+  selectors: Selectors;
+  classes: Selectors;
 }
 
 interface IStyleOps {
@@ -18,25 +19,25 @@ interface IStyleOps {
 }
 
 export default class Styleable extends Model implements IStyleable {
-  em?: IEditorModel;
+  em?: EditorModel;
 
-  get Style(): { [id: string]: string } {
+  get style(): { [id: string]: string } {
     return this.get("style");
   }
-  set Style(value: { [id: string]: string }) {
+  set style(value: { [id: string]: string }) {
     this.set("style", value);
   }
 
-  set Selectors(value: string) {
+  set selectors(value: Selectors) {
     this.set("selectors", value);
   }
-  get Selectors(): string {
+  get selectors(): Selectors {
     return this.get("selectors");
   }
-  set Classes(value: string) {
+  set classes(value: Selectors) {
     this.set("classes", value);
   }
-  get Classes(): string {
+  get classes(): Selectors {
     return this.get("classes");
   }
 
@@ -55,7 +56,7 @@ export default class Styleable extends Model implements IStyleable {
    * @return {Object}
    */
   getStyle(prop: IStyleOps | string = {}): { [id: string]: string } {
-    const style = this.Style || {};
+    const style = this.style || {};
     const result = { ...style };
     return prop && isString(prop) ? { prop: result[prop] } : result;
   }
@@ -136,11 +137,10 @@ export default class Styleable extends Model implements IStyleable {
   }
 
   getSelectors() {
-    return this.Selectors || this.Classes;
+    return this.selectors || this.classes;
   }
 
   getSelectorsString() {
-    //@ts-ignore
     return this.getSelectors().getFullString();
   }
 }

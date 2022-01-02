@@ -38,19 +38,19 @@ import { Module } from "common/module";
 import EditorModel from "editor/model/Editor";
 import { debounce, isFunction, isString } from "underscore";
 import { createText } from "../utils/dom";
-import ModalConfig from "./config/config";
+import ModalDialogConfig from "./config/config";
 
-import ModalM from "./model/Modal";
+import Modal from "./model/Modal";
 import ModalView from "./view/ModalView";
 
 //@ts-ignore
 const triggerEvent = (enable, em) => {
   em && em.trigger(`modal:${enable ? "open" : "close"}`);
 };
-export default class ModalModule extends Module<ModalConfig> {
+export default class ModalDialogModule extends Module<ModalDialogConfig> {
   constructor(em: EditorModel) {
-    super(em, ModalConfig);
-    this.model = new ModalM(this.config);
+    super(em, ModalDialogConfig);
+    this.model = new Modal(this.config);
     this.model.on("change:open", (m, enb) => triggerEvent(enb, this.em));
     this.model.on(
       "change",
@@ -62,7 +62,7 @@ export default class ModalModule extends Module<ModalConfig> {
       }, 10)
     );
   }
-  model: ModalM;
+  model: Modal;
   modal?: any;
 
   /**

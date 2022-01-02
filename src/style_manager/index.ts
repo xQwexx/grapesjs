@@ -54,6 +54,9 @@ import PropertyFactory from "./model/PropertyFactory";
 import SectorsView from "./view/SectorsView";
 import EditorModel from "editor/model/Editor";
 import StyleManagerConfig from "./config/config";
+import Styleable from "domain_abstract/model/Styleable";
+import { CssRule } from "css_composer/model/CssRule";
+import CssRules from "css_composer/model/CssRules";
 
 export default class StyleManagerModule extends Module<StyleManagerConfig> {
   PropertyFactory = PropertyFactory();
@@ -284,10 +287,10 @@ export default class StyleManagerModule extends Module<StyleManagerConfig> {
 
     if (em && classes) {
       const config = em.getConfig();
-      const um = em.get("UndoManager");
-      const cssC = em.get("CssComposer");
-      const sm = em.get("SelectorManager");
-      const smConf = sm ? sm.getConfig() : {};
+      const um = em.UndoManager;
+      const cssC = em.CssComposer;
+      const sm = em.SelectorManager;
+      const smConf = sm?.getConfig();
       const state = !config.devicePreviewMode ? em.get("state") : "";
       const valid = classes.getStyleable();
       const hasClasses = valid.length;
@@ -324,11 +327,11 @@ export default class StyleManagerModule extends Module<StyleManagerConfig> {
 
   getParentRules(target: any, state?: any) {
     const { em } = this;
-    let result = [];
+    let result: any[] = [];
 
     if (em && target) {
-      const cssC = em.get("CssComposer");
-      const cssGen = em.get("CodeManager").getGenerator("css");
+      const cssC = em.CssComposer;
+      const cssGen = em.CodeManager.getGenerator("css");
       const all = cssC
         .getRules(target.getSelectors().getFullString())
         .filter((rule: any) => (state ? rule.get("state") === state : true))
@@ -440,14 +443,14 @@ export default class StyleManagerModule extends Module<StyleManagerConfig> {
     const { em } = this;
     const trgs = isArray(target) ? target : [target];
     const { stylable } = opts;
-    const cssc = em.get("CssComposer");
+    const cssc = em.CssComposer;
     let targets: any[] = [];
 
     trgs.filter(Boolean).forEach(target => {
       let model = target;
 
       if (isString(target)) {
-        const rule = cssc.getRule(target) || cssc.setRule(target);
+        const rule = cssc.getRule(target) || cssc.setRule(target, "");
         !isUndefined(stylable) && rule.set({ stylable });
         model = rule;
       }

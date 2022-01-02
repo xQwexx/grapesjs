@@ -135,9 +135,9 @@ export default class KeymapsModule extends Module<KeymapsConfig> {
    */
   add(id: string, keys: string, handler: any, opts: any = {}) {
     const { em } = this;
-    const cmd = em.get("Commands");
+    const cmd = em.Commands;
     const editor = em.getEditor();
-    const canvas = em.get("Canvas");
+    const canvas = em.Canvas;
     const keymap = { id, keys, handler };
     const pk = this.keymaps[id];
     pk && this.remove(id);

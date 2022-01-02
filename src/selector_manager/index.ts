@@ -178,9 +178,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
 
   select(value: any, opts = {}) {
     const targets = Array.isArray(value) ? value : [value];
-    const toSelect: any[] = this.em
-      .get("StyleManager")
-      .setTarget(targets, opts);
+    const toSelect: any[] = this.em.StyleManager.setTarget(targets, opts);
     const selTags = this.selectorTags;
     const res = toSelect
       .filter(i => i)
@@ -195,7 +193,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
     return this;
   }
 
-  addSelector(name: any, opts = {}, cOpts = {}) {
+  addSelector(name: any, opts = {}, cOpts = {}): Selector {
     let props: any = { ...opts };
 
     if (isObject(name)) {
@@ -227,7 +225,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
     return selector;
   }
 
-  getSelector(name: any, type = SelectorType.class) {
+  getSelector(name: string, type = SelectorType.class) {
     if (isId(name)) {
       name = name.substr(1);
       type = SelectorType.id;
@@ -272,14 +270,14 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
    * sm.addClass(['class1', 'class2']);
    * // -> [SelectorObject, ...]
    */
-  addClass(classes: any) {
-    const added: any = [];
+  addClass(classes: string[] | string) {
+    const added: Selector[] = [];
 
     if (isString(classes)) {
       classes = classes.trim().split(" ");
     }
 
-    classes.forEach((name: any) => added.push(this.addSelector(name)));
+    classes.forEach(name => added.push(this.addSelector(name)));
     return added;
   }
 
@@ -292,7 +290,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
    * // Get Id
    * const selectorId = selectorManager.get('#my-id');
    * */
-  get(name: any, type: any) {
+  get(name: string, type?: SelectorType) {
     // Keep support for arrays but avoid it in docs
     if (isArray(name)) {
       const result: any = [];
@@ -315,7 +313,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
    * // or by passing the Selector
    * selectorManager.remove(selectorManager.get('.myclass'));
    */
-  remove(selector: any, opts: any) {
+  remove(selector: string | Selector, opts: any) {
     return this.__remove(selector, opts);
   }
 
@@ -326,7 +324,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
    * @example
    * selectorManager.setState('hover');
    */
-  setState(value: any) {
+  setState(value: string) {
     this.em.setState(value);
     return this;
   }
@@ -357,7 +355,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
    *   { name: 'nth-of-type(2n)', label: 'Even/Odd' }
    * ]);
    */
-  setStates(states: any, opts: any) {
+  setStates(states: State[], opts: any) {
     return this.states.reset(states, opts);
   }
 
@@ -378,7 +376,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
    * @example
    * selectorManager.addSelected('.new-class');
    */
-  addSelected(props: any) {
+  addSelected(props: State | string) {
     const added = this.add(props);
     // TODO: target should be the one from StyleManager
     this.em.getSelectedAll().forEach(target => {
@@ -393,9 +391,11 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
    * @example
    * selectorManager.removeSelected('.myclass');
    */
-  removeSelected(selector: any) {
+  removeSelected(selector: Selector | string) {
     this.em.getSelectedAll().forEach(trg => {
-      !selector.get("protected") && trg && trg.getSelectors().remove(selector);
+      (isString(selector) || !selector?.get("protected")) &&
+        trg &&
+        trg.getSelectors().remove(selector);
     });
   }
 
@@ -407,7 +407,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
    * console.log(targetsToStyle.map(target => target.getSelectorsString()))
    */
   getSelectedTargets() {
-    return this.em.get("StyleManager").getSelected();
+    return this.em.StyleManager.getSelected();
   }
 
   /**
@@ -458,7 +458,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
    * @return {HTMLElement}
    * @private
    */
-  render(selectors?: any) {
+  render(selectors?: Selector[]): HTMLElement {
     const { em, selectorTags } = this;
     const config = this.getConfig();
     const el = selectorTags && selectorTags.el;

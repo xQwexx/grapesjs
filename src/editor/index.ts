@@ -158,73 +158,73 @@ export default class Editor {
   private editorView?: any;
 
   get I18n(): I18nModule {
-    return this.em.get("I18n");
+    return this.em.I18n;
   }
   get Utils(): UtilsModule {
-    return this.em.get("Utils");
+    return this.em.Utils;
   }
   get Config(): any {
     return this.em.getConfig();
   }
   get Commands(): CommandsModule {
-    return this.em.get("Commands");
+    return this.em.Commands;
   }
   get Keymaps(): KeymapsModule {
-    return this.em.get("Keymaps");
+    return this.em.Keymaps;
   }
   get Modal(): ModalModule {
-    return this.em.get("Modal");
+    return this.em.ModalDialog;
   }
   get Panels(): PanelsModule {
-    return this.em.get("Panels");
+    return this.em.Panels;
   }
   get Canvas(): CanvasModule {
-    return this.em.get("Canvas");
+    return this.em.Canvas;
   }
   get Parser(): ParserModule {
-    return this.em.get("Parser");
+    return this.em.Parser;
   }
   get CodeManager(): CodeManagerModule {
-    return this.em.get("CodeManager");
+    return this.em.CodeManager;
   }
   get UndoManager(): UndoManagerModule {
-    return this.em.get("UndoManager");
+    return this.em.UndoManager;
   }
   get RichTextEditor(): RichTextEditorModule {
-    return this.em.get("RichTextEditor");
+    return this.em.RichTextEditor;
   }
   get Pages(): PageManagerModule {
-    return this.em.get("PageManager");
+    return this.em.PageManager;
   }
   get Components(): DomComponentsModule {
-    return this.em.get("DomComponents");
+    return this.em.DomComponents;
   }
   get LayerManager(): LayerManagerModule {
     return this.em.get("LayerManager");
   }
   get CssComposer(): CssComposerModule {
-    return this.em.get("CssComposer");
+    return this.em.CssComposer;
   }
   get StorageManager(): StorageManagerModule {
-    return this.em.get("StorageManager");
+    return this.em.StorageManager;
   }
   get AssetManager(): AssetManagerCollectionModule {
-    return this.em.get("AssetManager");
+    return this.em.AssetManager;
   }
   get BlockManager(): BlockManagerCollectionModule {
-    return this.em.get("BlockManager");
+    return this.em.BlockManager;
   }
   get TraitManager(): TraitManagerModule {
-    return this.em.get("TraitManager");
+    return this.em.TraitManager;
   }
   get SelectorManager(): SelectorManagerCollectionModule {
-    return this.em.get("SelectorManager");
+    return this.em.SelectorManager;
   }
   get StyleManager(): StyleManagerModule {
-    return this.em.get("StyleManager");
+    return this.em.StyleManager;
   }
   get DeviceManager(): DeviceManagerCollectionModule {
-    return this.em.get("DeviceManager");
+    return this.em.DeviceManager;
   }
 
   /**
@@ -340,7 +340,7 @@ export default class Editor {
    * @return {Components}
    */
   getComponents() {
-    return this.em.get("DomComponents").getComponents();
+    return this.em.DomComponents.getComponents();
   }
 
   /**
@@ -348,7 +348,7 @@ export default class Editor {
    * @return {Component}
    */
   getWrapper() {
-    return this.em.get("DomComponents").getWrapper();
+    return this.em.DomComponents.getWrapper();
   }
 
   /**
@@ -396,7 +396,7 @@ export default class Editor {
    * @return {Object}
    */
   getStyle() {
-    return this.em.get("CssComposer").getAll();
+    return this.em.CssComposer.getAll();
   }
 
   /**
@@ -560,7 +560,7 @@ export default class Editor {
    * editor.runCommand('myCommand', {someValue: 1});
    */
   runCommand(id: string, options = {}) {
-    return this.em.get("Commands").run(id, options);
+    return this.em.Commands.run(id, options);
   }
 
   /**
@@ -572,7 +572,7 @@ export default class Editor {
    * editor.stopCommand('myCommand', {someValue: 1});
    */
   stopCommand(id: string, options = {}) {
-    return this.em.get("Commands").stop(id, options);
+    return this.em.Commands.stop(id, options);
   }
 
   /**

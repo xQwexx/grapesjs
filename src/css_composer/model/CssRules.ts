@@ -32,7 +32,7 @@ export default class CssRules extends Collection<CssRule> {
   onRemove(removed: any) {
     const em = this.editor;
     em?.stopListening(removed);
-    em?.get("UndoManager").remove(removed);
+    em?.UndoManager.remove(removed);
   }
 
   add(model: CssRule, options?: AddOptions): CssRule;
@@ -41,7 +41,7 @@ export default class CssRules extends Collection<CssRule> {
 
   add(models: unknown, opt?: any): any {
     if (typeof models === "string") {
-      models = this.editor?.get("Parser").parseCss(models);
+      models = this.editor?.Parser.parseCss(models);
     }
     opt.em = this.editor;
     return Collection.prototype.add.apply(this, [models as any, opt]);

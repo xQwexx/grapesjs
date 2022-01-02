@@ -1,6 +1,11 @@
-import { Model } from 'common';
-import SelectorUtils from 'selector_manager/utils/SelectorUtils';
-import { result, forEach, keys, isUndefined } from 'underscore';
+import { Model } from "common";
+import EditorModel from "editor/model/Editor";
+import SelectorManagerConfig from "selector_manager/config/config";
+import SelectorUtils, {
+  SelectorType
+} from "selector_manager/utils/SelectorUtils";
+import { result, forEach, keys, isUndefined } from "underscore";
+import UtilsModule from "utils";
 
 const TYPE_CLASS = 1;
 const TYPE_ID = 2;
@@ -17,9 +22,9 @@ const TYPE_ID = 2;
 export default class Selector extends Model {
   defaults() {
     return {
-      name: '',
-      label: '',
-      type: TYPE_CLASS,
+      name: "",
+      label: "",
+      type: SelectorType.class,
       active: true,
       private: false,
       protected: false,
@@ -27,45 +32,52 @@ export default class Selector extends Model {
     };
   }
 
-  initialize(props, opts = {}) {
-    const { config = {} } = opts;
-    const name = this.get('name');
-    const label = this.get('label');
+  em: EditorModel;
+
+  constructor(props = {}, opts: { config: SelectorManagerConfig }) {
+    super(props, opts);
+    const { config } = opts;
+    const name = this.get("name");
+    const label = this.get("label");
 
     if (!name) {
-      this.set('name', label);
+      this.set("name", label);
     } else if (!label) {
-      this.set('label', name);
+      this.set("label", name);
     }
 
-    const namePreEsc = this.get('name');
+    const namePreEsc = this.get("name");
     const { escapeName } = config;
     const nameEsc = escapeName
       ? escapeName(namePreEsc)
-      : Selector.escapeName(namePreEsc);
-    this.set('name', nameEsc);
+      : this.escapeName(namePreEsc);
+    this.set("name", nameEsc);
     this.em = config.em;
   }
 
+  get type() {
+    return this.get("type") as SelectorType;
+  }
+
   isId() {
-    return this.get('type') === TYPE_ID;
+    return this.type === SelectorType.id;
   }
 
   isClass() {
-    return this.get('type') === TYPE_CLASS;
+    return this.type === SelectorType.class;
   }
 
-  getFullName(opts = {}) {
+  getFullName(opts: { escape?: (n: string) => string } = {}) {
     const { escape } = opts;
-    const name = this.get('name');
-    let pfx = '';
+    const name = this.get("name");
+    let pfx = "";
 
-    switch (this.get('type')) {
-      case TYPE_CLASS:
-        pfx = '.';
+    switch (this.type) {
+      case SelectorType.class:
+        pfx = ".";
         break;
-      case TYPE_ID:
-        pfx = '#';
+      case SelectorType.id:
+        pfx = "#";
         break;
     }
 
@@ -93,7 +105,7 @@ export default class Selector extends Model {
    * // -> `My selector`
    */
   getLabel() {
-    return this.get('label');
+    return this.get("label");
   }
 
   /**
@@ -105,8 +117,8 @@ export default class Selector extends Model {
    * console.log(selector.getLabel());
    * // -> `New Label`
    */
-  setLabel(label) {
-    return this.set('label', label);
+  setLabel(label: string) {
+    return this.set("label", label);
   }
 
   /**
@@ -114,23 +126,23 @@ export default class Selector extends Model {
    * @returns {Boolean}
    */
   getActive() {
-    return this.get('active');
+    return this.get("active");
   }
 
   /**
    * Update selector active state.
    * @param {Boolean} value New active state
    */
-  setActive(value) {
-    return this.set('active', value);
+  setActive(value: boolean) {
+    return this.set("active", value);
   }
 
   toJSON(opts = {}) {
     const { em } = this;
     let obj = Model.prototype.toJSON.call(this, [opts]);
-    const defaults = result(this, 'defaults');
+    const defaults = result(this, "defaults");
 
-    if (em && em.getConfig('avoidDefaults')) {
+    if (em && em.getConfig().avoidDefaults) {
       forEach(defaults, (value, key) => {
         if (obj[key] === value) {
           delete obj[key];
@@ -154,14 +166,9 @@ export default class Selector extends Model {
 
     return obj;
   }
+  escapeName = (name: string) => {
+    return `${name}`.trim().replace(/([^a-z0-9\w-\:]+)/gi, "-");
+  };
 }
 
-Selector.prototype.idAttribute = 'name';
-
-// Type selectors: https://developer.mozilla.org/it/docs/Web/CSS/CSS_Selectors
-Selector.TYPE_CLASS = TYPE_CLASS;
-Selector.TYPE_ID = TYPE_ID;
-
-Selector.escapeName = name => {
-  return `${name}`.trim().replace(/([^a-z0-9\w-\:]+)/gi, '-');
-};
+Selector.prototype.idAttribute = "name";

@@ -14,8 +14,8 @@ export default class EditorView extends Backbone.View {
     super({ model: model });
     model.view = this;
     this.conf = model.getConfig();
-    this.pn = model.get("Panels");
-    this.cv = model.get("Canvas");
+    this.pn = model.Panels;
+    this.cv = model.Canvas;
     model.once("change:ready", () => {
       this.pn.active();
       this.pn.disableButtons();

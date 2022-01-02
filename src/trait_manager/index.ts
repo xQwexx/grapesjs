@@ -10,6 +10,7 @@ import TraitButtonView from "./view/TraitButtonView";
 import { Module } from "common/module";
 import EditorModel from "editor/model/Editor";
 import TraitManagerConfig from "./config/config";
+import Trait from "./model/Trait";
 
 const typesDef = {
   text: TraitView,
@@ -21,7 +22,7 @@ const typesDef = {
 };
 export default class TraitManagerModule extends Module<TraitManagerConfig> {
   TraitsViewer?: typeof TraitsView;
-  types: any;
+  types: { [id: string]: Trait };
 
   constructor(em: EditorModel) {
     super(em, TraitManagerConfig);
@@ -60,7 +61,7 @@ export default class TraitManagerModule extends Module<TraitManagerConfig> {
    * @param {string} name Type name
    * @param {Object} methods Object representing the trait
    */
-  addType(name: string, trait: any) {
+  addType(name: string, trait: Trait) {
     const baseView = this.getType("text");
     this.types[name] = baseView.extend(trait);
   }

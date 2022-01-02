@@ -79,7 +79,7 @@ export class PageManagerConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
     const { config } = em;
-    this.stm = em.get("StorageManager");
+    this.stm = em.StorageManager;
   }
 
   name = "PageManager";
@@ -148,7 +148,7 @@ export default class PageManagerModule extends Module<PageManagerConfig> {
 
   postLoad() {
     const { em, model } = this;
-    const um = em.get("UndoManager");
+    const um = em.UndoManager;
     um && um.add(model);
     um && um.add(this.pages);
   }

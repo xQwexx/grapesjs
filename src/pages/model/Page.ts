@@ -28,7 +28,7 @@ export default class Page extends Model {
     const frames = new Frames(frms, config);
     frames.page = this;
     this.set("frames", frames);
-    const um = em && em.get("UndoManager");
+    const um = em && em.UndoManager;
     um && um.add(frames);
   }
 
