@@ -201,7 +201,7 @@ export default Backbone.View.extend(
       const edEl = ev.el;
       const editor = em.get('Editor');
       const container = em.get('Config').el;
-      const frameEl = em.get('Canvas').getBody();
+      const frameEl = em.Canvas.getBody();
       const ppfx = this.ppfx;
       const updatedCls = `${ppfx}dropzone-active`;
       const dropzoneCls = `${ppfx}dropzone`;

@@ -86,15 +86,15 @@ export interface ICollectionModule {
 }
 
 export default abstract class CollectionModule<
-  T extends ModuleConfig
-> extends Module<T> {
+  TConf extends ModuleConfig, TModel extends any
+> extends Module<TConf> {
   cls: any[] = [];
-  protected all: any;
+  protected all: TModel;
   events: any;
 
   constructor(
     em: EditorModel,
-    confClass: { new (em: EditorModel, module: Module<T>): T },
+    confClass: { new (em: EditorModel, module: Module<TConf>): TConf },
     all: any,
     events: any
   ) {
@@ -112,7 +112,7 @@ export default abstract class CollectionModule<
   abstract render(): any;
 
   getAll() {
-    return this.all ? this.all : [];
+    return this.all;
   }
 
   getAllMap() {

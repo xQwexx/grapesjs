@@ -68,7 +68,7 @@ export default Backbone.View.extend({
     const inputEl = this.getInputEl();
     const label = inputEl.textContent;
     const em = this.em;
-    const sm = em && em.get('SelectorManager');
+    const sm = em && em.SelectorManager;
     inputEl[inputProp] = false;
     em && (em.editing = false);
 

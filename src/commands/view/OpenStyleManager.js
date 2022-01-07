@@ -64,7 +64,7 @@ export default {
   toggleSm() {
     const { target, sender } = this;
     if (sender && sender.get && !sender.get('active')) return;
-    const { componentFirst } = target.get('SelectorManager').getConfig();
+    const { componentFirst } = target.SelectorManager.getConfig();
     const selectedAll = target.getSelectedAll().length;
 
     if (selectedAll === 1 || (selectedAll > 1 && componentFirst)) {

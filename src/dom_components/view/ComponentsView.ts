@@ -48,7 +48,7 @@ export default class ComponentsView extends Backbone.View{
       };
       triggerAdd(model);
     }
-  },
+  }
 
   /**
    * Add new object to collection
@@ -66,7 +66,7 @@ export default class ComponentsView extends Backbone.View{
     const { frameView = {} } = config;
     const sameFrameView = frameView.model && model.getView(frameView.model);
     const dt =
-      opts.componentTypes || (em && em.get('DomComponents').getTypes());
+      opts.componentTypes || (em && em.DomComponents.getTypes());
     const type = model.get('type') || 'default';
     let viewObject = this.compView;
 
@@ -122,7 +122,7 @@ export default class ComponentsView extends Backbone.View{
     return rendered;
   }
 
-  resetChildren(models: Components, { previousModels = [] } = {}) {
+  resetChildren(models: Component[], { previousModels = [] } = {}) {
     this.parentEl.innerHTML = '';
     previousModels.forEach(md => this.removeChildren(md, this.collection));
     models.each(model => this.addToCollection(model));

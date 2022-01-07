@@ -16,7 +16,7 @@ export default TraitView.extend({
 
     if (command) {
       if (isString(command)) {
-        em.get('Commands').run(command);
+        em.Commands.run(command);
       } else {
         command(em.get('Editor'), model);
       }

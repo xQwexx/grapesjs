@@ -47,16 +47,13 @@ describe('E2E tests', () => {
         { classes: ['test11', 'test12', 'test13'] },
         { classes: ['test11', 'test22', 'test22'] }
       ]);
-      expect(gjs.editor.get('SelectorManager').getAll().length).toEqual(4);
+      expect(gjs.editor.SelectorManager.getAll().length).toEqual(4);
     });
 
     test('Class imported into component is the same model from main container', () => {
       var model = components.add({ classes: ['test1'] });
       var clModel = model.get('classes').at(0);
-      var clModel2 = gjs.editor
-        .get('SelectorManager')
-        .getAll()
-        .at(0);
+      var clModel2 = gjs.editor.SelectorManager.getAll().at(0);
       expect(clModel).toEqual(clModel2);
     });
 

@@ -75,7 +75,7 @@ describe('CssGenerator', () => {
     em = new Editor({});
     newCssComp = () => new CssComposer().init({ em });
 
-    cc = em.get('CssComposer');
+    cc = em.CssComposer;
     obj = new CssGenerator();
     dcomp = new DomComponents();
     comp = new Component(
@@ -276,7 +276,7 @@ describe('CssGenerator', () => {
     em.getConfig().avoidInlineStyle = 1;
     const state = 'hover';
     comp.config.avoidInlineStyle = 1;
-    em.get('SelectorManager').setState(state);
+    em.SelectorManager.setState(state);
     comp.setStyle({ color: 'red' });
     const id = comp.getId();
     const result = `#${id}:${state}{color:red;}`;
@@ -288,7 +288,7 @@ describe('CssGenerator', () => {
     const state = 'hover';
     comp.config.avoidInlineStyle = 1;
     comp.setStyle({ color: 'blue' });
-    em.get('SelectorManager').setState(state);
+    em.SelectorManager.setState(state);
     comp.setStyle({ color: 'red' });
     const id = comp.getId();
     const result = `#${id}{color:blue;}#${id}:${state}{color:red;}`;

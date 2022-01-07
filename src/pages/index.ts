@@ -139,7 +139,7 @@ export default class PageManagerModule extends Module<PageManagerConfig> {
 
   _onPageChange(m: any, page: Page, opts: any) {
     const { em } = this;
-    const lm = em.get("LayerManager");
+    const lm = em.LayerManager;
     const mainComp = page.getMainComponent();
     lm && mainComp && lm.setRoot(mainComp);
     em.trigger(evPageSelect, page, m.previous("selected"));
@@ -285,7 +285,7 @@ export default class PageManagerModule extends Module<PageManagerConfig> {
    * @example
    * const selectedPage = pageManager.getSelected();
    */
-  getSelected() {
+  getSelected(): Page {
     return this.model.get("selected");
   }
 

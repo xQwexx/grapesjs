@@ -19,7 +19,7 @@ export default {
     const { em } = this;
     const mthEv = on ? 'on' : 'off';
     if (em) {
-      const canvas = em.get('Canvas');
+      const canvas = em.Canvas;
       const body = canvas.getBody();
       const tlb = canvas.getToolbarEl();
       tlb && (tlb.style.display = on ? 'none' : '');

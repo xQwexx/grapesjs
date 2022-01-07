@@ -39,6 +39,9 @@ import DomComponentsModule from "dom_components";
 import LayerManagerModule from "navigator";
 import ModalDialogModule from "modal_dialog";
 import PageManagerModule from "pages";
+import { CssRule } from "css_composer/model/CssRule";
+import Component from "dom_components/model/Component";
+import FrameView from "canvas/view/FrameView";
 
 //@ts-ignore
 Backbone.$ = $;
@@ -333,7 +336,7 @@ export default class EditorModel extends Backbone.Model
     return this.get("DomComponents") as DomComponentsModule;
   }
   get LayerManager() {
-    return this.get("navigator") as LayerManagerModule;
+    return this.get("LayerManager") as LayerManagerModule;
   }
   get Canvas() {
     return this.get("Canvas") as CanvasModule;
@@ -528,7 +531,7 @@ export default class EditorModel extends Backbone.Model
    * @return {Array}
    * @private
    */
-  getSelectedAll(): any[] {
+  getSelectedAll() {
     return this.selected.allComponents();
   }
 
@@ -538,7 +541,7 @@ export default class EditorModel extends Backbone.Model
    * @param  {Object} [opts={}] Options, optional
    * @private
    */
-  setSelected(el?: any[], opts: any = {}) {
+  setSelected(el?: Component|HTMLElement|(Component|HTMLElement)[], opts: any = {}) {
     const { event } = opts;
     const ctrlKey = event && (event.ctrlKey || event.metaKey);
     const { shiftKey } = event || {};
@@ -701,7 +704,7 @@ export default class EditorModel extends Backbone.Model
    * @return {this}
    * @private
    */
-  setStyle(style: Object | string, opt = {}) {
+  setStyle(style: CssRule | string, opt = {}) {
     const cssc = this.CssComposer;
     cssc.clear(opt);
     cssc.getAll().add(style, opt);
@@ -968,11 +971,11 @@ export default class EditorModel extends Backbone.Model
     return this.DomComponents.getWrapper();
   }
 
-  setCurrentFrame(frameView: any) {
+  setCurrentFrame(frameView: FrameView) {
     return this.set("currentFrame", frameView);
   }
 
-  getCurrentFrame() {
+  getCurrentFrame(): FrameView {
     return this.get("currentFrame");
   }
 

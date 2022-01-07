@@ -10,8 +10,8 @@ describe('Pages', () => {
   beforeAll(() => {
     editor = new Editor({ pageManager: true });
     em = editor.getModel();
-    domc = em.get('DomComponents');
-    pm = em.get('PageManager');
+    domc = em.DomComponents;
+    pm = em.PageManager;
     pm.onLoad();
     initCmpLen = Object.keys(domc.allById()).length;
   });
@@ -121,8 +121,8 @@ describe('Pages', () => {
         }
       });
       em = editor.getModel();
-      domc = em.get('DomComponents');
-      pm = em.get('PageManager');
+      domc = em.DomComponents;
+      pm = em.PageManager;
       pm.onLoad();
       allbyId = domc.allById();
       initCmpLen = Object.keys(allbyId).length;
@@ -158,7 +158,7 @@ describe('Pages', () => {
       // Number of wrappers (eg. 3) where each one containes 1 component and 1 textnode (3 * 3)
       expect(initCmpLen).toBe(initPages.length * 3);
       // Each page contains 1 rule per component
-      expect(em.get('CssComposer').getAll().length).toBe(initPages.length);
+      expect(em.CssComposer.getAll().length).toBe(initPages.length);
     });
   });
 });
@@ -173,8 +173,8 @@ describe('Managing pages', () => {
   beforeEach(() => {
     editor = new Editor({ pageManager: true });
     em = editor.getModel();
-    domc = em.get('DomComponents');
-    pm = em.get('PageManager');
+    domc = em.DomComponents;
+    pm = em.PageManager;
     editor.getModel().loadOnStart();
     initCmpLen = Object.keys(domc.allById()).length;
   });

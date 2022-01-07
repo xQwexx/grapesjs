@@ -35,6 +35,7 @@
 import { Module } from "common/module";
 import EditorModel from "editor/model/Editor";
 import StorageManagerConfig from "./config/config";
+import IStorage from "./model/IStorage";
 import LocalStorage from "./model/LocalStorage";
 import RemoteStorage from "./model/RemoteStorage";
 
@@ -46,13 +47,13 @@ const eventError = "storage:error";
 export default class StorageManagerModule extends Module<StorageManagerConfig> {
   constructor(em: EditorModel) {
     super(em, StorageManagerConfig);
-    this.defaultStorages.remote = new RemoteStorage(this.config);
-    this.defaultStorages.local = new LocalStorage(this.config);
+    this.defaultStorages["remote"] = new RemoteStorage(this.config);
+    this.defaultStorages["local"]  = new LocalStorage(this.config);
     this.currentStorage = this.config.type;
     this.loadDefaultProviders().setCurrent(this.config.type);
   }
-  storages: { [id: string]: any } = [];
-  defaultStorages: any = {};
+  storages: { [id: string]: IStorage } = {};
+  defaultStorages: { [id: string]: IStorage } = {};
   currentStorage: string;
 
   /**
@@ -139,7 +140,7 @@ export default class StorageManagerModule extends Module<StorageManagerConfig> {
    *   }
    * });
    * */
-  add(id: string, storage: any) {
+  add(id: string, storage: IStorage) {
     this.storages[id] = storage;
     return this;
   }
@@ -187,7 +188,7 @@ export default class StorageManagerModule extends Module<StorageManagerConfig> {
    * @example
    * storageManager.store({item1: value1, item2: value2});
    * */
-  store(data: any, clb: any) {
+  store(data: { [id: string]: any }, clb?: (res?: any) => void) {
     const st = this.get(this.getCurrent());
     const toStore: any = {};
     this.onStart("store", data);
@@ -223,7 +224,7 @@ export default class StorageManagerModule extends Module<StorageManagerConfig> {
    * // res -> {item1: value1}
    * });
    * */
-  load(keys: any, clb: any) {
+  load(keys: string|string[], clb?: (res: any) => void) {
     const st = this.get(this.getCurrent());
     const keysF = [];
     let result = {};
@@ -260,8 +261,8 @@ export default class StorageManagerModule extends Module<StorageManagerConfig> {
    * @returns {Object}
    * @private
    */
-  __clearKeys(data: any = {}) {
-    const result: any = {};
+  __clearKeys(data: { [id: string]: any } = {}) {
+    const result: { [id: string]: any } = {};
     const reg = new RegExp("^" + this.config.id + "");
 
     for (let itemKey in data) {
@@ -294,7 +295,7 @@ export default class StorageManagerModule extends Module<StorageManagerConfig> {
    * On start callback
    * @private
    */
-  onStart(ctx: string, data: any) {
+  onStart(ctx: string, data: { [id: string]: any }) {
     if (this.em) {
       this.em.trigger(eventStart);
       ctx && this.em.trigger(`${eventStart}:${ctx}`, data);
@@ -305,7 +306,7 @@ export default class StorageManagerModule extends Module<StorageManagerConfig> {
    * On after callback (before passing data to the callback)
    * @private
    */
-  onAfter(ctx: string, data: any) {
+  onAfter(ctx: string, data: { [id: string]: any }) {
     if (this.em) {
       this.em.trigger(eventAfter);
       ctx && this.em.trigger(`${eventAfter}:${ctx}`, data);
@@ -316,7 +317,7 @@ export default class StorageManagerModule extends Module<StorageManagerConfig> {
    * On end callback
    * @private
    */
-  onEnd(ctx: string, data?: any) {
+  onEnd(ctx: string, data?: { [id: string]: any }) {
     if (this.em) {
       this.em.trigger(eventEnd);
       ctx && this.em.trigger(`${eventEnd}:${ctx}`, data);
@@ -327,7 +328,7 @@ export default class StorageManagerModule extends Module<StorageManagerConfig> {
    * On error callback
    * @private
    */
-  onError(ctx: string, data: any) {
+  onError(ctx: string, data: { [id: string]: any }) {
     if (this.em) {
       this.em.trigger(eventError, data);
       ctx && this.em.trigger(`${eventError}:${ctx}`, data);

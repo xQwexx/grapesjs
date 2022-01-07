@@ -39,7 +39,7 @@ describe('ClassTagsView', () => {
     view = new ClassTagsView({
       config: { em },
       collection: coll,
-      module: em.get('SelectorManager')
+      module: em.SelectorManager
     });
 
     testContext.targetStub = {
@@ -189,9 +189,9 @@ describe('ClassTagsView', () => {
   });
 
   test('Output correctly state options', done => {
-    target
-      .get('SelectorManager')
-      .setStates([{ name: 'testName', label: 'testLabel' }]);
+    target.SelectorManager.setStates([
+      { name: 'testName', label: 'testLabel' }
+    ]);
     setTimeout(() => {
       const res =
         '<option value="">- State -</option><option value="testName">testLabel</option>';

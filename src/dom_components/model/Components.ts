@@ -14,17 +14,17 @@ import {
 } from "underscore";
 import Component, { keySymbol, keySymbols } from "./Component";
 
-const getIdsToKeep = (prev?: Components, res = []) => {
+const getIdsToKeep = (prev: Components|null, res: string[] = []) => {
   const pr = prev || [];
-  pr.forEach(comp => {
+  pr?.forEach(comp => {
     res.push(comp.getId());
     getIdsToKeep(comp.components, res);
   });
   return res;
 };
 
-const getNewIds = (items: Components, res = []) => {
-  items.map(item => {
+const getNewIds = (items: Components|null, res: string[] = []) => {
+  items?.map(item => {
     res.push(item.getId());
     getNewIds(item.components, res);
   });
@@ -41,6 +41,8 @@ export default class Components extends Backbone.Collection<Component> {
   domc: DomComponentsModule;
   em: EditorModel;
   config: DomComponentsConfig;
+  parent?: Component;
+  opt: any;
 
   constructor(
     models: any,
@@ -63,15 +65,15 @@ export default class Components extends Backbone.Collection<Component> {
 
   resetChildren(models: Components, opts: removeOpts = {}) {
     const coll = this;
-    const prev = opts.previousModels || [];
-    const toRemove = prev.filter(prev => !models.get(prev.cid));
+    const prev = opts.previousModels ?? null;
+    const toRemove = prev?.filter(prev => !models.get(prev.cid));
     const newIds = getNewIds(models);
     opts.keepIds = getIdsToKeep(prev).filter(pr => newIds.indexOf(pr) >= 0);
-    toRemove.forEach(md => this.removeChildren(md, coll, opts));
+    toRemove?.forEach(md => this.removeChildren(md, coll, opts));
     models.each(model => this.onAdd(model));
   }
 
-  removeChildren(removed, coll, opts: removeOpts = {}) {
+  removeChildren(removed: Component, coll: Components, opts: any = {}) {
     // Removing a parent component can cause this function
     // to be called with an already removed child element
     if (!removed) {
@@ -86,24 +88,22 @@ export default class Components extends Backbone.Collection<Component> {
     if (!isTemp) {
       // Remove the component from the global list
       const id = removed.getId();
-      const sels = em.get("SelectorManager").getAll();
-      const rules = em.get("CssComposer").getAll();
+      const sels = em.SelectorManager.getAll();
+      const rules = em.CssComposer.getAll();
       const canRemoveStyle = (opts.keepIds || []).indexOf(id) < 0;
       delete allByID[id];
 
       // Remove all component related styles
       const rulesRemoved = canRemoveStyle
-        ? rules.remove(
-            rules.filter(r => r.getSelectors().getFullString() === `#${id}`),
-            opts
-          )
+        ? rules.filter(r => r.getSelectors().getFullString() === `#${id}`)
+            .map(r => rules.remove(r, opts))
         : [];
 
       // Clean selectors
       sels.remove(rulesRemoved.map(rule => rule.getSelectors().at(0)));
 
       if (!removed.opt.temporary) {
-        em.get("Commands").run("core:component-style-clear", {
+        em.Commands.run("core:component-style-clear", {
           target: removed
         });
         removed.removed();
@@ -111,20 +111,20 @@ export default class Components extends Backbone.Collection<Component> {
         em.trigger("component:remove", removed);
       }
 
-      const inner = removed.components();
-      inner.forEach(it => this.removeChildren(it, coll, opts));
+      const inner = removed.components;
+      inner?.forEach(it => this.removeChildren(it, coll, opts));
       // removed.empty(opts);
     }
 
     // Remove stuff registered in DomComponents.handleChanges
-    const inner = removed.components();
+    const inner = removed.components;
     em.stopListening(inner);
     em.stopListening(removed);
     em.stopListening(removed.get("classes"));
     removed.__postRemove();
   }
 
-  model(attrs: any, options: any): Component {
+  model(attrs: any, options: any): {new (attrs: any, options: any): Component} {
     const { opt } = options.collection;
     const { em } = opt;
     let model;
@@ -156,10 +156,10 @@ export default class Components extends Backbone.Collection<Component> {
     return new model(attrs, options);
   }
 
-  parseString(value: string, opt: removeOpts = {}) {
+  parseString(value: string, opt: any = {}) {
     const { em, domc } = this;
-    const cssc = em.get("CssComposer");
-    const parsed = em.get("Parser").parseHtml(value);
+    const cssc = em.CssComposer;
+    const parsed = em.Parser.parseHtml(value);
     // We need this to avoid duplicate IDs
     Component.checkId(parsed.html, parsed.css, domc.componentsById, opt);
 
@@ -175,22 +175,21 @@ export default class Components extends Backbone.Collection<Component> {
   }
   __firstAdd?: Component | Component[];
 
-  add(models: Component, opt?: removeOpts): Component;
-  add(models: (Component | string)[], opt?: removeOpts): Component[];
-  add(models: string, opt?: removeOpts): Component | Component[];
-  add(models: unknown, opt: removeOpts = {}): any {
+  add(models: Component |object, opt?: any): Component;
+  add(models: (Component | object)[]|Components, opt?: any): Component[];
+  add(models: unknown, opt: any = {}): any {
     opt.keepIds = getIdsToKeep(opt.previousModels);
 
     if (isString(models)) {
       models = this.parseString(models, opt);
     } else if (isArray(models)) {
       models = [...models];
-      (models as Component[]).forEach((item, index) => {
+      models = (models as (Component | string)[]).map(item => {
         if (isString(item)) {
           const nodes = this.parseString(item, opt);
-          (models as Component[])[index] =
-            isArray(nodes) && !nodes.length ? null : nodes;
+          return isArray(nodes) && !nodes.length ? null : nodes;
         }
+        return item;
       });
     }
 
@@ -210,10 +209,10 @@ export default class Components extends Backbone.Collection<Component> {
   /**
    * Process component definition.
    */
-  processDef(mdl: Component) {
+  private processDef(mdl: any) {
     // Avoid processing Models
     if (mdl.cid && mdl.ccid) return mdl;
-    const { em, config = {} } = this;
+    const { em, config } = this;
     const { processor } = config;
     let model = mdl;
 
@@ -271,11 +270,11 @@ export default class Components extends Backbone.Collection<Component> {
       !avoidInline &&
       em &&
       em.get &&
-      em.getConfig("forceClass") &&
+      em.getConfig().forceClass &&
       !opts.temporary
     ) {
       const name = model.cid;
-      const rule = em.get("CssComposer").setClassRule(name, style);
+      const rule = em.CssComposer.setClassRule(name, style);
       model.setStyle({});
       model.addClass(name);
     }

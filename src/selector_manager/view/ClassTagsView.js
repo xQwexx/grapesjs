@@ -79,7 +79,7 @@ export default Backbone.View.extend({
   syncStyle() {
     const { em } = this;
     const target = this.getTarget();
-    const cssC = em.get('CssComposer');
+    const cssC = em.CssComposer;
     const opts = { noDisabled: 1 };
     const selectors = this.getCommonSelectors({ opts });
     const state = em.get('state');

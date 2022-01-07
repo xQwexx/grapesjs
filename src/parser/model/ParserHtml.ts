@@ -3,6 +3,8 @@ import BrowserParserHtml from "./BrowserParserHtml";
 import ParserConfig, { IParserConfig } from "../config/config";
 import { Collection } from "backbone";
 import { EditorConfig } from "editor/config/config";
+import { ComponentType } from "dom_components";
+import Component from "dom_components/model/Component";
 export interface IComponent {
   //Component type, eg. `text`, `image`, `video`, etc.
   type: string;
@@ -85,9 +87,9 @@ const event = "parse:html";
 
 export default class ParserHtml {
   c: ParserConfig;
-  compTypes: any[] = [];
+  compTypes: ComponentType[] = [];
 
-  constructor(config: any = {}) {
+  constructor(config: ParserConfig) {
     this.c = config;
   }
   private parseAttrValue(value: string): string | boolean {
@@ -148,7 +150,7 @@ export default class ParserHtml {
    * console.log(stl);
    * // {color: 'black', width: '100px', test: 'value'}
    */
-  parseStyle(str: string): { [id: string]: string } {
+  static parseStyle(str: string): { [id: string]: string } {
     var result: { [id: string]: string } = {};
     var decls = str.split(";");
     for (var i = 0, len = decls.length; i < len; i++) {
@@ -189,7 +191,7 @@ export default class ParserHtml {
    * @return {Array<Object>}
    */
   private parseNode(el: HTMLElement, opts: any = {}) {
-    const result = [];
+    const result: any[] = [];
     const nodes = Object.values(el.childNodes) as HTMLElement[];
 
     for (var i = 0, len = nodes.length; i < len; i++) {
@@ -199,8 +201,8 @@ export default class ParserHtml {
       const nodePrev = result[result.length - 1];
       const nodeChild = node.childNodes.length;
       const ct = this.compTypes;
-      //@ts-ignore
-      let model: IComponent = {};
+      
+      let model: any = {};
 
       // Start with understanding what kind of component it is
       if (ct) {
@@ -244,7 +246,7 @@ export default class ParserHtml {
 
         // Isolate attributes
         if (nodeName == "style") {
-          model.style = this.parseStyle(nodeValue);
+          model.style = ParserHtml.parseStyle(nodeValue);
         } else if (nodeName == "class") {
           model.classes = this.parseClass(nodeValue);
         } else if (nodeName == "contenteditable") {
@@ -253,12 +255,12 @@ export default class ParserHtml {
           const modelAttr = nodeName.replace(modelAttrStart, "");
           const value = this.parseAttrValue(nodeValue);
 
-          //@ts-ignore
+
           model[modelAttr] = value;
         } else {
           // Check for attributes from props (eg. required, disabled)
           model.attributes[nodeName] = nodeValue;
-          //@ts-ignore
+
           if (nodeValue === "" && node[nodeName] === true) {
             model.attributes[nodeName] = true;
           }
@@ -353,11 +355,10 @@ export default class ParserHtml {
    * @return {Object}
    */
   parse(str: string, parserCss: any, opts: IParserConfig = {}) {
-    //@ts-ignore
     const { em } = this.c;
     opts = { ...this.c, ...opts };
     const conf = (em && em.get("Config")) || {};
-    const res: { html?: IComponent[]; css?: string } = {};
+    const res: { html?: Component[]; css?: string } = {};
     const el = isFunction(opts.parserHtml)
       ? opts.parserHtml(str, opts)
       : BrowserParserHtml(str, opts);

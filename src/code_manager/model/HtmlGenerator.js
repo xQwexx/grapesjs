@@ -8,7 +8,7 @@ export default class HTMLGenerator extends Model {
 
     // Remove unnecessary IDs
     if (opts.cleanId && em) {
-      const rules = em.get('CssComposer').getAll();
+      const rules = em.CssComposer.getAll();
       const idRules = rules
         .toJSON()
         .map(rule => {

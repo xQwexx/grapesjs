@@ -100,12 +100,10 @@ export default {
     em[method]('change:canvasOffset', this.updateAttached, this);
     em[method]('frame:updated', this.onFrameUpdated, this);
     em[method]('canvas:updateTools', this.onFrameUpdated, this);
-    em.get('Canvas')
-      .getFrames()
-      .forEach(frame => {
-        const { view } = frame;
-        view && trigger(view.getWindow(), view.getBody());
-      });
+    em.Canvas.getFrames().forEach(frame => {
+      const { view } = frame;
+      view && trigger(view.getWindow(), view.getBody());
+    });
   },
 
   /**
@@ -423,7 +421,7 @@ export default {
             keepAutoWidth
           } = config;
           toggleBodyClass('add', e, opts);
-          modelToStyle = em.get('StyleManager').getModelToStyle(model);
+          modelToStyle = em.StyleManager.getModelToStyle(model);
           canvas.toggleFramesEvents();
           const computedStyle = getComputedStyle(el);
           const modelStyle = modelToStyle.getStyle();
@@ -526,11 +524,10 @@ export default {
       if (!this.toolbar) {
         toolbarEl.innerHTML = '';
         this.toolbar = new Toolbar(toolbar);
-        const toolbarView = new ToolbarView({
-          collection: this.toolbar,
-          editor: this.editor,
-          em
-        });
+        const toolbarView = new ToolbarView(
+          this.toolbar,
+          em.Command.getConfig()
+        );
         toolbarEl.appendChild(toolbarView.render().el);
       }
 

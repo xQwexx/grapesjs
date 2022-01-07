@@ -7,7 +7,7 @@ describe('StyleManager', () => {
 
     beforeEach(() => {
       em = new Editor({});
-      obj = em.get('StyleManager');
+      obj = em.StyleManager;
     });
 
     afterEach(() => {
@@ -147,7 +147,7 @@ describe('StyleManager', () => {
             ]
           }
         });
-        obj = em.get('StyleManager');
+        obj = em.StyleManager;
         obj.onLoad();
       });
 

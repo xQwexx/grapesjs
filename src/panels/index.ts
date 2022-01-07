@@ -29,6 +29,7 @@ import { Module, ModuleConfig } from "common/module";
 import EditorModel from "editor/model/Editor";
 import PanelsConfig from "./config/config";
 import defaults from "./config/config";
+import Button from "./model/Button";
 import Panel from "./model/Panel";
 import Panels from "./model/Panels";
 import PanelsView from "./view/PanelsView";
@@ -79,7 +80,7 @@ export default class PanelsModule extends Module<PanelsConfig> {
    *  buttons  : [...],
    * });
    */
-  addPanel(panel: any) {
+  addPanel(panel: Panel) {
     return this.panels.add(panel);
   }
 
@@ -97,7 +98,7 @@ export default class PanelsModule extends Module<PanelsConfig> {
    * const newPanel = panelManager.removePanel('myNewPanel');
    *
    */
-  removePanel(panel: any) {
+  removePanel(panel: Panel|String) {
     return this.panels.remove(panel);
   }
 
@@ -143,7 +144,7 @@ export default class PanelsModule extends Module<PanelsConfig> {
    *   ...
    * }
    */
-  addButton(panelId: string, button: any) {
+  addButton(panelId: string, button: Button) {
     var pn = this.getPanel(panelId);
     return pn ? pn.get("buttons").add(button) : null;
   }
@@ -181,7 +182,7 @@ export default class PanelsModule extends Module<PanelsConfig> {
   getButton(panelId: string, id: string) {
     var pn = this.getPanel(panelId);
     if (pn) {
-      var res = pn.get("buttons").where({ id });
+      var res:Button[] = pn.get("buttons").where({ id });
       return res.length ? res[0] : null;
     }
     return null;

@@ -9,7 +9,7 @@ export default {
    * */
   startSelectPosition(trg, doc, opts = {}) {
     this.isPointed = false;
-    var utils = this.editorModel.get('Utils');
+    var utils = this.editorModel.Utils;
     const container = trg.ownerDocument.body;
 
     if (utils && !this.sorter)

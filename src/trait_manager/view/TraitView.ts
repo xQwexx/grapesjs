@@ -1,57 +1,65 @@
 import Backbone from 'backbone';
+import View from 'common/View';
+import TraitManagerConfig from 'trait_manager/config/config';
+import Trait from 'trait_manager/model/Trait';
 import { isUndefined, isString, isFunction } from 'underscore';
 import { capitalize } from 'utils/mixins';
 
 const $ = Backbone.$;
 
-export default Backbone.View.extend({
-  events: {},
-  eventCapture: ['change'],
+export default class TraitView extends View<Trait>{
+  //events: {},
+  eventCapture = ['change']
 
-  appendInput: 1,
+  appendInput = true;
 
-  attributes() {
+  /*attributes() {
     return this.model.get('attributes');
-  },
+  }*/
 
   templateLabel() {
     const { ppfx } = this;
     const label = this.getLabel();
     return `<div class="${ppfx}label" title="${label}">${label}</div>`;
-  },
+  }
 
-  templateInput() {
+  templateInput(ev?: any) {
     const { clsField } = this;
     return `<div class="${clsField}" data-input></div>`;
-  },
+  }
+  clsField: string;
+  target: Trait;
+  elInput?:HTMLElement;
+  $input?: JQuery<HTMLElement>;
+  input: any;
+  noLabel = false;
 
-  initialize(o = {}) {
-    const { config = {} } = o;
-    const { model, eventCapture } = this;
+
+  constructor(model: Trait, config: TraitManagerConfig) {
+    super(model, config);
+    const { eventCapture } = this;
     const { target } = model;
     const { type } = model.attributes;
     this.config = config;
-    this.em = config.em;
-    this.pfx = config.stylePrefix || '';
-    this.ppfx = config.pStylePrefix || '';
     this.target = target;
     const { ppfx } = this;
     this.clsField = `${ppfx}field ${ppfx}field-${type}`;
     [
       ['change:value', this.onValueChange],
       ['remove', this.removeView]
-    ].forEach(([event, clb]) => {
+    ].forEach((tuple) => {
+      const [event, clb] = tuple as [string, any];
       model.off(event, clb);
       this.listenTo(model, event, clb);
     });
     model.view = this;
     this.listenTo(model, 'change:label', this.render);
     this.listenTo(model, 'change:placeholder', this.rerender);
-    this.events = {};
+    //this.events = {};
     eventCapture.forEach(event => (this.events[event] = 'onChange'));
     this.delegateEvents();
     this.init();
-  },
+  }
 
   getClbOpts() {
     return {
@@ -59,24 +67,26 @@ export default Backbone.View.extend({
       trait: this.model,
       elInput: this.getInputElem()
     };
-  },
+  }
 
   removeView() {
     this.remove();
     this.removed();
-  },
+  }
 
-  init() {},
-  removed() {},
-  onRender() {},
-  onUpdate() {},
-  onEvent() {},
+  init() {}
+  removed() {}
+  onRender(ev: any) {}
+  onUpdate(ev: any) {}
+  onEvent(ev: any) {}
+  createInput?(ev: any): HTMLElement;
+  createLabel?(ev: any): string;
 
   /**
    * Fires when the input is changed
    * @private
    */
-  onChange(event) {
+  onChange(event: any) {
     const el = this.getInputElem();
     if (el && !isUndefined(el.value)) {
       this.model.set('value', el.value);
@@ -85,22 +95,22 @@ export default Backbone.View.extend({
       ...this.getClbOpts(),
       event
     });
-  },
+  }
 
   getValueForTarget() {
     return this.model.get('value');
-  },
+  }
 
-  setInputValue(value) {
+  setInputValue(value: any) {
     const el = this.getInputElem();
     el && (el.value = value);
-  },
+  }
 
   /**
    * On change callback
    * @private
    */
-  onValueChange(model, value, opts = {}) {
+  onValueChange(model: Trait, value: any, opts: any = {}) {
     if (opts.fromTarget) {
       this.setInputValue(model.get('value'));
       this.postUpdate();
@@ -108,7 +118,7 @@ export default Backbone.View.extend({
       const val = this.getValueForTarget();
       model.setTargetValue(val, opts);
     }
-  },
+  }
 
   /**
    * Render label
@@ -117,7 +127,7 @@ export default Backbone.View.extend({
   renderLabel() {
     const { $el, target } = this;
     const label = this.getLabel();
-    let tpl = this.templateLabel(target);
+    let tpl = this.templateLabel();
 
     if (this.createLabel) {
       tpl =
@@ -129,7 +139,7 @@ export default Backbone.View.extend({
     }
 
     $el.find('[data-label]').append(tpl);
-  },
+  }
 
   /**
    * Returns label for the input
@@ -143,14 +153,14 @@ export default Backbone.View.extend({
       em.t(`traitManager.traits.labels.${name}`) ||
       capitalize(label || name).replace(/-/g, ' ')
     );
-  },
+  }
 
   /**
    * Returns current target component
    */
   getComponent() {
     return this.target;
-  },
+  }
 
   /**
    * Returns input element
@@ -187,14 +197,14 @@ export default Backbone.View.extend({
       this.$input = input;
     }
     return this.$input.get(0);
-  },
+  }
 
   getInputElem() {
     const { input, $input } = this;
     return (
       input || ($input && $input.get && $input.get(0)) || this.getElInput()
     );
-  },
+  }
 
   getModelValue() {
     let value;
@@ -210,11 +220,11 @@ export default Backbone.View.extend({
     }
 
     return !isUndefined(value) ? value : '';
-  },
+  }
 
   getElInput() {
     return this.elInput;
-  },
+  }
 
   /**
    * Renders input
@@ -234,35 +244,35 @@ export default Backbone.View.extend({
 
     if (isString(tpl)) {
       el.innerHTML = tpl;
-      this.elInput = el.firstChild;
+      this.elInput = el.firstChild as HTMLElement ?? undefined;
     } else {
       appendInput ? el.appendChild(tpl) : el.insertBefore(tpl, el.firstChild);
       this.elInput = tpl;
     }
 
     model.el = this.elInput;
-  },
+  }
 
   hasLabel() {
     const { label } = this.model.attributes;
     return !this.noLabel && label !== false;
-  },
+  }
 
   rerender() {
     this.model.el = null;
     this.render();
-  },
+  }
 
   postUpdate() {
     this.onUpdate(this.getClbOpts());
-  },
+  }
 
   render() {
     const { $el, pfx, ppfx, model } = this;
     const { type, id } = model.attributes;
     const hasLabel = this.hasLabel && this.hasLabel();
     const cls = `${pfx}trait`;
-    this.$input = null;
+    this.$input = undefined;
     let tmpl = `<div class="${cls} ${cls}--${type}">
       ${hasLabel ? `<div class="${ppfx}label-wrp" data-label></div>` : ''}
       <div class="${ppfx}field-wrp ${ppfx}field-wrp--${type}" data-input>
@@ -283,4 +293,4 @@ export default Backbone.View.extend({
     this.onRender(this.getClbOpts());
     return this;
   }
-});
+};

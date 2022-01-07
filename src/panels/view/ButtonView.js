@@ -47,7 +47,7 @@ export default Backbone.View.extend({
       );
     }
 
-    if (em && em.get) this.commands = em.get('Commands');
+    if (em && em.get) this.commands = em.Commands;
   },
 
   /**

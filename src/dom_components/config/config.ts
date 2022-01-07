@@ -1,4 +1,6 @@
 import { Module, ModuleConfig } from "common/module";
+import Component from "dom_components/model/Component";
+import Components from "dom_components/model/Components";
 import EditorModel from "editor/model/Editor";
 
 export default class DomComponentsConfig extends ModuleConfig {
@@ -23,7 +25,7 @@ export default class DomComponentsConfig extends ModuleConfig {
   stm?: any;
 
   // Could be used for default components
-  components = [];
+  components: Component[] = [];
 
   // If the component is draggable you can drag the component itself (not only from the toolbar)
   draggableComponents = 1;
@@ -54,7 +56,7 @@ export default class DomComponentsConfig extends ModuleConfig {
    *  }
    * }
    */
-  processor = 0;
+  processor?: (obj: any) => object;
 
   // List of HTML void elements
   // https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#void-elements

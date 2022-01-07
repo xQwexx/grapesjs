@@ -5,17 +5,16 @@ import { Model } from "backbone";
 import EditorModel, { IEditorModel } from "editor/model/Editor";
 import Selectors from "selector_manager/model/Selectors";
 
-const parseStyle = new ParserHtml().parseStyle;
-
 interface IStyleable {
   style: { [id: string]: string };
   selectors: Selectors;
   classes: Selectors;
 }
 
-interface IStyleOps {
+type IStyleOps = {
   important?: string[];
   props?: { [id: string]: string };
+  inline?: boolean
 }
 
 export default class Styleable extends Model implements IStyleable {
@@ -68,8 +67,9 @@ export default class Styleable extends Model implements IStyleable {
    * @return {Object} Applied properties
    */
   setStyle(prop = {}, opts = {}) {
+
     if (isString(prop)) {
-      prop = parseStyle(prop);
+      prop = this.em?.Parser.parseStyle(prop) ?? {};
     }
 
     const propOrig = this.getStyle(opts);

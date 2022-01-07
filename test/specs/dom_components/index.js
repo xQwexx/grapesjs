@@ -53,12 +53,12 @@ describe('DOM Components', () => {
       em = new Editor({
         avoidInlineStyle: 1
       });
-      em.get('PageManager').onLoad();
+      em.PageManager.onLoad();
       config = {
         em,
         storeWrapper: 1
       };
-      obj = em.get('DomComponents');
+      obj = em.DomComponents;
       // obj = new DomComponents().init(config);
     });
 
@@ -91,7 +91,7 @@ describe('DOM Components', () => {
       (em.getHtml = () => {
         return 'testHtml';
       }),
-        (obj = em.get('DomComponents').init(config));
+        (obj = em.DomComponents.init(config));
       var expected = {
         html: 'testHtml',
         components: JSON.stringify(obj.getWrapper())
@@ -154,8 +154,8 @@ describe('DOM Components', () => {
     });
 
     test('Import propertly components and styles with the same ids', () => {
-      obj = em.get('DomComponents');
-      const cc = em.get('CssComposer');
+      obj = em.DomComponents;
+      const cc = em.CssComposer;
       const id = 'idtest';
       const comp = obj.addComponent(`
       <div id="${id}" style="color:red; padding: 50px 100px">Text</div>
@@ -178,7 +178,7 @@ describe('DOM Components', () => {
     });
 
     test('Add new component type with simple model', () => {
-      obj = em.get('DomComponents');
+      obj = em.DomComponents;
       const id = 'test-type';
       const testProp = 'testValue';
       const initialTypes = obj.componentTypes.length;
@@ -197,7 +197,7 @@ describe('DOM Components', () => {
     });
 
     test('Add new component type with custom isComponent', () => {
-      obj = em.get('DomComponents');
+      obj = em.DomComponents;
       const id = 'test-type';
       const testProp = 'testValue';
       obj.addType(id, {
@@ -213,7 +213,7 @@ describe('DOM Components', () => {
     });
 
     test('Extend component type with custom model and view', () => {
-      obj = em.get('DomComponents');
+      obj = em.DomComponents;
       const id = 'image';
       const testProp = 'testValue';
       const initialTypes = obj.getTypes().length;
@@ -238,7 +238,7 @@ describe('DOM Components', () => {
     });
 
     test('Add new component type by extending another one, without isComponent', () => {
-      obj = em.get('DomComponents');
+      obj = em.DomComponents;
       const id = 'test-type';
       const testProp = 'testValue';
       obj.addType(id, {
@@ -259,7 +259,7 @@ describe('DOM Components', () => {
     });
 
     test('Add new component type by extending another one, with custom isComponent', () => {
-      obj = em.get('DomComponents');
+      obj = em.DomComponents;
       const id = 'test-type';
       const testProp = 'testValue';
       obj.addType(id, {

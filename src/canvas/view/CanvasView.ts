@@ -1,6 +1,10 @@
-import Backbone, { View } from "backbone";
+import Backbone from "backbone";
 import CanvasConfig from "canvas/config/config";
+import Canvas from "canvas/model/Canvas";
 import Frames from "canvas/model/Frames";
+import View from "common/View";
+import Component from "dom_components/model/Component";
+import Components from "dom_components/model/Components";
 import { HtmlType } from "parser/config/config";
 import { bindAll } from "underscore";
 import {
@@ -13,14 +17,21 @@ import {
   getUiClass
 } from "utils/mixins";
 import FramesView from "./FramesView";
+import FrameView from "./FrameView";
 
 const $ = Backbone.$;
-let timerZoom;
 
-export default class CanvasView extends Backbone.View {
-  events = {
+type Offset = {
+  top: number,
+  left: number,
+  width: number,
+  height: number
+}
+export default class CanvasView extends View<Canvas> {
+  events(){ return {
     wheel: "onWheel"
   };
+}
 
   template() {
     const { pfx } = this;
@@ -29,26 +40,17 @@ export default class CanvasView extends Backbone.View {
       <div id="${pfx}tools" class="${pfx}canvas__tools" data-tools></div>
     `;
   }
-  config: CanvasConfig;
-  get em() {
-    return this.config.em || {};
-  }
-  pfx;
-  ppfx;
-  frames?: Frames;
 
-  constructor(o: any = {}) {
-    super(o);
-    this.config = o.config || {};
-  }
+  frames?: FramesView;
+  frame?: FrameView;
+  timerZoom?: NodeJS.Timeout;
+  ready = false;
+  className: string;
 
-  initialize(o) {
+  constructor(model: Canvas, config: CanvasConfig) {
+    super(model, config);
     bindAll(this, "clearOff", "onKeyPress", "onCanvasMove");
-    const { model } = this;
-    this.config = o.config || {};
-    this.pfx = this.config.stylePrefix || "";
-    this.ppfx = this.config.pStylePrefix || "";
-    this.className = this.config.stylePrefix + "canvas";
+    this.className = this.pfx + "canvas";
     const { em } = this;
     this._initFrames();
     this.listenTo(em, "change:canvasOffset", this.clearOff);
@@ -66,8 +68,8 @@ export default class CanvasView extends Backbone.View {
   _initFrames() {
     const { frames, model, config, em } = this;
     const collection = model.get("frames");
-    em.set("readyCanvas", 0);
-    collection.once("loaded:all", () => em.set("readyCanvas", 1));
+    em.set("readyCanvas", false);
+    collection.once("loaded:all", () => em.set("readyCanvas", true));
     frames?.remove();
     this.frames = new FramesView({
       collection,
@@ -78,7 +80,7 @@ export default class CanvasView extends Backbone.View {
     });
   }
 
-  checkSelected(component, opts: { scroll: boolean }) {
+  checkSelected(component: Component, opts: { scroll: boolean }) {
     const { scroll } = opts;
     const currFrame = this.em.get("currentFrame");
 
@@ -89,71 +91,76 @@ export default class CanvasView extends Backbone.View {
   }
 
   remove() {
-    this.frames.remove();
-    this.frames = {};
+    this.frames?.remove();
+    this.frames = undefined;
     Backbone.View.prototype.remove.apply(this, arguments);
     this.toggleListeners();
+    return this;
   }
 
-  preventDefault(ev) {
+  preventDefault(ev?: Event) {
     if (ev) {
       ev.preventDefault();
-      ev._parentEvent && ev._parentEvent.preventDefault();
+      ev.stopPropagation();
     }
   }
 
-  onCanvasMove(ev) {
+  onCanvasMove(ev: any) {
     // const data = { x: ev.clientX, y: ev.clientY };
-    // const data2 = this.em.get('Canvas').getMouseRelativeCanvas(ev);
-    // const data3 = this.em.get('Canvas').getMouseRelativePos(ev);
+    // const data2 = this.em.Canvas.getMouseRelativeCanvas(ev);
+    // const data3 = this.em.Canvas.getMouseRelativePos(ev);
     // this.em.trigger('canvas:over', data, data2, data3);
   }
 
-  toggleListeners(enable: boolean) {
-    const { el } = this;
+  toggleListeners(enable: boolean = false) {
+    //const { el } = this;
     const fn = enable ? on : off;
     fn(document, "keypress", this.onKeyPress);
     fn(window, "scroll resize", this.clearOff);
     // fn(el, 'mousemove dragover', this.onCanvasMove);
   }
 
-  onKeyPress(ev) {
+  onKeyPress(ev: KeyboardEvent) {
     const { em } = this;
     const key = getKeyChar(ev);
 
     if (
       key === " " &&
       em.getZoomDecimal() !== 1 &&
-      !em.get("Canvas").isInputFocused()
+      !em.Canvas.isInputFocused()
     ) {
       this.preventDefault(ev);
       em.get("Editor").runCommand("core:canvas-move");
     }
   }
 
-  onWheel(ev) {
-    if ((ev.ctrlKey || ev.metaKey) && this.em.getConfig("multiFrames")) {
+  onWheel(ev: WheelEvent) {
+    if ((ev.ctrlKey || ev.metaKey) && this.em.getConfig().multiFrames) {
       this.preventDefault(ev);
       const { model } = this;
+      //@ts-ignore  https://stackoverflow.com/questions/54258968/how-to-fix-property-wheeldelta-does-not-exist-on-type-wheelevent-while-u
       const delta = Math.max(-1, Math.min(1, ev.wheelDelta || -ev.detail));
       const zoom = model.get("zoom");
       model.set("zoom", zoom + delta * 2);
     }
   }
 
-  updateFrames(ev) {
+  updateFrames(ev: Event) {
     const { em, model } = this;
     const { x, y } = model.attributes;
     const zoom = this.getZoom();
     const defOpts = { preserveSelected: 1 };
     const mpl = zoom ? 1 / zoom : 1;
+    if (this.framesArea)
+    {
     this.framesArea.style.transform = `scale(${zoom}) translate(${x *
       mpl}px, ${y * mpl}px)`;
+    }
     this.clearOff();
     em.stopDefault(defOpts);
     em.trigger("canvas:update", ev);
-    timerZoom && clearTimeout(timerZoom);
-    timerZoom = setTimeout(() => em.runDefault(defOpts), 300);
+    this.timerZoom && clearTimeout(this.timerZoom);
+    this.timerZoom = setTimeout(() => em.runDefault(defOpts), 300);
   }
 
   getZoom() {
@@ -184,26 +191,27 @@ export default class CanvasView extends Backbone.View {
    * @param  {HTMLElement} el
    * @return {Object}
    */
-  offset(el: HTMLElement, opts: { noScroll: boolean }) {
+  offset(el?: Element, opts: { noScroll?: boolean } = {}) {
     const rect = getElRect(el);
-    const docBody = el.ownerDocument.body;
+    const docBody = el?.ownerDocument.body;
     const { noScroll } = opts;
 
     return {
-      top: rect.top + (noScroll ? 0 : docBody.scrollTop),
-      left: rect.left + (noScroll ? 0 : docBody.scrollLeft),
+      top: rect.top + ((noScroll || !docBody) ? 0 : docBody.scrollTop),
+      left: rect.left + ((noScroll || !docBody) ? 0 : docBody.scrollLeft),
       width: rect.width,
       height: rect.height
     };
   }
-
+  frmOff?: Offset;
+  cvsOff?: Offset;
   /**
    * Cleare cached offsets
    * @private
    */
   clearOff() {
-    this.frmOff = null;
-    this.cvsOff = null;
+    this.frmOff = undefined;
+    this.cvsOff = undefined;
   }
 
   /**
@@ -211,9 +219,9 @@ export default class CanvasView extends Backbone.View {
    * @return {Object}
    * @private
    */
-  getFrameOffset(el: HTMLElement) {
+  getFrameOffset(el?: HTMLElement) {
     if (!this.frmOff || el) {
-      const frame = this.frame.el;
+      const frame = this.frame?.el;
       const winEl = el && el.ownerDocument.defaultView;
       const frEl = winEl ? winEl.frameElement : frame;
       this.frmOff = this.offset(frEl || frame);
@@ -237,7 +245,7 @@ export default class CanvasView extends Backbone.View {
    * @return {Object}
    * @private
    */
-  getElementPos(el: HTMLElement, opts: { avoidFrameOffset: boolean }) {
+  getElementPos(el: HTMLElement, opts?: { avoidFrameOffset?: boolean }) {
     const zoom = this.getZoom();
     var opt = opts || {};
     var frmOff = this.getFrameOffset(el);
@@ -265,7 +273,7 @@ export default class CanvasView extends Backbone.View {
     if (!el || isTextNode(el)) return {};
     const result: { [id: string]: number } = {};
     const styles = window.getComputedStyle(el);
-    [
+    const props: (keyof CSSStyleDeclaration)[] =[
       "marginTop",
       "marginRight",
       "marginBottom",
@@ -274,8 +282,11 @@ export default class CanvasView extends Backbone.View {
       "paddingRight",
       "paddingBottom",
       "paddingLeft"
-    ].forEach(offset => {
-      result[offset] = parseFloat(styles[offset]) * this.getZoom();
+    ]
+    props.forEach(offset => {
+      const a = styles[offset]
+      //@ts-ignore
+      result[offset as string] = parseFloat(styles[offset]) * this.getZoom();
     });
 
     return result;
@@ -287,7 +298,7 @@ export default class CanvasView extends Backbone.View {
    * @private
    */
   getPosition(opts = {}) {
-    const doc = this.frame.el.contentDocument;
+    const doc = this.frame?.el.contentDocument;
     if (!doc) return;
     const bEl = doc.body;
     const zoom = this.getZoom();
@@ -357,15 +368,28 @@ export default class CanvasView extends Backbone.View {
   _renderFrames() {
     if (!this.ready) return;
     const { model, frames, em, framesArea } = this;
-    const frms = model.get("frames");
+    const frms = model.frames;
     frms.listenToLoad();
-    frames.render();
+    frames?.render();
     const mainFrame = frms.at(0);
     const currFrame = mainFrame && mainFrame.view;
-    em.setCurrentFrame(currFrame);
-    framesArea && framesArea.appendChild(frames.el);
+    currFrame && em.setCurrentFrame(currFrame);
+    framesArea && frames && framesArea.appendChild(frames.el);
     this.frame = currFrame;
   }
+
+  framesArea?: HTMLElement;
+  toolsWrapper?: HTMLElement;
+  hlEl?: HTMLElement|null;                         
+  badgeEl?: HTMLElement|null;                      
+  placerEl?: HTMLElement|null;                     
+  ghostEl?: HTMLElement|null;                      
+  toolbarEl?: HTMLElement|null;                    
+  resizerEl?: HTMLElement|null;                    
+  offsetEl?: HTMLElement|null;                     
+  fixedOffsetEl?: HTMLElement|null;               
+  toolsGlobEl?: HTMLElement|null;                  
+  toolsEl?: Element|null; 
 
   render() {
     const { el, $el, ppfx, config, em } = this;
@@ -403,7 +427,7 @@ export default class CanvasView extends Backbone.View {
     this.toolsGlobEl = el.querySelector(`.${ppfx}tools-gl`);
     this.toolsEl = toolsEl;
     this.el.className = getUiClass(em, this.className);
-    this.ready = 1;
+    this.ready = true;
     this._renderFrames();
 
     return this;

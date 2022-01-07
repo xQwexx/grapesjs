@@ -8,15 +8,16 @@ export default class Traits extends Backbone.Collection<Trait> {
   model = Trait;
 
   em: EditorModel;
-  target;
-  initialize(coll, options = {}) {
+  target?: string;
+  constructor(coll: any, options:any = {}) {
+    super(coll, options)
     this.em = options.em || "";
     this.listenTo(this, "add", this.handleAdd);
     this.listenTo(this, "reset", this.handleReset);
   }
 
-  handleReset(coll, { previousModels = [] } = {}) {
-    previousModels.forEach(model => model.trigger("remove"));
+  handleReset(coll: Traits, o: { previousModels?:Trait[] } = {}) {
+    o.previousModels?.forEach(model => model.trigger("remove"));
   }
 
   handleAdd(model: Trait) {
@@ -31,8 +32,9 @@ export default class Traits extends Backbone.Collection<Trait> {
     this.target = target;
   }
 
-  add(models, opt) {
+  add(models:string| string[]|Trait[], opt ={}) {
     const em = this.em;
+    const result: Trait[] = []
 
     // Use TraitFactory if necessary
     if (isString(models) || isArray(models)) {
@@ -41,17 +43,17 @@ export default class Traits extends Backbone.Collection<Trait> {
       const tf = TraitFactory(tmOpts);
 
       if (isString(models)) {
-        models = [models];
+        models = [models as string];
       }
 
       for (var i = 0, len = models.length; i < len; i++) {
         const str = models[i];
-        const model = isString(str) ? tf.build(str)[0] : str;
+        const model = isString(str) ? tf.build(str as string)[0] : str as Trait;
         model.target = this.target;
-        models[i] = model;
+        result[i] = model;
       }
     }
 
-    return Backbone.Collection.prototype.add.apply(this, [models, opt]);
+    return Backbone.Collection.prototype.add.apply(this, [result, opt]);
   }
 }

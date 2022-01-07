@@ -1,11 +1,13 @@
 import Backbone from 'backbone';
 import fetch from 'utils/fetch';
 import { isUndefined, isFunction } from 'underscore';
+import { any } from 'promise-polyfill';
+import IStorage from './IStorage';
 
-export default Backbone.Model.extend({
-  fetch,
+export default class RemoteStorage extends Backbone.Model implements IStorage{
+  //fetch = fetch;
 
-  defaults: {
+  defaults(){ return{
     urlStore: '',
     urlLoad: '',
     params: {},
@@ -14,7 +16,7 @@ export default Backbone.Model.extend({
     contentTypeJson: false,
     credentials: 'include',
     fetchOptions: ''
-  },
+  }}
 
   /**
    * Triggered before the request is started
@@ -24,7 +26,7 @@ export default Backbone.Model.extend({
     const em = this.get('em');
     const before = this.get('beforeSend');
     before && before();
-  },
+  }
 
   /**
    * Triggered on request error
@@ -32,7 +34,7 @@ export default Backbone.Model.extend({
    * @param  {Function} [clbErr] Error callback
    * @private
    */
-  onError(err, clbErr) {
+  onError(err: any, clbErr?: (err: any) => void) {
     if (clbErr) {
       clbErr(err);
     } else {
@@ -40,14 +42,14 @@ export default Backbone.Model.extend({
       console.error(err);
       em && em.trigger('storage:error', err);
     }
-  },
+  }
 
   /**
    * Triggered on request response
    * @param  {string} text Response text
    * @private
    */
-  onResponse(text, clb) {
+  onResponse(text: string, clb?:(res: any) => void) {
     const em = this.get('em');
     const complete = this.get('onComplete');
     const typeJson = this.get('contentTypeJson');
@@ -55,22 +57,22 @@ export default Backbone.Model.extend({
     const res = typeJson && parsable ? JSON.parse(text) : text;
     complete && complete(res);
     clb && clb(res);
-    em && em.trigger('storage:response', res);
-  },
+    em?.trigger('storage:response', res);
+  }
 
-  store(data, clb, clbErr) {
-    const body = {};
+  store(data: {[id: string]:string}, clb?:(res: any) => void, clbErr?: (err: any) => void) {
+    const body:{[id: string]:string} = {};
 
     for (let key in data) {
       body[key] = data[key];
     }
 
     this.request(this.get('urlStore'), { body }, clb, clbErr);
-  },
+  }
 
-  load(keys, clb, clbErr) {
+  load(keys:string[], clb?:(res: any) => void, clbErr?: (err: any) => void) {
     this.request(this.get('urlLoad'), { method: 'get' }, clb, clbErr);
-  },
+  }
 
   /**
    * Execute remote request
@@ -80,14 +82,14 @@ export default Backbone.Model.extend({
    * @param  {Function} [clbErr=null] Error callback
    * @private
    */
-  request(url, opts = {}, clb = null, clbErr = null) {
+  request(url: string, opts: any = {}, clb?:(res: any) => void, clbErr?: (err: any) => void) {
     const typeJson = this.get('contentTypeJson');
     const headers = this.get('headers') || {};
     const params = this.get('params');
     const reqHead = 'X-Requested-With';
     const typeHead = 'Content-Type';
     const bodyObj = opts.body || {};
-    let fetchOptions;
+    let fetchOptions: any;
     let body;
 
     for (let param in params) {
@@ -117,7 +119,7 @@ export default Backbone.Model.extend({
     fetchOptions = {
       method: opts.method || 'post',
       credentials: this.get('credentials'),
-      headers
+      headers,
     };
 
     // Body should only be included on POST method
@@ -131,16 +133,16 @@ export default Backbone.Model.extend({
       : fetchOptions;
 
     this.onStart();
-    this.fetch(url, {
+    fetch(url, {
       ...fetchOptions,
       ...(addOpts || {})
     })
-      .then(res =>
+      ?.then((res: any) =>
         ((res.status / 200) | 0) == 1
           ? res.text()
-          : res.text().then(text => Promise.reject(text))
+          : res.text().then((text: any) => Promise.reject(text))
       )
       .then(text => this.onResponse(text, clb))
-      .catch(err => this.onError(err, clbErr));
+      .catch((err: any) => this.onError(err, clbErr));
   }
-});
+};

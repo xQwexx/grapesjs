@@ -141,7 +141,7 @@ export default PropertyCompositeView.extend({
     const { em } = this;
     const { skipAdd = 1 } = opts;
     const selected = em.getSelected();
-    const targetAlt = em.get('StyleManager').getModelToStyle(selected, {
+    const targetAlt = em.StyleManager.getModelToStyle(selected, {
       skipAdd,
       useClasses: 1
     });
@@ -156,12 +156,9 @@ export default PropertyCompositeView.extend({
     const { em, model } = this;
     const property = model.get('property');
     const isValid = opts.isValid || (rule => rule.getStyle()[property]);
-    const targetsDevice = em
-      .get('CssComposer')
-      .getAll()
-      .filter(
-        rule => rule.getSelectorsString() === target.getSelectorsString()
-      );
+    const targetsDevice = em.CssComposer.getAll().filter(
+      rule => rule.getSelectorsString() === target.getSelectorsString()
+    );
     const map = targetsDevice.reduce((acc, rule) => {
       acc[rule.getAtRule()] = rule;
       return acc;

@@ -1,4 +1,6 @@
+import FrameView from "canvas/view/FrameView";
 import { Collection, Model } from "common";
+import Component from "dom_components/model/Component";
 import EditorModel from "editor/model/Editor";
 import Page from "pages/model/Page";
 import { result, forEach, isEmpty, isString } from "underscore";
@@ -83,7 +85,7 @@ export default class Frame extends Model {
 
   em: EditorModel;
   page?: Page;
-  view?: any;
+  view?: FrameView;
   //collection: Collection<Frame>
 
   onRemove() {
@@ -97,7 +99,7 @@ export default class Frame extends Model {
     this.set("changesCount", this.get("changesCount") + 1);
   }
 
-  getComponent() {
+  getComponent(): Component {
     return this.get("component");
   }
 
@@ -110,7 +112,7 @@ export default class Frame extends Model {
   }
 
   remove() {
-    this.view = 0;
+    this.view = undefined;
     const coll = this.collection;
     return coll && coll.remove(this);
   }

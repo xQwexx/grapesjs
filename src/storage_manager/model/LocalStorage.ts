@@ -1,27 +1,29 @@
 import { Model } from 'backbone';
 import { hasWin } from 'utils/mixins';
+import IStorage from './IStorage';
 
-export default Model.extend({
-  defaults: {
+export default class LocalStorage extends Model implements IStorage{
+  defaults(){ return{
     checkLocal: true
-  },
+  }
+}
 
   /**
    * @private
    */
-  store(data, clb = () => {}) {
+  store(data: {[id: string]: string}, clb?: () => void) {
     if (this.hasLocal()) {
       for (let key in data) localStorage.setItem(key, data[key]);
     }
 
     clb && clb();
-  },
+  }
 
   /**
    * @private
    */
-  load(keys, clb = () => {}) {
-    const result = {};
+  load(keys: string[], clb = (result:{[id: string]: string}) => {}) {
+    const result: {[id: string]: string} = {};
 
     if (this.hasLocal()) {
       for (let i = 0, len = keys.length; i < len; i++) {
@@ -33,17 +35,17 @@ export default Model.extend({
     clb && clb(result);
 
     return result;
-  },
+  }
 
   /**
    * @private
    */
-  remove(keys) {
+  remove(keys: string[]) {
     if (!this.hasLocal()) return;
 
     for (let i = 0, len = keys.length; i < len; i++)
       localStorage.removeItem(keys[i]);
-  },
+  }
 
   /**
    * Check storage environment
@@ -59,4 +61,4 @@ export default Model.extend({
 
     return true;
   }
-});
+};

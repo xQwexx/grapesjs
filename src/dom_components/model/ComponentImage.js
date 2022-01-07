@@ -43,7 +43,7 @@ export default Component.extend(
       const em = this.em;
 
       if (em) {
-        var cmd = em.get('Commands');
+        var cmd = em.Commands;
         var cmdName = 'image-editor';
 
         // Add Image Editor button only if the default command exists

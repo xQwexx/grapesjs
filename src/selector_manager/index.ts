@@ -84,6 +84,8 @@ import ClassTagsView from "./view/ClassTagsView";
 import EditorModel from "editor/model/Editor";
 import SelectorManagerConfig from "./config/config";
 import SelectorUtils, { SelectorType } from "./utils/SelectorUtils";
+import Components from "dom_components/model/Components";
+import Component from "dom_components/model/Component";
 
 const isId = (str: any) => isString(str) && str[0] == "#";
 const isClass = (str: any) => isString(str) && str[0] == ".";
@@ -107,8 +109,8 @@ const events = {
   custom: evCustom
 };
 
-export default class SelectorManagerCollectionModule extends CollectionModule<
-  SelectorManagerConfig
+export default class SelectorManagerModule extends CollectionModule<
+  SelectorManagerConfig, Selectors
 > {
   selectorTags: any;
   states: Collection;
@@ -166,7 +168,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
   // postLoad() {
   //   this.__postLoad();
   //   const { em, model } = this;
-  //   const um = em.get('UndoManager');
+  //   const um = em.UndoManager;
   //   um && um.add(model);
   //   um && um.add(this.pages);
   // },
@@ -219,7 +221,7 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
     const selector = cname ? this.get(cname, props.type) : all.where(props)[0];
 
     if (!selector) {
-      return all.add(props, { ...cOpts, config });
+      return all.add(props, { ...cOpts, config: config });
     }
 
     return selector;
@@ -249,7 +251,9 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
    * const selector = selectorManager.add('.my-class');
    * console.log(selector.toString()) // `.my-class`
    * */
-  add(props: any, opts = {}) {
+  add(props: any, opts?: any): Selector
+  add(props: any[], opts?: any): Selector[]
+  add(props: unknown, opts = {}) {
     const cOpts = isString(props) ? {} : opts;
     // Keep support for arrays but avoid it in docs
     if (isArray(props)) {
@@ -429,10 +433,6 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
     return this.getConfig().componentFirst;
   }
 
-  getConfig() {
-    return super.getConfig() as SelectorManagerConfig;
-  }
-
   /**
    * Get all selectors
    * @name getAll
@@ -490,14 +490,14 @@ export default class SelectorManagerCollectionModule extends CollectionModule<
     return this.__getCommonSelectors(this.em.getSelectedAll());
   }
 
-  __getCommonSelectors(components: any[], opts = {}) {
+  __getCommonSelectors(components: Component[], opts = {}) {
     const selectors = components
       .map(cmp => cmp.getSelectors && cmp.getSelectors().getValid(opts))
       .filter(Boolean);
     return this.__common(...selectors);
   }
 
-  __common(...args: any[]): any[] {
+  __common(...args: any[]): Selector[] {
     if (!args.length) return [];
     if (args.length === 1) return args[0];
     if (args.length === 2)

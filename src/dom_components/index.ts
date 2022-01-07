@@ -27,7 +27,7 @@
  *
  * @module DomComponents
  */
-import Backbone from "backbone";
+import Backbone, { Model, View } from "backbone";
 import { isEmpty, isObject, isArray, result } from "underscore";
 import defaults from "./config/config";
 import Component from "./model/Component";
@@ -176,13 +176,19 @@ var componentTypes = [
     view: ComponentView
   }
 ];
+
+export type ComponentType =   {
+  id: string,
+  model: Component,
+  view: View
+}
 export default class DomComponentsModule extends Module<DomComponentsConfig>
   implements IStorableModule {
   Component = Component;
   component: any;
 
   componentsById: { [id: string]: Component } = {};
-  componentTypes: any[];
+  componentTypes: ComponentType[];
   componentView: any;
   constructor(em: EditorModel) {
     super(em, DomComponentsConfig);
@@ -363,9 +369,9 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    * // Remove comp2
    * wrapperChildren.remove(comp2);
    */
-  getComponents(): any {
+  getComponents() {
     const wrp = this.getWrapper();
-    return wrp && wrp.get("components");
+    return wrp && wrp.get("components") as Components;
   }
 
   /**
@@ -397,7 +403,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    *   attributes: { title: 'here' }
    * });
    */
-  addComponent(component: any, opt = {}) {
+  addComponent(component: object|Component|(object|Component)[], opt = {}) {
     return this.getComponents().add(component, opt);
   }
 
@@ -417,7 +423,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    * @return {this}
    */
   clear(opts = {}) {
-    (this.getComponents() as any[]).map(i => i).forEach(i => i.remove(opts));
+    this.getComponents().map(i => i).forEach(i => i.remove(opts));
     return this;
   }
 
@@ -428,7 +434,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    * @return {this}
    * @private
    */
-  setComponents(components: any, opt = {}) {
+  setComponents(components: Component[]|Component, opt = {}) {
     this.clear(opt).addComponent(components, opt);
   }
 
@@ -457,7 +463,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
       ? extendType
       : compType
       ? compType
-      : this.getType("default");
+      : this.getType("default") as ComponentType;
     const modelToExt = typeToExtend.model;
     const viewToExt = extendViewType ? extendViewType.view : typeToExtend.view;
 
@@ -556,7 +562,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
     return this.componentTypes;
   }
 
-  selectAdd(component: any, opts = {}) {
+  selectAdd(component: Component, opts = {}) {
     if (component) {
       component.set({
         status: "selected"
@@ -567,7 +573,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
     }
   }
 
-  selectRemove(component: any, opts = {}) {
+  selectRemove(component: Component, opts = {}) {
     if (component) {
       const { em } = this;
       component.set({

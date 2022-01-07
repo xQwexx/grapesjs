@@ -38,7 +38,7 @@ describe('Symbols', () => {
         return attr;
       }
     });
-  const getUm = cmp => cmp.em.get('UndoManager');
+  const getUm = cmp => cmp.em.UndoManager;
   const getInnerComp = (cmp, i = 0) => cmp.components().at(i);
   const getFirstInnSymbol = cmp => getInnerComp(cmp).__getSymbol();
   const getInnSymbol = (cmp, i = 0) => getInnerComp(cmp, i).__getSymbol();
@@ -55,10 +55,7 @@ describe('Symbols', () => {
 
   beforeAll(() => {
     editor = new Editor({ symbols: 1 });
-    editor
-      .getModel()
-      .get('PageManager')
-      .onLoad();
+    editor.getModel().PageManager.onLoad();
     wrapper = editor.getWrapper();
   });
 

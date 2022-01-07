@@ -1,3 +1,6 @@
+import Component from 'dom_components/model/Component';
+import Components from 'dom_components/model/Components';
+import EditorModel from 'editor/model/Editor';
 import { keys, isUndefined, isElement, isArray } from 'underscore';
 
 export const isDef = value => typeof value !== 'undefined';
@@ -11,16 +14,17 @@ export const getGlobal = () =>
     ? window
     : global;
 
-export const toLowerCase = str => (str || '').toLowerCase();
+export const toLowerCase = (str?: string) => (str || '').toLowerCase();
 
-const elProt = hasWin() ? window.Element.prototype : {};
+const elProt: any = hasWin() ? window.Element.prototype : {};
 const matches =
   elProt.matches ||
   elProt.webkitMatchesSelector ||
+  elProt.mat
   elProt.mozMatchesSelector ||
   elProt.msMatchesSelector;
 
-export const getUiClass = (em, defCls) => {
+export const getUiClass = (em: EditorModel, defCls: string) => {
   const { stylePrefix, customUI } = em.getConfig();
   return [customUI && `${stylePrefix}cui`, defCls].filter(i => i).join(' ');
 };
@@ -29,7 +33,7 @@ export const getUiClass = (em, defCls) => {
  * Import styles asynchronously
  * @param {String|Array<String>} styles
  */
-const appendStyles = (styles, opts = {}) => {
+const appendStyles = (styles: string|string[], opts = {}) => {
   const stls = isArray(styles) ? [...styles] : [styles];
 
   if (stls.length) {
@@ -66,8 +70,8 @@ const appendStyles = (styles, opts = {}) => {
  * shallowDiff(a, b);
  * // -> {baz: 2, faz: null, bar: ''};
  */
-const shallowDiff = (objOrig, objNew) => {
-  const result = {};
+const shallowDiff = (objOrig: any, objNew: any) => {
+  const result: any = {};
   const keysNew = keys(objNew);
 
   for (let prop in objOrig) {
@@ -96,39 +100,38 @@ const shallowDiff = (objOrig, objNew) => {
   return result;
 };
 
-const on = (el, ev, fn, opts) => {
-  ev = ev.split(/\s+/);
-  el = el instanceof Array ? el : [el];
+const on = (el: HTMLElement|Window| HTMLElement[], ev:string, fn, opts={}) => {
+  const evs = ev.split(/\s+/);
+  const res = el instanceof Array ? el : [el];
 
-  for (let i = 0; i < ev.length; ++i) {
-    el.forEach(elem => elem && elem.addEventListener(ev[i], fn, opts));
+  for (let i = 0; i < evs.length; ++i) {
+    res.forEach(elem => elem?.addEventListener(evs[i], fn, opts));
   }
 };
 
-const off = (el, ev, fn, opts) => {
-  ev = ev.split(/\s+/);
-  el = el instanceof Array ? el : [el];
+const off = (el: HTMLElement|Window| HTMLElement[], ev:string, fn: Function, opts = {}) => {
+  const evs = ev.split(/\s+/);
+  const res = el instanceof Array ? el : [el];
 
-  for (let i = 0; i < ev.length; ++i) {
-    el.forEach(elem => elem && elem.removeEventListener(ev[i], fn, opts));
+  for (let i = 0; i < evs.length; ++i) {
+    res.forEach(elem => elem?.removeEventListener(evs[i], fn, opts));
   }
 };
 
-const getUnitFromValue = value => {
+const getUnitFromValue = (value:string) => {
   return value.replace(parseFloat(value), '');
 };
 
-const upFirst = value => value[0].toUpperCase() + value.toLowerCase().slice(1);
+const upFirst = (value:string) => value[0].toUpperCase() + value.toLowerCase().slice(1);
 
-const camelCase = value => {
+const camelCase = (value:string) => {
   const values = value.split('-').filter(String);
   return values[0].toLowerCase() + values.slice(1).map(upFirst);
 };
 
-const normalizeFloat = (value, step = 1, valueDef = 0) => {
+const normalizeFloat = (value:number, step = 1, valueDef = 0) => {
   let stepDecimals = 0;
   if (isNaN(value)) return valueDef;
-  value = parseFloat(value);
 
   if (Math.floor(value) !== value) {
     const side = step.toString().split('.')[1];
@@ -138,10 +141,10 @@ const normalizeFloat = (value, step = 1, valueDef = 0) => {
   return stepDecimals ? parseFloat(value.toFixed(stepDecimals)) : value;
 };
 
-const hasDnd = em => {
+const hasDnd = (em: EditorModel) => {
   return (
     'draggable' in document.createElement('i') &&
-    (em ? em.get('Config').nativeDnD : 1)
+    (em ? em.getConfig().nativeDnD : true)
   );
 };
 
@@ -150,9 +153,9 @@ const hasDnd = em => {
  * @param  {HTMLElement|Component} el Component or HTML element
  * @return {HTMLElement}
  */
-const getElement = el => {
+const getElement = (el: HTMLElement|Component) => {
   if (isElement(el) || isTextNode(el)) {
-    return el;
+    return el as HTMLElement;
   } else if (el && el.getEl) {
     return el.getEl();
   }
@@ -163,21 +166,21 @@ const getElement = el => {
  * @param  {HTMLElement} el
  * @return {Boolean}
  */
-const isTextNode = el => el && el.nodeType === 3;
+const isTextNode = (el: Node) => el && el.nodeType === 3;
 
 /**
  * Check if element is a comment node
  * @param  {HTMLElement} el
  * @return {Boolean}
  */
-export const isCommentNode = el => el && el.nodeType === 8;
+export const isCommentNode = (el: HTMLElement)  => el && el.nodeType === 8;
 
 /**
  * Check if element is a comment node
  * @param  {HTMLElement} el
  * @return {Boolean}
  */
-export const isTaggableNode = el => el && !isTextNode(el) && !isCommentNode(el);
+export const isTaggableNode = (el: HTMLElement) => el && !isTextNode(el) && !isCommentNode(el);
 
 export const find = (arr, test) => {
   let result = null;
@@ -200,13 +203,11 @@ export const escape = (str = '') => {
  * @param  {HTMLElement|Component} el Component or HTML element
  * @return {Component}
  */
-const getModel = (el, $) => {
-  let model = el;
-  isElement(el) && (model = $(el).data('model'));
-  return model;
+const getModel = (el: HTMLElement|Component, $):Component => {
+  return isElement(el) ?  $(el).data('model') : el;
 };
 
-const getElRect = el => {
+const getElRect = (el?: Element) => {
   const def = {
     top: 0,
     left: 0,
@@ -233,7 +234,7 @@ const getElRect = el => {
  * @param  {Event} ev
  * @return {Event}
  */
-const getPointerEvent = ev =>
+const getPointerEvent = (ev: any):PointerEvent =>
   ev.touches && ev.touches[0] ? ev.touches[0] : ev;
 
 /**
@@ -241,16 +242,16 @@ const getPointerEvent = ev =>
  * @param  {Event} ev
  * @return {Number}
  */
-const getKeyCode = ev => ev.which || ev.keyCode;
-const getKeyChar = ev => String.fromCharCode(getKeyCode(ev));
-const isEscKey = ev => getKeyCode(ev) === 27;
-const isEnterKey = ev => getKeyCode(ev) === 13;
-const isObject = val =>
+const getKeyCode = (ev: KeyboardEvent) => ev.which || ev.keyCode;
+const getKeyChar = (ev: KeyboardEvent) => String.fromCharCode(getKeyCode(ev));
+const isEscKey = (ev: KeyboardEvent) => getKeyCode(ev) === 27;
+const isEnterKey = (ev: KeyboardEvent) => getKeyCode(ev) === 13;
+const isObject = (val: unknown) =>
   val !== null && !Array.isArray(val) && typeof val === 'object';
-const isEmptyObj = val => Object.keys(val).length <= 0;
+const isEmptyObj = (val: object) => Object.keys(val).length <= 0;
 
-const capitalize = str => str && str.charAt(0).toUpperCase() + str.substring(1);
-const isComponent = obj => obj && obj.toHTML;
+const capitalize = (str: string) => str && str.charAt(0).toUpperCase() + str.substring(1);
+const isComponent = (obj: object) => obj && obj.toHTML;
 const isRule = obj => obj && obj.toCSS;
 
 const getViewEl = el => el.__gjsv;

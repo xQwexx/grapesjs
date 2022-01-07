@@ -4,6 +4,7 @@ import { isElement } from "underscore";
 import { Module } from "common/module";
 import LayerManagerConfig from "./config/config";
 import EditorModel from "editor/model/Editor";
+import Component from "dom_components/model/Component";
 
 export default class LayerManagerModule extends Module<LayerManagerConfig> {
   constructor(em: EditorModel) {
@@ -62,7 +63,7 @@ export default class LayerManagerModule extends Module<LayerManagerConfig> {
    * Triggered when the selected component is changed
    * @private
    */
-  componentChanged(selected?: any, opts: any = {}) {
+  componentChanged(selected?: Component, opts: any = {}) {
     if (opts.fromLayers) return;
     const opened = this.em.get("opened");
     const model = this.em.getSelected();

@@ -22,7 +22,7 @@ export default Backbone.View.extend({
   },
 
   __getCollectionModule() {
-    return this.em.get('BlockManager');
+    return this.em.BlockManager;
   },
 
   handleClick(ev) {

@@ -208,7 +208,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
    *   color: '#000',
    * });
    * */
-  get(selectors: any, state: string, width: string, ruleProps?: any) {
+  get(selectors: Selector[]|string, state: string, width: string, ruleProps?: any) {
     let slc = selectors;
     if (isString(selectors)) {
       const sm = this.em.SelectorManager;
@@ -219,7 +219,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
       slc = sm.get(node.selectors);
     }
     return (
-      this.rules.find(rule => rule.compare(slc, state, width, ruleProps)) ||
+      this.rules.find(rule => rule.compare(slc as Selector[], state, width, ruleProps)) ||
       null
     );
   }
@@ -421,7 +421,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
    * const rule = css.getIdRule('myid');
    * const ruleHover = css.setIdRule('myid', { state: 'hover' });
    */
-  getIdRule(name: string, opts: any = {}) {
+  getIdRule(name: string, opts: any = {}): CssRule {
     const { mediaText } = opts;
     const state = opts.state || "";
     const media = !isUndefined(mediaText)

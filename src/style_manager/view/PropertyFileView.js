@@ -28,8 +28,8 @@ export default PropertyView.extend({
 
   init() {
     const em = this.em;
-    this.modal = em.get('Modal');
-    this.am = em.get('AssetManager');
+    this.modal = em.ModalDialog;
+    this.am = em.AssetManager;
     this.events['click #' + this.pfx + 'close'] = 'removeFile';
     this.events['click #' + this.pfx + 'images'] = 'openAssetManager';
     this.delegateEvents();
@@ -122,7 +122,7 @@ export default PropertyView.extend({
    * */
   openAssetManager() {
     const { em } = this;
-    const am = em && em.get('AssetManager');
+    const am = em && em.AssetManager;
     const handleAsset = a => this.spreadUrl(isString(a) ? a : a.get('src'));
 
     am &&

@@ -24,7 +24,7 @@ export default View.extend({
     const em = config.em;
 
     if (config.sortable && !this.opt.sorter) {
-      const utils = em.get('Utils');
+      const utils = em.Utils;
       this.opt.sorter = new utils.Sorter({
         container: config.sortContainer || this.el,
         containerSel: `.${this.className}`,

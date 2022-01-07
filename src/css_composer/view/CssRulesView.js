@@ -119,10 +119,7 @@ export default Backbone.View.extend({
     $el.empty();
 
     // Create devices related DOM structure, ensure also to have a default container
-    const prs = em
-      .get('DeviceManager')
-      .getAll()
-      .pluck('priority');
+    const prs = em.DeviceManager.getAll().pluck('priority');
     prs.every(pr => pr) && prs.unshift(0);
     prs.forEach(pr =>
       $(`<div id="${getBlockId(className, pr)}"></div>`).appendTo(frag)

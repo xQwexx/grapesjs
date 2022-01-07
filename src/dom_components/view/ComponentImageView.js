@@ -28,7 +28,7 @@ export default ComponentView.extend({
     const file = model.get('file');
 
     if (file) {
-      const fu = this.em.get('AssetManager').FileUploader();
+      const fu = this.em.AssetManager.FileUploader();
       fu.uploadFile(
         {
           dataTransfer: { files: [file] }
@@ -63,7 +63,7 @@ export default ComponentView.extend({
   onActive(ev) {
     ev && ev.stopPropagation();
     const { em, model } = this;
-    const am = em && em.get('AssetManager');
+    const am = em && em.AssetManager;
 
     if (am && model.get('editable')) {
       am.open({

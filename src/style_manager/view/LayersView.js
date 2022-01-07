@@ -19,7 +19,7 @@ export default Backbone.View.extend({
     this.items = [];
 
     var em = this.config.em || '';
-    var utils = em ? em.get('Utils') : '';
+    var utils = em ? em.Utils : '';
 
     this.sorter = utils
       ? new utils.Sorter({

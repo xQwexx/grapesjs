@@ -3,8 +3,10 @@ import Styleable from 'domain_abstract/model/Styleable';
 import { isEmpty, forEach, isString, isArray } from 'underscore';
 import Selectors from 'selector_manager/model/Selectors';
 import { isEmptyObj, hasWin } from 'utils/mixins';
+import EditorModel from 'editor/model/Editor';
+import Selector from 'selector_manager/model/Selector';
 
-const { CSS } = hasWin() ? window : {};
+const { CSS = undefined } = hasWin() ? window : {};
 
 /**
  * @typedef CssRule
@@ -34,8 +36,15 @@ export default class CssRule extends Styleable {
       _undo: true
     };
   }
+  em: EditorModel;
+  config: any;
+  opt: any;
 
-  initialize(c, opt = {}) {
+  get selectors(): Selectors{
+    return this.get("selectors")
+  }
+  constructor(c: any, opt = {}) {
+    super(c, opt);
     this.config = c || {};
     this.opt = opt;
     this.em = opt.em;
@@ -43,36 +52,36 @@ export default class CssRule extends Styleable {
     this.on('change', this.__onChange);
   }
 
-  __onChange(m, opts) {
+  __onChange(m: any, opts: any) {
     const { em } = this;
     const changed = this.changedAttributes();
-    !isEmptyObj(changed) && em && em.changesUp(opts);
+    changed && !isEmptyObj(changed) && em && em.changesUp(opts);
   }
 
   clone() {
     const opts = { ...this.opt };
     const attr = { ...this.attributes };
-    attr.selectors = this.get('selectors').map(s => s.clone());
-    return new this.constructor(attr, opts);
+    attr.selectors = this.selectors.map(s => s.clone());
+    return new CssRule(attr, opts);
   }
 
-  ensureSelectors(m, c, opts) {
+  ensureSelectors(m?: any, c?: any, opts?: any) {
     const { em } = this;
-    const sm = em && em.get('SelectorManager');
+    const sm = em && em.SelectorManager;
     const toListen = [this, 'change:selectors', this.ensureSelectors];
-    let sels = this.getSelectors();
+    let sels = [...this.getSelectors().models];
     this.stopListening(...toListen);
 
-    if (sels.models) {
+    if (sels instanceof Selectors) {
       sels = [...sels.models];
     }
-
+/*
     sels = isString(sels) ? [sels] : sels;
 
     if (Array.isArray(sels)) {
       const res = sels.filter(i => i).map(i => (sm ? sm.add(i) : i));
       sels = new Selectors(res);
-    }
+    }*/
 
     this.set('selectors', sels, opts);
     this.listenTo(...toListen);
@@ -107,18 +116,18 @@ export default class CssRule extends Styleable {
    * cssRule.getSelectorsString(); // ".class1:hover"
    * cssRule.getSelectorsString({ skipState: true }); // ".class1"
    */
-  getSelectorsString(opts = {}) {
+  getSelectorsString(opts: any = {}) {
     const result = [];
     const state = this.get('state');
     const wrapper = this.get('wrapper');
     const addSelector = this.get('selectorsAdd');
     const isBody = wrapper && opts.body;
     const selOpts = {
-      escape: str => (CSS && CSS.escape ? CSS.escape(str) : str)
+      escape: (str: string) => (CSS && CSS.escape ? CSS.escape(str) : str)
     };
     const selectors = isBody
       ? 'body'
-      : this.get('selectors').getFullString(0, selOpts);
+      : this.selectors.getFullString(undefined, selOpts);
     const stateStr = state && !opts.skipState ? `:${state}` : '';
     selectors && result.push(`${selectors}${stateStr}`);
     addSelector && !opts.skipAdd && result.push(addSelector);
@@ -173,10 +182,10 @@ export default class CssRule extends Styleable {
     return result;
   }
 
-  toJSON(...args) {
+  toJSON(...args: any) {
     const obj = Model.prototype.toJSON.apply(this, args);
 
-    if (this.em.getConfig('avoidDefaults')) {
+    if (this.em.getConfig().avoidDefaults) {
       const defaults = this.defaults();
 
       forEach(defaults, (value, key) => {
@@ -200,21 +209,22 @@ export default class CssRule extends Styleable {
    * @param {Object} ruleProps Other rule props
    * @returns  {Boolean}
    */
-  compare(selectors, state, width, ruleProps = {}) {
+  compare(selectors: Selectors|Selector[]|Selector, state: string, width: string, ruleProps: any = {}) {
     const st = state || '';
     const wd = width || '';
     const selAdd = ruleProps.selectorsAdd || '';
     let atRule = ruleProps.atRuleType || '';
-    const sel =
-      !isArray(selectors) && !selectors.models
-        ? [selectors]
-        : selectors.models || selectors;
+    const sel = (selectors instanceof Selectors)
+                  ?selectors.models
+                  : !isArray(selectors)
+                    ? [selectors]
+                    : selectors;
 
     // Fix atRuleType in case is not specified with width
     if (wd && !atRule) atRule = 'media';
 
     const a1 = sel.map(model => model.getFullName());
-    const a2 = this.get('selectors').map(model => model.getFullName());
+    const a2 = this.selectors.map(model => model.getFullName());
 
     // Check selectors
     const a1S = a1.slice().sort();

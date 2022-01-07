@@ -2,13 +2,14 @@ import { bindAll } from "underscore";
 import { Collection } from "common";
 import model from "./Frame";
 import Frame from "./Frame";
-import { AddOptions } from "backbone";
+import { AddOptions, CollectionFetchOptions, CollectionSetOptions } from "backbone";
+import Page from "pages/model/Page";
 
 export default class Frames extends Collection<Frame> {
   config: any = {};
   loadedItems: number = 0;
   itemsToLoad: number = 0;
-  page: any;
+  //page: Page;
   initialize(models: any, config = {}) {
     bindAll(this, "itemLoaded");
     this.config = config;
@@ -17,12 +18,12 @@ export default class Frames extends Collection<Frame> {
   }
 
   onReset(m: any, opts: any = {}) {
-    const prev: any[] = opts.previousModels || [];
+    const prev: Frame[] = opts.previousModels || [];
     prev.map(p => this.onRemove(p));
   }
 
-  onRemove(removed: any) {
-    removed && removed.onRemove();
+  onRemove(removed: Frame) {
+    removed?.onRemove();
   }
 
   itemLoaded() {

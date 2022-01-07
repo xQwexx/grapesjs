@@ -3,14 +3,16 @@ import FrameView from './FrameView';
 import { bindAll, isNumber, isNull, debounce } from 'underscore';
 import { createEl, removeEl } from 'utils/dom';
 import Dragger from 'utils/Dragger';
+import Frame from 'canvas/model/Frame';
 
-export default Backbone.View.extend({
-  events: {
+export default class FrameWrapView extends Backbone.View<Frame>{
+  events(){ return {
     'click [data-action-remove]': 'remove',
     'mousedown [data-action-move]': 'startDrag'
-  },
-
-  initialize(opts = {}, conf = {}) {
+  }
+  }
+  constructor(opts = {}, conf = {}) {
+    super(opts)
     bindAll(
       this,
       'onScroll',
@@ -28,7 +30,7 @@ export default Backbone.View.extend({
     this.cv = canvasView;
     this.config = config;
     this.em = em;
-    this.canvas = em && em.get('Canvas');
+    this.canvas = em && em.Canvas;
     this.ppfx = config.pStylePrefix || '';
     this.frame = new FrameView({ model, config });
     this.classAnim = `${this.ppfx}frame-wrapper--anim`;
@@ -40,12 +42,15 @@ export default Backbone.View.extend({
     this.listenTo(model, 'destroy remove', this.remove);
     this.updatePos();
     this.setupDragger();
-  },
+  }
+  dragger: Dragger;
+  frame: FrameView;
+  elTools?: HTMLElement;
 
   setupDragger() {
     const { canvas, model } = this;
-    let dragX, dragY, zoom;
-    const toggleEffects = on => {
+    let dragX: number, dragY: number, zoom;
+    const toggleEffects = (on = false) => {
       canvas.toggleFramesEvents(on);
     };
 
@@ -57,7 +62,7 @@ export default Backbone.View.extend({
         dragY = y;
         toggleEffects();
       },
-      onEnd: () => toggleEffects(1),
+      onEnd: () => toggleEffects(true),
       setPosition: posOpts => {
         model.set({
           x: dragX + posOpts.x * zoom,
@@ -65,26 +70,26 @@ export default Backbone.View.extend({
         });
       }
     });
-  },
+  }
 
-  startDrag(ev) {
+  startDrag(ev: DragEvent) {
     ev && this.dragger.start(ev);
-  },
+  }
 
   __clear(opts) {
     const { frame } = this;
     frame && frame.remove(opts);
     removeEl(this.elTools);
-  },
+  }
 
-  remove(opts) {
+  remove(opts={}) {
     this.__clear(opts);
     Backbone.View.prototype.remove.apply(this, arguments);
     ['frame', 'dragger', 'cv', 'em', 'canvas', 'elTools'].forEach(
       i => (this[i] = 0)
     );
     return this;
-  },
+  }
 
   updateOffset() {
     const { em, $el, frame } = this;
@@ -92,7 +97,7 @@ export default Backbone.View.extend({
     em.runDefault({ preserveSelected: 1 });
     $el.removeClass(this.classAnim);
     frame.model._emitUpdated();
-  },
+  }
 
   updatePos(md) {
     const { model, el } = this;
@@ -102,11 +107,11 @@ export default Backbone.View.extend({
     style.left = isNaN(x) ? x : `${x}px`;
     style.top = isNaN(y) ? y : `${y}px`;
     md && this.updateOffset();
-  },
+  }
 
   updateSize() {
     this.updateDim();
-  },
+  }
 
   /**
    * Update dimensions of the frame
@@ -134,7 +139,7 @@ export default Backbone.View.extend({
     // component hover during the animation
     em.stopDefault({ preserveSelected: 1 });
     noChanges ? this.updateOffset() : setTimeout(this.updateOffset, 350);
-  },
+  }
 
   onScroll() {
     const { frame, em } = this;
@@ -143,13 +148,13 @@ export default Backbone.View.extend({
       body: frame.getBody(),
       target: frame.getWindow()
     });
-  },
+  }
 
   frameLoaded() {
     const { frame } = this;
     frame.getWindow().onscroll = this.onScroll;
     this.updateDim();
-  },
+  }
 
   __handleSize() {
     const un = 'px';
@@ -164,7 +169,7 @@ export default Backbone.View.extend({
     style.width = isNumber(newW) ? `${newW}${un}` : newW;
     style.height = isNumber(newH) ? `${newH}${un}` : newH;
     return { noChanges, width, height, newW, newH };
-  },
+  }
 
   render() {
     const { frame, $el, ppfx, cv, model, el } = this;
@@ -242,4 +247,4 @@ export default Backbone.View.extend({
       });
     return this;
   }
-});
+};

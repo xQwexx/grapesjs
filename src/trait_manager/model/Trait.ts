@@ -40,6 +40,8 @@ export default class Trait extends Backbone.Model {
       this.listenTo(target, targetEvent, this.targetUpdated);
     }
   }
+  view?: any;
+  el: any;
 
   /**
    * Return all the propeties

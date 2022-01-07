@@ -25,22 +25,25 @@
  * @module Parser
  */
 import { Module } from "common/module";
+import { ComponentType } from "dom_components";
 import EditorModel from "editor/model/Editor";
 import ParserConfig from "./config/config";
+import BrowserParserCss from "./model/BrowserParserCss";
 import parserCss from "./model/ParserCss";
-import parserHtml from "./model/ParserHtml";
+import ParserHtml from "./model/ParserHtml";
 
 export default class ParserModule extends Module<ParserConfig> {
-  pHtml: parserHtml;
+  pHtml: ParserHtml;
   pCss: any;
-  compTypes = "";
+  compTypes: ComponentType[] = [];
+  parserCss = BrowserParserCss;
 
   constructor(em: EditorModel) {
     super(em, ParserConfig);
 
     //@ts-ignore
     this.config.Parser = this;
-    this.pHtml = new parserHtml(this.config);
+    this.pHtml = new ParserHtml(this.config);
     this.pCss = parserCss(this.config);
   }
 
@@ -82,6 +85,7 @@ export default class ParserModule extends Module<ParserConfig> {
   parseCss(input: string) {
     return this.pCss.parse(input);
   }
+  parseStyle = ParserHtml.parseStyle
 
   destroy() {
     [this.config, this.pHtml, this.pCss].forEach(i => (i = {}));

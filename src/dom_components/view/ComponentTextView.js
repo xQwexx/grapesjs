@@ -17,7 +17,7 @@ export default ComponentView.extend({
     this.listenTo(model, 'focus', this.onActive);
     this.listenTo(model, 'change:content', this.updateContentText);
     this.listenTo(model, 'sync:content', this.syncContent);
-    this.rte = em && em.get('RichTextEditor');
+    this.rte = em && em.RichTextEditor;
   },
 
   updateContentText(m, v, opts = {}) {

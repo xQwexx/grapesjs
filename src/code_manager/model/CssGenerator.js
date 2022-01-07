@@ -42,7 +42,7 @@ export default Backbone.Model.extend({
   build(model, opts = {}) {
     const { json } = opts;
     const em = opts.em || '';
-    const cssc = opts.cssc || (em && em.get('CssComposer'));
+    const cssc = opts.cssc || (em && em.CssComposer);
     this.em = em;
     this.compCls = [];
     this.ids = [];

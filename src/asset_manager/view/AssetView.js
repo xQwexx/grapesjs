@@ -19,7 +19,7 @@ export default Backbone.View.extend({
 
   __getBhv() {
     const { em } = this;
-    const am = em && em.get('AssetManager');
+    const am = em && em.AssetManager;
     return (am && am.__getBehaviour()) || {};
   },
 

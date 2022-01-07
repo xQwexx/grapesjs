@@ -19,8 +19,8 @@ let em;
 describe('Component', () => {
   beforeEach(() => {
     em = new Editor();
-    dcomp = em.get('DomComponents');
-    em.get('PageManager').onLoad();
+    dcomp = em.DomComponents;
+    em.PageManager.onLoad();
     // dcomp = new DomComponents();
     compOpts = {
       em,
@@ -589,8 +589,8 @@ describe('Video Component', () => {
 describe('Components', () => {
   beforeEach(() => {
     em = new Editor({});
-    dcomp = em.get('DomComponents');
-    em.get('PageManager').onLoad();
+    dcomp = em.DomComponents;
+    em.PageManager.onLoad();
     compOpts = {
       em,
       componentTypes: dcomp.componentTypes
@@ -617,8 +617,8 @@ describe('Components', () => {
 
   test('Avoid conflicting components with the same ID', () => {
     const em = new Editor({});
-    dcomp = em.get('DomComponents');
-    em.get('PageManager').onLoad();
+    dcomp = em.DomComponents;
+    em.PageManager.onLoad();
     dcomp.init({ em });
     const id = 'myid';
     const idB = 'myid2';
@@ -645,7 +645,7 @@ describe('Components', () => {
     expect(added.getId()).toBe(id);
     đ;
     expect(addComps.at(0).getId()).toBe(idB);
-    const cc = em.get('CssComposer');
+    const cc = em.CssComposer;
     const rules = cc.getAll();
     expect(rules.length).toBe(3);
     expect(rules.at(0).getSelectorsString()).toBe(`#${id}`);

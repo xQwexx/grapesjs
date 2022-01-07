@@ -22,12 +22,12 @@ export default Component.extend(
       ]
     },
     __postAdd() {
-      const um = this.em && this.em.get('UndoManager');
+      const um = this.em && this.em.UndoManager;
       um && !this.__hasUm && um.add(this);
       return Component.prototype.__postAdd.call(this, arguments);
     },
     __postRemove() {
-      const um = this.em && this.em.get('UndoManager');
+      const um = this.em && this.em.UndoManager;
       um && um.remove(this);
       return Component.prototype.__postRemove.call(this, arguments);
     }

@@ -19,7 +19,7 @@ import {
   toLowerCase
 } from "utils/mixins";
 import Styleable from "domain_abstract/model/Styleable";
-import { Model } from "backbone";
+import { AddOptions, Model } from "backbone";
 import Components from "./Components";
 import Selector from "selector_manager/model/Selector";
 import Selectors from "selector_manager/model/Selectors";
@@ -29,6 +29,11 @@ import EditorModel from "editor/model/Editor";
 import Editor from "editor";
 import DomComponentsConfig from "dom_components/config/config";
 import Frame from "canvas/model/Frame";
+import ComponentsView from "dom_components/view/ComponentsView";
+import ComponentView from "dom_components/view/ComponentView";
+import CssRule from "css_composer/model/CssRule";
+import CssRules from "css_composer/model/CssRules";
+import Trait from "trait_manager/model/Trait";
 
 const escapeRegExp = (str: string) => {
   return str.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
@@ -113,7 +118,7 @@ export default class Component extends Styleable {
    * @param {*} value Property value, if triggered after some property update
    * @param {*} previous Property previous value, if triggered after some property update
    */
-  updated(property: string, value, previous) {}
+  updated(property: string, value: any, previous: any) {}
 
   /**
    * Hook method, called once the model has been removed
@@ -200,17 +205,30 @@ export default class Component extends Styleable {
       em && em.trigger("component:create", this);
     }
   }
-
-  __postAdd(opts = {}) {
+views: any[] = [];
+view?: ComponentView;
+prevColl?: Components;
+em: EditorModel;
+config: DomComponentsConfig;
+__symbReady = false;
+__hasUm = false;
+ccid: string;
+opt: any;
+frame: Frame;
+rule?: CssRule;
+get traits(): Traits{
+  return this.traits;
+}
+  __postAdd(opts: any = {}) {
     const { em } = this;
     const um = em && em.UndoManager;
     const comps = this.components;
     if (um && !this.__hasUm) {
       um.add(comps);
       um.add(this.getSelectors());
-      this.__hasUm = 1;
+      this.__hasUm = true;
     }
-    opts.recursive && comps.map(c => c.__postAdd(opts));
+    opts.recursive && comps?.map(c => c.__postAdd(opts));
   }
 
   __postRemove() {
@@ -223,29 +241,32 @@ export default class Component extends Styleable {
     }
   }
 
-  __onChange(m, opts) {
+  __onChange(m: Component, opts: any) {
     const changed = this.changedAttributes();
-    ["status", "open", "toolbar", "traits"].forEach(
-      name => delete changed[name]
-    );
-    // Propagate component prop changes
-    if (!isEmptyObj(changed)) {
-      this.__changesUp(opts);
-      this.__propSelfToParent({ component: this, changed, options: opts });
+    if(changed){
+      ["status", "open", "toolbar", "traits"].forEach(
+        name => delete changed[name]
+      );
+      // Propagate component prop changes
+      if (!isEmptyObj(changed)) {
+        this.__changesUp(opts);
+        this.__propSelfToParent({ component: this, changed, options: opts });
+      }
     }
+
   }
 
-  __changesUp(opts) {
+  __changesUp(opts: any) {
     const { em, frame } = this;
     [frame, em].forEach(md => md && md.changesUp(opts));
   }
 
-  __propSelfToParent(props) {
+  __propSelfToParent(props: any) {
     this.trigger(keyUpdate, props);
     this.__propToParent(props);
   }
 
-  __propToParent(props) {
+  __propToParent(props: any) {
     const parent = this.parent();
     parent && parent.trigger(keyUpdateInside, props);
   }
@@ -303,9 +324,9 @@ export default class Component extends Styleable {
    * // -> [Component, Component, ...]
    */
   find(query: string) {
-    const result = [];
-    const $els = this.view.$el.find(query);
-    $els.each(i => {
+    const result: Component[] = [];
+    const $els = this.view?.$el.find(query);
+    $els && $els.each(i => {
       const $el = $els.eq(i);
       const model = $el.data("model");
       model && result.push(model);
@@ -326,8 +347,8 @@ export default class Component extends Styleable {
    */
   findType(type: string) {
     const result: Component[] = [];
-    const find:(components: Component[])=>void = components =>
-      components.forEach(item => {
+    const find:(components: Components|null)=>void = components =>
+      components?.forEach(item => {
         item.is(type) && result.push(item);
         find(item.components);
       });
@@ -345,8 +366,8 @@ export default class Component extends Styleable {
    * // -> Component
    */
   closest(query: string) {
-    const result = this.view.$el.closest(query);
-    return result.length && result.data("model");
+    const result = this.view?.$el.closest(query);
+    return result?.length && result.data("model");
   }
 
   /**
@@ -378,11 +399,11 @@ export default class Component extends Styleable {
   contains(component: Component) {
     let result = !1;
     if (!component) return result;
-    const contains:(components: Components)=>void = components => {
+    const contains:(components: Components|null)=>void = components => {
       !result &&
-        components.forEach(item => {
+        components?.forEach(item => {
           if (item === component) result = !0;
-          !result && contains(item.components;
+          !result && contains(item.components);
         });
     };
     contains(this.components);
@@ -416,7 +437,7 @@ export default class Component extends Styleable {
    * Emit changes for each updated attribute
    * @private
    */
-  attrUpdated(m, v, opts = {}) {
+  attrUpdated(m: any, v: any, opts = {}) {
     const attrs = this.get("attributes");
     // Handle classes
     const classes = attrs.class;
@@ -443,7 +464,7 @@ export default class Component extends Styleable {
    * @example
    * component.setAttributes({ id: 'test', 'data-key': 'value' });
    */
-  setAttributes(attrs, opts = {}) {
+  setAttributes(attrs: any, opts = {}) {
     this.set("attributes", { ...attrs }, opts);
     return this;
   }
@@ -456,7 +477,7 @@ export default class Component extends Styleable {
    * @example
    * component.addAttributes({ 'data-key': 'value' });
    */
-  addAttributes(attrs, opts = {}) {
+  addAttributes(attrs: any, opts = {}) {
     return this.setAttributes(
       {
         ...this.getAttributes({ noClass: 1 }),
@@ -489,7 +510,7 @@ export default class Component extends Styleable {
   getStyle(options = {}, optsAdd = {}) {
     const em = this.em;
     const prop = isString(options) ? options : "";
-    const opts = prop ? optsAdd : options;
+    const opts: any = prop ? optsAdd : options;
 
     if (em && em.getConfig().avoidInlineStyle && !opts.inline) {
       const state = em.get("state");
@@ -502,7 +523,7 @@ export default class Component extends Styleable {
       }
     }
 
-    return super.getStyle(this, prop);
+    return super.getStyle(prop);
   }
 
   /**
@@ -512,7 +533,7 @@ export default class Component extends Styleable {
    * @example
    * component.setStyle({ color: 'red' });
    */
-  setStyle(prop = {}, opts = {}) {
+  setStyle(prop = {}, opts:any = {}) {
     const em = this.em;
     const { opt } = this;
 
@@ -530,7 +551,7 @@ export default class Component extends Styleable {
       const propOrig = this.getStyle(opts);
       this.rule = cc.setIdRule(this.getId(), prop, { ...opts, state });
       const diff = shallowDiff(propOrig, prop);
-      this.set("style", "", { silent: 1 });
+      this.set("style", "", { silent: true });
       keys(diff).forEach(pr => this.trigger(`change:style:${pr}`));
     } else {
       prop = super.setStyle.apply(this, arguments);
@@ -543,7 +564,7 @@ export default class Component extends Styleable {
    * Return all component's attributes
    * @return {Object}
    */
-  getAttributes(opts = {}) {
+  getAttributes(opts: any = {}) {
     const { em } = this;
     const classes: string[] = [];
     const attributes = { ...this.get("attributes") };
@@ -562,7 +583,7 @@ export default class Component extends Styleable {
     if (!opts.noStyle) {
       const style = this.get("style");
       if (isObject(style) && !isEmptyObj(style)) {
-        attributes.style = this.styleToString({ inline: 1 });
+        attributes.style = this.styleToString({ inline: true });
       }
     }
 
@@ -719,7 +740,7 @@ export default class Component extends Styleable {
   }
 
   __getSymbols() {
-    let symbs = this.get(keySymbols);
+    let symbs = this.get(keySymbols) as Component[];
     if (symbs && isArray(symbs)) {
       symbs.forEach((symb, idx) => {
         if (symb && isString(symb)) {
@@ -740,8 +761,8 @@ export default class Component extends Styleable {
     );
   }
 
-  __getSymbToUp(opts = {}) {
-    let result = [];
+  __getSymbToUp(opts: any = {}) {
+    let result: Component[] = [];
     const { em } = this;
     const { changed } = opts;
     const symbEnabled = em && em.get("symbols");
@@ -769,7 +790,7 @@ export default class Component extends Styleable {
   }
 
   __getSymbTop(opts = {}) {
-    let result = this;
+    let result: Component = this;
     let parent = this.parent(opts);
 
     while (parent && (parent.__isSymbol() || parent.__getSymbol())) {
@@ -780,37 +801,39 @@ export default class Component extends Styleable {
     return result;
   }
 
-  __upSymbProps(m, opts = {}) {
+  __upSymbProps(m: any, opts = {}) {
     const changed = this.changedAttributes();
-    const attrs = changed.attributes || {};
-    delete changed.status;
-    delete changed.open;
-    delete changed[keySymbols];
-    delete changed[keySymbol];
-    delete changed[keySymbolOvrd];
-    delete changed.attributes;
-    delete attrs.id;
-    if (!isEmptyObj(attrs)) changed.attributes = attrs;
-    if (!isEmptyObj(changed)) {
-      const toUp = this.__getSymbToUp(opts);
-      // Avoid propagating overrides to other symbols
-      keys(changed).map(prop => {
-        if (this.__isSymbOvrd(prop)) delete changed[prop];
-      });
-
-      this.__logSymbol("props", toUp, { opts, changed });
-      toUp.forEach(child => {
-        const propsChanged = { ...changed };
-        // Avoid updating those with override
-        keys(propsChanged).map(prop => {
-          if (child.__isSymbOvrd(prop)) delete propsChanged[prop];
+    if(changed){
+      const attrs = changed.attributes || {};
+      delete changed.status;
+      delete changed.open;
+      delete changed[keySymbols];
+      delete changed[keySymbol];
+      delete changed[keySymbolOvrd];
+      delete changed.attributes;
+      delete attrs.id;
+      if (!isEmptyObj(attrs)) changed.attributes = attrs;
+      if (!isEmptyObj(changed)) {
+        const toUp = this.__getSymbToUp(opts);
+        // Avoid propagating overrides to other symbols
+        keys(changed).map(prop => {
+          if (this.__isSymbOvrd(prop)) delete changed[prop];
         });
-        child.set(propsChanged, { fromInstance: this, ...opts });
-      });
+
+        this.__logSymbol("props", toUp, { opts, changed });
+        toUp.forEach(child => {
+          const propsChanged = { ...changed };
+          // Avoid updating those with override
+          keys(propsChanged).map(prop => {
+            if (child.__isSymbOvrd(prop)) delete propsChanged[prop];
+          });
+          child.set(propsChanged, { fromInstance: this, ...opts });
+        });
+      }
     }
   }
 
-  __upSymbCls(m, c, opts = {}) {
+  __upSymbCls(m: Component, c: Components, opts = {}) {
     const toUp = this.__getSymbToUp(opts);
     this.__logSymbol("classes", toUp, { opts });
     toUp.forEach(child => {
@@ -820,7 +843,7 @@ export default class Component extends Styleable {
     this.__changesUp(opts);
   }
 
-  __upSymbComps(m, c, o) {
+  __upSymbComps(m: Component, c: Components, o?:any) {
     const optUp = o || c || {};
     const { fromInstance, fromUndo } = optUp;
     const toUpOpts = { fromInstance, fromUndo };
@@ -832,14 +855,14 @@ export default class Component extends Styleable {
         ...toUpOpts,
         changed: "components:reset"
       });
-      this.__logSymbol("reset", toUp, { components: m.models });
+      this.__logSymbol("reset", toUp, { components: c.models });
       toUp.forEach(symb => {
-        const newMods = m.models.map(mod => mod.clone({ symbol: 1 }));
-        symb.components().reset(newMods, { fromInstance: this, ...c });
+        const newMods = c.models.map(mod => mod.clone({ symbol: 1 }));
+        symb.components?.reset(newMods, { fromInstance: this, ...c });
       });
       // Add
     } else if (o.add) {
-      let addedInstances = [];
+      let addedInstances: Component[] = [];
       const isMainSymb = !!this.__getSymbols();
       const toUp = this.__getSymbToUp({
         ...toUpOpts,
@@ -888,19 +911,19 @@ export default class Component extends Styleable {
         const parent = m.parent();
         const opts = { fromInstance: m, ...o };
         const isSymbNested = m.__isSymbolNested();
-        let toUpFn = symb => {
+        let toUpFn = (symb: Component) => {
           const symbPrnt = symb.parent();
           symbPrnt && !symbPrnt.__isSymbOvrd(changed) && symb.remove(opts);
         };
         // Check if the parent allows the removing
-        let toUp = !parent.__isSymbOvrd(changed)
+        let toUp = !parent?.__isSymbOvrd(changed)
           ? m.__getSymbToUp(toUpOpts)
           : [];
 
         if (isSymbNested) {
-          toUp = parent.__getSymbToUp({ ...toUpOpts, changed });
-          toUpFn = symb => {
-            const toRemove = symb.components().at(index);
+          toUp = parent?.__getSymbToUp({ ...toUpOpts, changed }) ?? [];
+          toUpFn = (symb: Component) => {
+            const toRemove = symb.components?.at(index);
             toRemove && toRemove.remove({ fromInstance: parent, ...opts });
           };
         }
@@ -928,16 +951,15 @@ export default class Component extends Styleable {
     const classes = this.normalizeClasses(clsArr);
     const selectors = new Selectors([]);
     this.set("classes", selectors, opts);
-    selectors.add(classes);
+    classes && selectors.add(classes);
     selectors.on("add remove reset", this.__upSymbCls);
-    this.listenTo(...toListen);
+    this.listenTo(this, event, this.initClasses);
     return this;
   }
 
   initComponents() {
     const event = "change:components";
-    const toListen = [this, event, this.initComponents];
-    this.stopListening(...toListen);
+    this.stopListening(this, event, this.initComponents);
     // Have to add components after the init, otherwise the parent
     // is not visible
     const comps = new Components(null, this.opt);
@@ -952,7 +974,7 @@ export default class Component extends Styleable {
         this.opt
       );
     comps.on("add remove reset", this.__upSymbComps);
-    this.listenTo(...toListen);
+    this.listenTo(this, event, this.initComponents);
     return this;
   }
 
@@ -962,7 +984,7 @@ export default class Component extends Styleable {
     this.off(event, this.initTraits);
     this.__loadTraits();
     const attrs = { ...this.get("attributes") };
-    const traits = this.get("traits");
+    const traits = this.traits;
     traits.each(trait => {
       if (!trait.get("changeProp")) {
         const name = trait.get("name");
@@ -979,18 +1001,17 @@ export default class Component extends Styleable {
   initScriptProps() {
     if (this.opt.temporary) return;
     const prop = "script-props";
-    const toListen = [`change:${prop}`, this.initScriptProps];
-    this.off(...toListen);
+    this.off(`change:${prop}`, this.initScriptProps);
     const prevProps = this.previous(prop) || [];
     const newProps = this.get(prop) || [];
-    const prevPropsEv = prevProps.map(e => `change:${e}`).join(" ");
-    const newPropsEv = newProps.map(e => `change:${e}`).join(" ");
+    const prevPropsEv = prevProps.map((e: any) => `change:${e}`).join(" ");
+    const newPropsEv = newProps.map((e: any) => `change:${e}`).join(" ");
     prevPropsEv && this.off(prevPropsEv, this.__scriptPropsChange);
     newPropsEv && this.on(newPropsEv, this.__scriptPropsChange);
-    this.on(...toListen);
+    this.on(`change:${prop}`, this.initScriptProps);
   }
 
-  __scriptPropsChange(m, v, opts: { avoidStore?: boolean } = {}) {
+  __scriptPropsChange(m: any, v: any, opts: { avoidStore?: boolean } = {}) {
     if (opts.avoidStore) return;
     this.trigger("rerender");
   }
@@ -1022,12 +1043,12 @@ export default class Component extends Styleable {
         return comp;
       }
     });
-    const result = this.components.add(toAppend, opts);
+    const result = this.components?.add(toAppend, opts);
     return isArray(result) ? result : [result];
   }
 
-  get components() {
-    return this.get("components") as Components;
+  get components(): Components|null {
+    return this.get("components");
   }
   /**
    * Set new collection if `components` are provided, otherwise the
@@ -1043,11 +1064,11 @@ export default class Component extends Styleable {
    * console.log(collection.length);
    * // -> 2
    */
-  set components(components: Components, opts = {}) {
-    const coll = this.get("components");
+  getNewComponents(component: Component|string, opts = {}) {
+    const coll = this.components;
 
-    coll.reset(null, opts);
-    this.append(components, opts);
+    coll?.reset(undefined, opts);
+    return this.append(component, opts);
   }
 
   /**
@@ -1061,7 +1082,7 @@ export default class Component extends Styleable {
    * component.getChildAt(1);
    */
   getChildAt(index: number) {
-    return this.components.at(index || 0) || null;
+    return this.components?.at(index || 0) || null;
   }
 
   /**
@@ -1072,7 +1093,7 @@ export default class Component extends Styleable {
    */
   getLastChild() {
     const children = this.components;
-    return children.at(children.length - 1) || null;
+    return children?.at(children.length - 1) || null;
   }
 
   /**
@@ -1080,7 +1101,7 @@ export default class Component extends Styleable {
    * * @return {this}
    */
   empty(opts = {}) {
-    this.components.reset(undefined, opts);
+    this.components?.reset(undefined, opts);
     return this;
   }
 
@@ -1091,9 +1112,9 @@ export default class Component extends Styleable {
    * component.parent();
    * // -> Component
    */
-  parent(opts = {}) {
-    const coll = this.collection || (opts.prev && this.prevColl);
-    return coll ? coll.parent : null;
+  parent(opts: any = {}): Component|null {
+    const coll: Components = this.collection as any || (opts.prev && this.prevColl);
+    return coll?.parent ?? null;
   }
 
   /**
@@ -1118,7 +1139,7 @@ export default class Component extends Styleable {
       if (model.collection) {
         tb.push({
           attributes: { class: "fa fa-arrow-up" },
-          command: ed => ed.runCommand("core:component-exit", { force: 1 })
+          command: (ed: Editor) => ed.runCommand("core:component-exit", { force: 1 })
         });
       }
       if (model.get("draggable")) {
@@ -1147,15 +1168,15 @@ export default class Component extends Styleable {
     }
   }
 
-  __loadTraits(tr?: any, opts = {}) {
-    let traitsI = tr || this.get("traits");
+  __loadTraits(tr?: Traits|Trait[]|Function, opts = {}) {
+    let traitsI = tr || this.traits;
 
     if (!(traitsI instanceof Traits)) {
       traitsI = isFunction(traitsI) ? traitsI(this) : traitsI;
       const traits = new Traits([], this.opt);
       traits.setTarget(this);
 
-      if (traitsI.length) {
+      if (isArray(traitsI)) {
         traitsI.forEach(tr => tr.attributes && delete tr.attributes.value);
         traits.add(traitsI);
       }
@@ -1176,7 +1197,7 @@ export default class Component extends Styleable {
    */
   getTraits() {
     this.__loadTraits();
-    return [...this.get("traits").models];
+    return [...this.traits.models];
   }
 
   /**
@@ -1188,7 +1209,7 @@ export default class Component extends Styleable {
    * console.log(traits);
    * // [Trait, ...]
    */
-  setTraits(traits) {
+  setTraits(traits: any[]) {
     const tr = isArray(traits) ? traits : [traits];
     this.set({ traits: tr });
     return this.getTraits();
@@ -1221,7 +1242,7 @@ export default class Component extends Styleable {
    *  options: [ 'Option 1', 'Option 2' ],
    * });
    */
-  updateTrait(id: string, props) {
+  updateTrait(id: string, props: any) {
     const trait = this.getTrait(id);
     trait?.set(props);
     this.em?.trigger("component:toggled");
@@ -1239,7 +1260,7 @@ export default class Component extends Styleable {
    */
   getTraitIndex(id: string): number {
     const trait = this.getTrait(id);
-    return trait ? this.get("traits").indexOf(trait) : -1;
+    return trait ? this.traits.indexOf(trait) : -1;
   }
 
   /**
@@ -1253,7 +1274,7 @@ export default class Component extends Styleable {
   removeTrait(id: string|string[]) {
     const ids = isArray(id) ? id : [id];
     const toRemove = ids.map(id => this.getTrait(id));
-    const traits = this.get("traits");
+    const traits = this.traits;
     const removed = toRemove.length ? traits.remove(toRemove) : [];
     this.em?.trigger("component:toggled");
     return isArray(removed) ? removed : [removed];
@@ -1272,9 +1293,9 @@ export default class Component extends Styleable {
    * });
    * component.addTrait(['title', {...}, ...]);
    */
-  addTrait(trait, opts = {}) {
+  addTrait(trait: any, opts = {}) {
     this.__loadTraits();
-    const added = this.get("traits").add(trait, opts);
+    const added = this.traits.add(trait, opts);
     this.em?.trigger("component:toggled");
     return isArray(added) ? added : [added];
   }
@@ -1285,21 +1306,21 @@ export default class Component extends Styleable {
    * @return {Array}
    * @private
    */
-  normalizeClasses(arr) {
-    const res = [];
+  normalizeClasses(arr: string[]|Selector[]|Selectors): Selector[]|undefined {
     const { em } = this;
     const clm = em && em.SelectorManager;
     if (!clm) return;
-    if (arr.models) return [...arr.models];
-    arr.forEach(val => res.push(clm.add(val)));
-    return res;
+
+    if (arr instanceof Selectors) return [...arr.models];
+    return arr.flatMap((val) => clm.add(val)) as Selector[]
+
   }
 
   /**
    * Override original clone method
    * @private
    */
-  clone(opt = {}) {
+  clone(opt: any = {}) {
     const em = this.em;
     const attr = { ...this.attributes };
     const opts = { ...this.opt };
@@ -1315,10 +1336,10 @@ export default class Component extends Styleable {
       opt.symbol = 1;
     }
 
-    this.get("components").each((md, i) => {
+    this.components?.each((md, i) => {
       attr.components[i] = md.clone({ ...opt, _inner: 1 });
     });
-    this.get("traits").each((md, i) => {
+    this.traits.each((md, i) => {
       attr.traits[i] = md.clone();
     });
     this.classes.each((md, i) => {
@@ -1327,7 +1348,7 @@ export default class Component extends Styleable {
 
     attr.status = "";
     opts.collection = null;
-
+//@ts-ignore
     const cloned = new this.constructor(attr, opts);
 
     // Clone component specific rules
@@ -1445,7 +1466,7 @@ export default class Component extends Styleable {
    * });
    * // -> <span title="Custom attribute"></span>
    */
-  toHTML(opts = {}) {
+  toHTML(opts: any = {}) {
     const model = this;
     const attrs = [];
     const customTag = opts.tag;
@@ -1487,7 +1508,7 @@ export default class Component extends Styleable {
 
   __innerHTML(opts = {}): string {
     const cmps = this.components;
-    return !cmps.length
+    return !cmps?.length
       ? this.get("content")
       : cmps.map(c => c.toHTML(opts)).join("");
   }
@@ -1509,7 +1530,7 @@ export default class Component extends Styleable {
    * @return {Object}
    * @private
    */
-  toJSON(opts = {}) {
+  toJSON(opts: any = {}) {
     const obj = Model.prototype.toJSON.call(this, opts);
     obj.attributes = this.getAttributes();
     delete obj.attributes.class;
@@ -1531,7 +1552,7 @@ export default class Component extends Styleable {
       }
     }
 
-    if (this.em.getConfig().avoidDefaults)) {
+    if (this.em.getConfig().avoidDefaults) {
       this.getChangedProps(obj);
     }
 
@@ -1541,7 +1562,7 @@ export default class Component extends Styleable {
   /**
    * Return an object containing only changed props
    */
-  getChangedProps(res) {
+  getChangedProps(res?: any) {
     const obj = res || Model.prototype.toJSON.apply(this);
     const defaults = result(this, "defaults");
 
@@ -1597,7 +1618,7 @@ export default class Component extends Styleable {
    * @param {Frame} frame Specific frame from which taking the element
    * @return {HTMLElement}
    */
-  getEl(frame: Frame):HTMLElement {
+  getEl(frame?: Frame) {
     const view = this.getView(frame);
     return view && view.el;
   }
@@ -1608,7 +1629,7 @@ export default class Component extends Styleable {
    * @param {Frame} frame Get View of a specific frame
    * @return {ComponentView}
    */
-  getView(frame: Frame) {
+  getView(frame?: Frame) {
     let { view, views } = this;
 
     if (frame) {
@@ -1623,9 +1644,9 @@ export default class Component extends Styleable {
     return this.getView(frame);
   }
 
-  __getScriptProps() {
+  __getScriptProps(): any[] {
     const modelProps = this.props();
-    const scrProps = this.get("script-props") || [];
+    const scrProps:any[] = this.get("script-props") || [];
     return scrProps.reduce((acc, prop) => {
       acc[prop] = modelProps[prop];
       return acc;
@@ -1639,7 +1660,7 @@ export default class Component extends Styleable {
    * @return {string}
    * @private
    */
-  getScriptString(script) {
+  getScriptString(script?: string|Function): string {
     let scr = script || this.get("script");
 
     if (!scr) {
@@ -1663,7 +1684,7 @@ export default class Component extends Styleable {
       var tagVarStart = escapeRegExp(config.tagVarStart || "{[ ");
       var tagVarEnd = escapeRegExp(config.tagVarEnd || " ]}");
       var reg = new RegExp(`${tagVarStart}([\\w\\d-]*)${tagVarEnd}`, "g");
-      scr = scr.replace(reg, (match, v) => {
+      scr = (scr as string).replace(reg, (match, v) => {
         // If at least one match is found I have to track this change for a
         // better optimization inside JS generator
         this.scriptUpdated();
@@ -1676,7 +1697,7 @@ export default class Component extends Styleable {
     return scr;
   }
 
-  emitUpdate(property, ...args) {
+  emitUpdate(property: string, ...args: any) {
     const { em } = this;
     const event = keyUpdate + (property ? `:${property}` : "");
     const item = property && this.get(property);
@@ -1709,7 +1730,7 @@ export default class Component extends Styleable {
   onAll(clb: Function) {
     if (isFunction(clb)) {
       clb(this);
-      this.components.forEach(model => model.onAll(clb));
+      this.components?.forEach(model => model.onAll(clb));
     }
     return this;
   }
@@ -1718,12 +1739,12 @@ export default class Component extends Styleable {
    * Remove the component
    * @return {this}
    */
-  remove(opts = {}) {
+  remove(opts:any = {}) {
     const { em } = this;
     const coll = this.collection;
     const remove = () => {
       coll && coll.remove(this, opts);
-      opts.root && this.components("");
+      opts.root && this.getNewComponents("");
     };
     const rmOpts = { ...opts };
     [this, em].map(i =>
@@ -1778,7 +1799,7 @@ export default class Component extends Styleable {
     return rule && rule.get("selectors").at(0);
   }
 
-  _idUpdated(m: Component, v, opts = {}) {
+  _idUpdated(m: Component, v: any, opts: any = {}) {
     if (opts.idUpdate) return;
 
     const { ccid } = this;
@@ -1800,9 +1821,9 @@ export default class Component extends Styleable {
     const selector = this._getStyleSelector({ id: idPrev });
     selector && selector.set({ name: id, label: id });
   }
-}
+  createId: any;
 
-/**
+  /**
  * Detect if the passed element is a valid component.
  * In case the element is valid an object abstracted
  * from the element will be returned
@@ -1810,11 +1831,11 @@ export default class Component extends Styleable {
  * @return {Object}
  * @private
  */
-Component.isComponent = el => {
+static isComponent = (el: HTMLElement) => {
   return { tagName: toLowerCase(el.tagName) };
 };
 
-Component.ensureInList = model => {
+static ensureInList = (model: Component) => {
   const list = Component.getList(model);
   const id = model.getId();
   const current = list[id];
@@ -1829,7 +1850,7 @@ Component.ensureInList = model => {
     list[nextId] = model;
   }
 
-  model.components().forEach(i => Component.ensureInList(i));
+  model.components?.forEach(i => Component.ensureInList(i));
 };
 
 /**
@@ -1839,7 +1860,7 @@ Component.ensureInList = model => {
  * @return {string}
  * @private
  */
-Component.createId = (model, opts = {}) => {
+ static createId = (model: Component, opts: any = {}) => {
   const list = Component.getList(model);
   const { idMap = {} } = opts;
   let { id } = model.get("attributes");
@@ -1857,7 +1878,7 @@ Component.createId = (model, opts = {}) => {
   return nextId;
 };
 
-Component.getNewId = list => {
+static getNewId = (list: {[id: string]: Component}) => {
   const count = Object.keys(list).length;
   // Testing 1000000 components with `+ 2` returns 0 collisions
   const ilen = count.toString().length + 2;
@@ -1871,7 +1892,7 @@ Component.getNewId = list => {
   return newId;
 };
 
-Component.getIncrementId = (id, list, opts = {}) => {
+static getIncrementId = (id: string, list: {[id: string]: Component}, opts:any = {}) => {
   const { keepIds = [] } = opts;
   let counter = 1;
   let newId = id;
@@ -1891,7 +1912,7 @@ Component.getIncrementId = (id, list, opts = {}) => {
  * Initially, the list, was set statically on the Component object but it was
  * not ok, as it was shared between multiple editor instances
  */
-Component.getList = model => {
+static getList = (model: Component) => {
   const { opt = {} } = model;
   const { domc, em } = opt;
   const dm = domc || (em && em.DomComponents);
@@ -1903,73 +1924,81 @@ Component.getList = model => {
  * (are not Components/CSSRules yet), for duplicated id and fixes them
  * This method is used in Components.js just after the parsing
  */
-Component.checkId = (components, styles = [], list = {}, opts = {}) => {
-  const comps = isArray(components) ? components : [components];
-  const { keepIds = [] } = opts;
-  comps.forEach(comp => {
-    const { attributes = {}, components } = comp;
-    const { id } = attributes;
+static checkId = (components?: Component[]|Component, styles:CssRule[]|CssRules = [], list:{[id: string]: Component} = {}, opts: any = {}) => {
+  if(components){
+    const comps = isArray(components) ? components : [components];
+    const { keepIds = [] } = opts;
+    comps.forEach(comp => {
+      const { attributes = {}, components } = comp;
+      const { id } = attributes;
 
-    // Check if we have collisions with current components
-    if (id && list[id] && keepIds.indexOf(id) < 0) {
-      const newId = Component.getIncrementId(id, list);
-      attributes.id = newId;
-      // Update passed styles
-      isArray(styles) &&
-        styles.forEach(style => {
-          const { selectors } = style;
-          selectors.forEach((sel, idx) => {
-            if (sel === `#${id}`) selectors[idx] = `#${newId}`;
+      // Check if we have collisions with current components
+      if (id && list[id] && keepIds.indexOf(id) < 0) {
+        const newId = Component.getIncrementId(id, list);
+        attributes.id = newId;
+        // Update passed styles
+        isArray(styles) &&
+          styles.forEach(style => {
+            const { selectors } = style;
+            selectors.forEach((sel, idx) => {
+              //@ts-ignore
+              if (sel === `#${id}`) selectors[idx] = `#${newId}`;
+            });
           });
-        });
-    }
+      }
 
-    components && Component.checkId(components, styles, list, opts);
-  });
+      //@ts-ignore
+      components && Component.checkId(components, styles, list, opts);
+      
+    });
+  }
 };
 
-Component.getDefaults = function() {
-  return result(this.prototype, "defaults");
+static getDefaults = function() {
+  return result(Component.prototype, "defaults");
 };
+defaults(){
+  return {
+    tagName: "div",
+    type: "",
+    name: "",
+    removable: true,
+    draggable: true,
+    droppable: true,
+    badgable: true,
+    stylable: true,
+    "stylable-require": "",
+    "style-signature": "",
+    unstylable: "",
+    highlightable: true,
+    copyable: true,
+    resizable: false,
+    editable: false,
+    layerable: true,
+    selectable: true,
+    hoverable: true,
+    void: false,
+    state: "", // Indicates if the component is in some CSS state like ':hover', ':active', etc.
+    status: "", // State, eg. 'selected'
+    content: "",
+    icon: "",
+    style: "",
+    styles: "", // Component related styles
+    classes: "", // Array of classes
+    script: "",
+    "script-props": "",
+    "script-export": "",
+    attributes: "",
+    traits: ["id", "title"],
+    propagate: "",
+    dmode: "",
+    toolbar: null,
+    [keySymbol]: 0,
+    [keySymbols]: 0,
+    [keySymbolOvrd]: 0,
+    _undo: true,
+    _undoexc: ["status", "open"]
+  };
+}
+}
 
-Component.prototype.defaults = {
-  tagName: "div",
-  type: "",
-  name: "",
-  removable: true,
-  draggable: true,
-  droppable: true,
-  badgable: true,
-  stylable: true,
-  "stylable-require": "",
-  "style-signature": "",
-  unstylable: "",
-  highlightable: true,
-  copyable: true,
-  resizable: false,
-  editable: false,
-  layerable: true,
-  selectable: true,
-  hoverable: true,
-  void: false,
-  state: "", // Indicates if the component is in some CSS state like ':hover', ':active', etc.
-  status: "", // State, eg. 'selected'
-  content: "",
-  icon: "",
-  style: "",
-  styles: "", // Component related styles
-  classes: "", // Array of classes
-  script: "",
-  "script-props": "",
-  "script-export": "",
-  attributes: "",
-  traits: ["id", "title"],
-  propagate: "",
-  dmode: "",
-  toolbar: null,
-  [keySymbol]: 0,
-  [keySymbols]: 0,
-  [keySymbolOvrd]: 0,
-  _undo: true,
-  _undoexc: ["status", "open"]
-};

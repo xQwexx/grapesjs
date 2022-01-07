@@ -14,10 +14,7 @@ describe('Component Types', () => {
 
   beforeAll(() => {
     editor = new Editor({ allowScripts: 1 });
-    editor
-      .getModel()
-      .get('PageManager')
-      .onLoad();
+    editor.getModel().PageManager.onLoad();
     wrapper = editor.getWrapper();
   });
 

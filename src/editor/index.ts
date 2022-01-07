@@ -200,7 +200,7 @@ export default class Editor {
     return this.em.DomComponents;
   }
   get LayerManager(): LayerManagerModule {
-    return this.em.get("LayerManager");
+    return this.em.LayerManager;
   }
   get CssComposer(): CssComposerModule {
     return this.em.CssComposer;
@@ -750,8 +750,8 @@ export default class Editor {
    * // custom local
    * editor.t('msg2', { params: { test: 'hello' }, l: 'it' });
    */
-  t(...args: any[]) {
-    return this.em.t(...args);
+  t(key: string, opts: { l?: string; params?: any; lFlb?: string } = {}) {
+    return this.em.t(key, opts);
   }
 
   /**

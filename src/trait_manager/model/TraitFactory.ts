@@ -1,17 +1,19 @@
-export default (config = {}) => ({
+import Trait from "./Trait";
+
+export default (config:any = {}) => ({
   /**
    * Build props object by their name
    * @param  {Array<string>|string} props Array of properties name
    * @return {Array<Object>}
    */
-  build(props) {
+  build(props: string |string[]) {
     const objs = [];
 
     if (typeof props === 'string') props = [props];
 
     for (let i = 0; i < props.length; i++) {
-      const obj = {};
-      const prop = props[i];
+      const obj: any = {};
+      const prop: string = props[i];
       obj.name = prop;
 
       switch (prop) {
@@ -25,6 +27,6 @@ export default (config = {}) => ({
       objs.push(obj);
     }
 
-    return objs;
+    return objs as Trait[];
   }
 });

@@ -284,7 +284,7 @@ export default class UndoManagerModule extends Module<UndoManagerConfig> {
    * @return {Array}
    */
   getStackGroup() {
-    const result: any = [];
+    const result: any[] = [];
     const inserted: any = [];
 
     this.getStack().forEach((item: any) => {

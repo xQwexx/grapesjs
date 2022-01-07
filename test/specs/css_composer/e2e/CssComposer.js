@@ -60,9 +60,9 @@ describe('E2E tests', () => {
       cssComposer: { rules: rulesSet },
       container: 'csscomposer-fixture'
     });
-    var cssc = gj.editor.get('CssComposer');
+    var cssc = gj.editor.CssComposer;
     expect(cssc.getAll().length).toEqual(rulesSet.length);
-    var cls = gj.editor.get('SelectorManager').getAll();
+    var cls = gj.editor.SelectorManager.getAll();
     expect(cls.length).toEqual(3);
   });
 

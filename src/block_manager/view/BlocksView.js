@@ -23,7 +23,7 @@ export default Backbone.View.extend({
 
     if (this.em) {
       this.config.getSorter = this.getSorter;
-      this.canvas = this.em.get('Canvas');
+      this.canvas = this.em.Canvas;
     }
   },
 
@@ -41,7 +41,7 @@ export default Backbone.View.extend({
   getSorter() {
     if (!this.em) return;
     if (!this.sorter) {
-      var utils = this.em.get('Utils');
+      var utils = this.em.Utils;
       var canvas = this.canvas;
       this.sorter = new utils.Sorter({
         container: canvas.getBody(),

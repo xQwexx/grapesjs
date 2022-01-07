@@ -70,7 +70,7 @@ export default Backbone.View.extend({
 
     const config = em.get('Config');
     const state = !config.devicePreviewMode ? em.get('state') : '';
-    const { componentFirst } = em.get('SelectorManager').getConfig();
+    const { componentFirst } = em.SelectorManager.getConfig();
     const el = model.getEl();
     pt.helper = null;
     pt.targets = null;
@@ -83,7 +83,7 @@ export default Backbone.View.extend({
 
     // Create a new rule for the state as a helper
     const appendStateRule = (style = {}) => {
-      const cc = em.get('CssComposer');
+      const cc = em.CssComposer;
       const rules = cc.getAll();
       let helperRule = cc.getClassRule(helperCls);
 
@@ -100,7 +100,7 @@ export default Backbone.View.extend({
       pt.helper = helperRule;
     };
 
-    const sm = em.get('StyleManager');
+    const sm = em.StyleManager;
     const target = sm.getModelToStyle(model);
 
     if (state) {
@@ -134,7 +134,7 @@ export default Backbone.View.extend({
 
       if (isString(target)) {
         let rule;
-        const rules = em.get('CssComposer').getAll();
+        const rules = em.CssComposer.getAll();
 
         if (targetIsClass) {
           rule = rules.filter(

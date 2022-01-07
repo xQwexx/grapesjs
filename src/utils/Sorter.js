@@ -95,7 +95,7 @@ export default Backbone.View.extend({
     const em = this.em;
     const elDoc = el
       ? el.ownerDocument
-      : em && em.get('Canvas').getBody().ownerDocument;
+      : em && em.Canvas.getBody().ownerDocument;
     const docs = [document];
     elDoc && docs.push(elDoc);
     return docs;
@@ -120,7 +120,7 @@ export default Backbone.View.extend({
   },
 
   updateTextViewCursorPosition(e) {
-    const Canvas = this.em.get('Canvas');
+    const Canvas = this.em.Canvas;
     const targetDoc = Canvas.getDocument();
     let range = null;
 
@@ -153,7 +153,7 @@ export default Backbone.View.extend({
    */
   toggleSortCursor(active) {
     const { em } = this;
-    const cv = em && em.get('Canvas');
+    const cv = em && em.Canvas;
 
     // Avoid updating body className as it causes a huge repaint
     // Noticeable with "fast" drag of blocks
@@ -187,7 +187,7 @@ export default Backbone.View.extend({
 
     // Listen mouse move events
     if (this.em) {
-      $(this.em.get('Canvas').getBody().ownerDocument)
+      $(this.em.Canvas.getBody().ownerDocument)
         .off('mousemove', this.moveDragHelper)
         .on('mousemove', this.moveDragHelper);
     }
@@ -374,7 +374,7 @@ export default Backbone.View.extend({
       }
 
       if (!dropModel) {
-        const comps = em.get('DomComponents').getComponents();
+        const comps = em.DomComponents.getComponents();
         const opts = {
           avoidChildren,
           avoidStore: 1,
@@ -444,9 +444,7 @@ export default Backbone.View.extend({
     var rX = e.pageX - this.elL + this.el.scrollLeft;
 
     if (this.canvasRelative && em) {
-      const mousePos = em
-        .get('Canvas')
-        .getMouseRelativeCanvas(e, { noScroll: 1 });
+      const mousePos = em.Canvas.getMouseRelativeCanvas(e, { noScroll: 1 });
       rX = mousePos.x;
       rY = mousePos.y;
     }
@@ -834,7 +832,7 @@ export default Backbone.View.extend({
    */
   getDim(el) {
     const { em, canvasRelative } = this;
-    const canvas = em && em.get('Canvas');
+    const canvas = em && em.Canvas;
     const offsets = canvas ? canvas.getElementOffsets(el) : {};
     let top, left, height, width;
 

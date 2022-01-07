@@ -5,29 +5,29 @@ import {
   Silenceable,
   ModelSetOptions
 } from "backbone";
+import Component from "dom_components/model/Component";
+import Components from "dom_components/model/Components";
 import { isArray } from "underscore";
 //import {Component} from 'parser/model/ParserHtml';
 
-export class Selectable extends Model {}
-
-export default class Selected extends Collection {
-  getByComponent(component: Selectable) {
+export default class Selected extends Collection<Component> {
+  getByComponent(component: Component) {
     return this.filter(s => this.getComponent(s) === component)[0];
   }
 
-  addComponent(component: any, opts?: AddOptions) {
+  addComponent(component: Component|Component[], opts?: AddOptions) {
     const toAdd = (isArray(component) ? component : [component])
       .filter(c => !this.hasComponent(c))
-      .map(component => ({ component }));
-    //@ts-ignore
+      .map(component => ( {component}));
+
     return this.push(toAdd, opts);
   }
 
   getComponent(model: Model) {
-    return model.get("component");
+    return model.get("component") as Component;
   }
 
-  hasComponent(component: Selectable) {
+  hasComponent(component: Component) {
     const model = this.getByComponent(component);
     return model && this.contains(model);
   }
@@ -41,7 +41,7 @@ export default class Selected extends Collection {
     return this.map(s => this.getComponent(s)).filter(i => i);
   }
 
-  removeComponent(component: any, opts?: Silenceable) {
+  removeComponent(component: Component|Component[], opts?: Silenceable) {
     const toRemove = (isArray(component) ? component : [component]).map(c =>
       this.getByComponent(c)
     );
@@ -49,4 +49,4 @@ export default class Selected extends Collection {
   }
 }
 
-Selected.prototype.model = Selectable;
+Selected.prototype.model = Component;

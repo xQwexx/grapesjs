@@ -12,14 +12,31 @@ import {
   motionsEv
 } from 'utils/dom';
 import { on, off, setViewEl, hasDnd, getPointerEvent } from 'utils/mixins';
+import Frame from 'canvas/model/Frame';
+import EditorModel from 'editor/model/Editor';
+import { scriptIncludeAttr, styleIncludeAttr } from 'canvas/model/Canvas';
 
-export default Backbone.View.extend({
-  tagName: 'iframe',
-
+interface styleLinkAttr {
+  tag: string,
   attributes: {
+    rel: string,
+    href: string
+  }
+}
+export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
+  tagName = 'iframe';
+
+  attributes = {
     allowfullscreen: 'allowfullscreen',
     'data-frame-el': true
-  },
+  }
+  dragging = false;
+  em: EditorModel;
+  jsContainer: any;
+  wrapper?: any;
+  droppable?: Droppable|false;
+  rect?: DOMRect;
+  tools:{[id: string]: any} = {};
 
   initialize(o) {
     bindAll(
@@ -42,7 +59,7 @@ export default Backbone.View.extend({
     this.listenTo(cvModel, 'change:styles', this.renderStyles);
     model.view = this;
     setViewEl(el, this);
-  },
+  }
 
   /**
    * Update `<head>` content of the frame
@@ -75,35 +92,35 @@ export default Backbone.View.extend({
       el && el.parentNode.removeChild(el);
     });
     appendVNodes(headEl, toAdd);
-  },
+  }
 
   getEl() {
     return this.el;
-  },
+  }
 
   getCanvasModel() {
-    return this.em.get('Canvas').getModel();
-  },
+    return this.em.Canvas.getModel();
+  }
 
   getWindow() {
     return this.getEl().contentWindow;
-  },
+  }
 
   getDoc() {
     return this.getEl().contentDocument;
-  },
+  }
 
   getHead() {
-    return this.getDoc().querySelector('head');
-  },
+    return this.getDoc()?.querySelector('head');
+  }
 
   getBody() {
-    return this.getDoc().querySelector('body');
-  },
+    return this.getDoc()?.querySelector('body');
+  }
 
   getWrapper() {
-    return this.getBody().querySelector('[data-gjs-type=wrapper]');
-  },
+    return this.getBody()?.querySelector('[data-gjs-type=wrapper]');
+  }
 
   getJsContainer() {
     if (!this.jsContainer) {
@@ -111,28 +128,28 @@ export default Backbone.View.extend({
     }
 
     return this.jsContainer;
-  },
+  }
 
   getToolsEl() {
     const { frameWrapView } = this.config;
     return frameWrapView && frameWrapView.elTools;
-  },
+  }
 
   getGlobalToolsEl() {
-    return this.em.get('Canvas').getGlobalToolsEl();
-  },
+    return this.em.Canvas.getGlobalToolsEl();
+  }
 
   getHighlighter() {
     return this._getTool('[data-hl]');
-  },
+  }
 
   getBadgeEl() {
     return this._getTool('[data-badge]');
-  },
+  }
 
   getOffsetViewerEl() {
     return this._getTool('[data-offset]');
-  },
+  }
 
   getRect() {
     if (!this.rect) {
@@ -140,14 +157,14 @@ export default Backbone.View.extend({
     }
 
     return this.rect;
-  },
+  }
 
   /**
    * Get rect data, not affected by the canvas zoom
    */
   getOffsetRect() {
     const { el } = this;
-    const { scrollTop, scrollLeft } = this.getBody();
+    const { scrollTop = 0, scrollLeft = 0 } = this.getBody() ?? {};
     const height = el.offsetHeight;
     const width = el.offsetWidth;
 
@@ -161,9 +178,9 @@ export default Backbone.View.extend({
       scrollBottom: scrollTop + height,
       scrollRight: scrollLeft + width
     };
-  },
+  }
 
-  _getTool(name) {
+  _getTool(name: string) {
     const { tools } = this;
     const toolsEl = this.getToolsEl();
 
@@ -172,34 +189,34 @@ export default Backbone.View.extend({
     }
 
     return tools[name];
-  },
+  }
 
   remove() {
     const wrp = this.wrapper;
-    this._toggleEffects();
+    this._toggleEffects(false);
     this.tools = {};
     wrp && wrp.remove();
     Backbone.View.prototype.remove.apply(this, arguments);
-  },
+  }
 
   startAutoscroll() {
-    this.lastMaxHeight = this.getWrapper().offsetHeight - this.el.offsetHeight;
+    this.lastMaxHeight = this.getWrapper()?.offsetHeight - this.el.offsetHeight;
 
     // By detaching those from the stack avoid browsers lags
     // Noticeable with "fast" drag of blocks
     setTimeout(() => {
-      this._toggleAutoscrollFx(1);
+      this._toggleAutoscrollFx(true);
       requestAnimationFrame(this.autoscroll);
     }, 0);
-  },
+  }
 
   autoscroll() {
     if (this.dragging) {
       const { lastClientY } = this;
-      const canvas = this.em.get('Canvas');
+      const canvas = this.em.Canvas;
       const win = this.getWindow();
       const body = this.getBody();
-      const actualTop = body.scrollTop;
+      const actualTop = body?.scrollTop ?? 0
       const clientY = lastClientY || 0;
       const limitTop = canvas.getConfig().autoscrollLimit;
       const limitBottom = this.getRect().height - limitTop;
@@ -220,58 +237,62 @@ export default Backbone.View.extend({
         nextTop < this.lastMaxHeight
       ) {
         const toolsEl = this.getGlobalToolsEl();
-        toolsEl.style.opacity = 0;
+        if(toolsEl) toolsEl.style.opacity = '0';
         this.showGlobalTools();
-        win.scrollTo(0, nextTop);
+        win?.scrollTo(0, nextTop);
       }
 
       requestAnimationFrame(this.autoscroll);
     }
-  },
+  }
 
-  updateClientY(ev) {
+  updateClientY(ev: Event) {
     ev.preventDefault();
     this.lastClientY = getPointerEvent(ev).clientY * this.em.getZoomDecimal();
-  },
+  }
 
-  showGlobalTools: debounce(function() {
-    this.getGlobalToolsEl().style.opacity = '';
-  }, 50),
+  showGlobalTools = debounce(() => {
+    const gtel = this.getGlobalToolsEl();
+    if(gtel) gtel.style.opacity = '';
+  }, 50)
 
   stopAutoscroll() {
     this.dragging && this._toggleAutoscrollFx();
-  },
+  }
 
-  _toggleAutoscrollFx(enable) {
+  _toggleAutoscrollFx(enable: boolean = false) {
     this.dragging = enable;
     const win = this.getWindow();
-    const method = enable ? 'on' : 'off';
-    const mt = { on, off };
-    mt[method](win, 'mousemove dragover', this.updateClientY);
-    mt[method](win, 'mouseup', this.stopAutoscroll);
-  },
+    if (win)
+    {
+      const method = enable ? 'on' : 'off';
+      const mt = { on, off };
+      mt[method](win, 'mousemove dragover', this.updateClientY);
+      mt[method](win, 'mouseup', this.stopAutoscroll);
+    }
+  }
 
   render() {
     const { $el, ppfx } = this;
     $el.attr({ class: `${ppfx}frame` });
     this.renderScripts();
     return this;
-  },
+  }
 
   renderScripts() {
     const { el, model, em } = this;
     const evLoad = 'frame:load';
     const evOpts = { el, model, view: this };
     const canvas = this.getCanvasModel();
-    const appendScript = scripts => {
+    const appendScript = (scripts: (string|scriptIncludeAttr)[]) => {
       if (scripts.length > 0) {
-        const src = scripts.shift();
+        const src = scripts.shift() ;
         const scriptEl = createEl('script', {
           type: 'text/javascript',
           ...(isString(src) ? { src } : src)
         });
         scriptEl.onerror = scriptEl.onload = appendScript.bind(null, scripts);
-        el.contentDocument.head.appendChild(scriptEl);
+        el.contentDocument?.head.appendChild(scriptEl);
       } else {
         this.renderBody();
         em && em.trigger(evLoad, evOpts);
@@ -280,40 +301,43 @@ export default Backbone.View.extend({
 
     el.onload = () => {
       em && em.trigger(`${evLoad}:before`, evOpts);
-      appendScript([...canvas.get('scripts')]);
+      appendScript([...canvas.scripts]);
     };
-  },
+  }
 
-  renderStyles(opts = {}) {
+  renderStyles(opts:{prev?:(string|styleIncludeAttr)[]}) {
     const head = this.getHead();
     const canvas = this.getCanvasModel();
-    const normalize = stls =>
-      stls.map(href => ({
-        tag: 'link',
-        attributes: {
-          rel: 'stylesheet',
-          ...(isString(href) ? { href } : href)
-        }
-      }));
-    const prevStyles = normalize(opts.prev || canvas.previous('styles'));
-    const styles = normalize(canvas.get('styles'));
-    const toRemove = [];
-    const toAdd = [];
-    const find = (items, stack, res) => {
-      items.forEach(item => {
-        const { href } = item.attributes;
-        const has = stack.some(s => s.attributes.href === href);
-        !has && res.push(item);
+    if(head)
+    {
+      const normalize = (stls: (string|styleIncludeAttr)[]) =>
+        stls.map(href => ({
+          tag: 'link',
+          attributes: {
+            rel: 'stylesheet',
+            ...(isString(href) ? { href } : href)
+          }
+        }));
+      const prevStyles = normalize(opts.prev || canvas.previous('styles'));
+      const styles = normalize(canvas.styles);
+      const toRemove: styleLinkAttr[] = [];
+      const toAdd: styleLinkAttr[] = [];
+      const find = (items: styleLinkAttr[], stack: styleLinkAttr[], res: styleLinkAttr[]) => {
+        items.forEach(item => {
+          const { href } = item.attributes;
+          const has = stack.some(s => s.attributes.href === href);
+          !has && res.push(item);
+        });
+      };
+      find(styles, prevStyles, toAdd);
+      find(prevStyles, styles, toRemove);
+      toRemove.forEach(stl => {
+        const el = head.querySelector(`link[href="${stl.attributes.href}"]`);
+        el && el.parentNode?.removeChild(el);
       });
-    };
-    find(styles, prevStyles, toAdd);
-    find(prevStyles, styles, toRemove);
-    toRemove.forEach(stl => {
-      const el = head.querySelector(`link[href="${stl.attributes.href}"]`);
-      el && el.parentNode.removeChild(el);
-    });
-    appendVNodes(head, toAdd);
-  },
+      appendVNodes(head, toAdd);
+    }
+  }
 
   renderBody() {
     const { config, model, ppfx } = this;
@@ -322,11 +346,13 @@ export default Backbone.View.extend({
     const body = this.getBody();
     const win = this.getWindow();
     const conf = em.get('Config');
-    win._isEditor = true;
+    win?._isEditor = true;
     this.renderStyles({ prev: [] });
 
     const colorWarn = '#ffca6f';
 
+    if (doc && body && win)
+    {
     // I need all this styles to make the editor work properly
     // Remove `html { height: 100%;}` from the baseCss as it gives jumpings
     // effects (on ENTER) with RTE like CKEditor (maybe some bug there?!?)
@@ -412,7 +438,7 @@ export default Backbone.View.extend({
       new CssRulesView({
         collection: model.getStyles(),
         config: {
-          ...em.get('CssComposer').getConfig(),
+          ...em.CssComposer.getConfig(),
           frameView: this
         }
       }).render().el
@@ -425,9 +451,9 @@ export default Backbone.View.extend({
     on(
       body,
       'click',
-      ev => ev && ev.target.tagName == 'A' && ev.preventDefault()
+      (ev: Event) => ev?.target && ev.target.tagName == 'A' && ev.preventDefault()
     );
-    on(body, 'submit', ev => ev && ev.preventDefault());
+    on(body, 'submit', (ev: SubmitEvent) => ev && ev.preventDefault());
 
     // When the iframe is focused the event dispatcher is not the same so
     // I need to delegate all events to the parent document
@@ -444,18 +470,19 @@ export default Backbone.View.extend({
       })
     );
 
-    this._toggleEffects(1);
+    this._toggleEffects(true);
     this.droppable = hasDnd(em) && new Droppable(em, this.wrapper.el);
     model.trigger('loaded');
-  },
+    }
+  }
 
-  _toggleEffects(enable) {
+  _toggleEffects(enable: boolean) {
     const method = enable ? on : off;
     const win = this.getWindow();
     win && method(win, `${motionsEv} resize`, this._emitUpdate);
-  },
+  }
 
   _emitUpdate() {
     this.model._emitUpdated();
   }
-});
+};

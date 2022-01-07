@@ -74,7 +74,7 @@ export default AssetView.extend({
       onDblClick(model);
     } else {
       this.updateTarget(target);
-      em && em.get('Modal').close();
+      em && em.ModalDialog.close();
     }
     isFunction(onSelect) && onSelect(model);
   },
