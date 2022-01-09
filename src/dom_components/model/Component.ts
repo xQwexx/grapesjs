@@ -34,6 +34,8 @@ import ComponentView from "dom_components/view/ComponentView";
 import CssRule from "css_composer/model/CssRule";
 import CssRules from "css_composer/model/CssRules";
 import Trait from "trait_manager/model/Trait";
+import BlockManagerModule from "block_manager";
+import { IComponent } from "dom_components";
 
 const escapeRegExp = (str: string) => {
   return str.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
@@ -124,21 +126,30 @@ export default class Component extends Styleable {
    * Hook method, called once the model has been removed
    */
   removed() {}
+  constructor(p: any, o: any) {
+    super(p, o);
+    return this;
+  }
 
   initialize(
     props = {},
-    opt: { em: EditorModel; config: DomComponentsConfig }
+    opt: {
+      em: EditorModel;
+      config: DomComponentsConfig;
+      frame: Frame;
+      temporary: boolean;
+    }
   ) {
     bindAll(this, "__upSymbProps", "__upSymbCls", "__upSymbComps");
     const em = opt.em;
 
     // Propagate properties from parent if indicated
     const parent = this.parent();
-    const parentAttr = parent && parent.attributes;
+    const parentAttr = parent?.attributes;
 
-    if (parentAttr && parentAttr.propagate) {
-      let newAttr = {};
-      const toPropagate = parentAttr.propagate;
+    if (parent && parentAttr?.propagate) {
+      let newAttr: any = {};
+      const toPropagate: any[] = parentAttr.propagate;
       toPropagate.forEach(prop => (newAttr[prop] = parent.get(prop)));
       newAttr.propagate = toPropagate;
       newAttr = { ...newAttr, ...props };
@@ -205,20 +216,25 @@ export default class Component extends Styleable {
       em && em.trigger("component:create", this);
     }
   }
-views: any[] = [];
-view?: ComponentView;
-prevColl?: Components;
-em: EditorModel;
-config: DomComponentsConfig;
-__symbReady = false;
-__hasUm = false;
-ccid: string;
-opt: any;
-frame: Frame;
-rule?: CssRule;
-get traits(): Traits{
-  return this.traits;
-}
+  views: any[] = [];
+  view?: ComponentView;
+  prevColl?: Components;
+  //@ts-ignore
+  em: EditorModel;
+  //@ts-ignore
+  config: DomComponentsConfig;
+  __symbReady = false;
+  __hasUm?: boolean = false;
+  //@ts-ignore
+  ccid: string;
+  opt: any;
+  //@ts-ignore
+  frame: Frame;
+  rule?: CssRule;
+  get traits(): Traits {
+    return this.get("traits");
+  }
+  viewLayer: any;
   __postAdd(opts: any = {}) {
     const { em } = this;
     const um = em && em.UndoManager;
@@ -237,13 +253,13 @@ get traits(): Traits{
     if (um) {
       um.remove(this.components);
       um.remove(this.getSelectors());
-      delete this.__hasUm;
+      this.__hasUm = undefined;
     }
   }
 
   __onChange(m: Component, opts: any) {
     const changed = this.changedAttributes();
-    if(changed){
+    if (changed) {
       ["status", "open", "toolbar", "traits"].forEach(
         name => delete changed[name]
       );
@@ -253,7 +269,6 @@ get traits(): Traits{
         this.__propSelfToParent({ component: this, changed, options: opts });
       }
     }
-
   }
 
   __changesUp(opts: any) {
@@ -326,11 +341,12 @@ get traits(): Traits{
   find(query: string) {
     const result: Component[] = [];
     const $els = this.view?.$el.find(query);
-    $els && $els.each(i => {
-      const $el = $els.eq(i);
-      const model = $el.data("model");
-      model && result.push(model);
-    });
+    $els &&
+      $els.each(i => {
+        const $el = $els.eq(i);
+        const model = $el.data("model");
+        model && result.push(model);
+      });
 
     return result;
   }
@@ -347,7 +363,7 @@ get traits(): Traits{
    */
   findType(type: string) {
     const result: Component[] = [];
-    const find:(components: Components|null)=>void = components =>
+    const find: (components: Components | null) => void = components =>
       components?.forEach(item => {
         item.is(type) && result.push(item);
         find(item.components);
@@ -399,7 +415,7 @@ get traits(): Traits{
   contains(component: Component) {
     let result = !1;
     if (!component) return result;
-    const contains:(components: Components|null)=>void = components => {
+    const contains: (components: Components | null) => void = components => {
       !result &&
         components?.forEach(item => {
           if (item === component) result = !0;
@@ -426,7 +442,7 @@ get traits(): Traits{
    * component.replaceWith('<div>Some new content</div>');
    * // -> Component
    */
-  replaceWith(el: String|Component) {
+  replaceWith(el: String | Component) {
     const coll = this.collection;
     const at = coll.indexOf(this);
     coll.remove(this);
@@ -533,7 +549,7 @@ get traits(): Traits{
    * @example
    * component.setStyle({ color: 'red' });
    */
-  setStyle(prop = {}, opts:any = {}) {
+  setStyle(prop = {}, opts: any = {}) {
     const em = this.em;
     const { opt } = this;
 
@@ -544,6 +560,7 @@ get traits(): Traits{
       !opts.inline
     ) {
       const style = this.get("style") || {};
+      //@ts-ignore
       prop = isString(prop) ? this.parseStyle(prop) : prop;
       prop = { ...prop, ...style };
       const state = em.get("state");
@@ -554,7 +571,7 @@ get traits(): Traits{
       this.set("style", "", { silent: true });
       keys(diff).forEach(pr => this.trigger(`change:style:${pr}`));
     } else {
-      prop = super.setStyle.apply(this, arguments);
+      prop = super.setStyle.apply(this, [prop, opts]);
     }
 
     return prop;
@@ -679,7 +696,7 @@ get traits(): Traits{
     return classStr ? classStr.split(" ") : [];
   }
 
-  __logSymbol(type: string, toUp= {}, opts = {}) {
+  __logSymbol(type: string, toUp = {}, opts = {}) {
     const symbol = this.__getSymbol();
     const symbols = this.__getSymbols();
     if (!symbol && !symbols) return;
@@ -725,7 +742,7 @@ get traits(): Traits{
     return em?.DomComponents.allById() ?? {};
   }
 
-  __getSymbol(): Component|undefined {
+  __getSymbol(): Component | undefined {
     let symb = this.get(keySymbol);
     if (symb && isString(symb)) {
       const ref = this.__getAllById()[symb];
@@ -803,7 +820,7 @@ get traits(): Traits{
 
   __upSymbProps(m: any, opts = {}) {
     const changed = this.changedAttributes();
-    if(changed){
+    if (changed) {
       const attrs = changed.attributes || {};
       delete changed.status;
       delete changed.open;
@@ -838,12 +855,13 @@ get traits(): Traits{
     this.__logSymbol("classes", toUp, { opts });
     toUp.forEach(child => {
       // This will propagate the change up to __upSymbProps
+      //@ts-ignore
       child.set("classes", this.classes, { fromInstance: this });
     });
     this.__changesUp(opts);
   }
 
-  __upSymbComps(m: Component, c: Components, o?:any) {
+  __upSymbComps(m: Component, c: Components, o?: any) {
     const optUp = o || c || {};
     const { fromInstance, fromUndo } = optUp;
     const toUpOpts = { fromInstance, fromUndo };
@@ -858,6 +876,7 @@ get traits(): Traits{
       this.__logSymbol("reset", toUp, { components: c.models });
       toUp.forEach(symb => {
         const newMods = c.models.map(mod => mod.clone({ symbol: 1 }));
+        //@ts-ignore
         symb.components?.reset(newMods, { fromInstance: this, ...c });
       });
       // Add
@@ -1039,6 +1058,7 @@ get traits(): Traits{
         return comp;
       } else {
         // I have to remove components from the old container before adding them to a new one
+        //@ts-ignore
         comp.collection?.remove(comp, { temporary: true });
         return comp;
       }
@@ -1047,7 +1067,7 @@ get traits(): Traits{
     return isArray(result) ? result : [result];
   }
 
-  get components(): Components|null {
+  get components(): Components | null {
     return this.get("components");
   }
   /**
@@ -1060,11 +1080,11 @@ get traits(): Traits{
    * // Set new collection
    * component.components('<span></span><div></div>');
    * // Get current collection
-   * const collection = component.components();
+   * const collection = component.components;
    * console.log(collection.length);
    * // -> 2
    */
-  getNewComponents(component: Component|string, opts = {}) {
+  getNewComponents(component: Component | string, opts = {}) {
     const coll = this.components;
 
     coll?.reset(undefined, opts);
@@ -1112,8 +1132,9 @@ get traits(): Traits{
    * component.parent();
    * // -> Component
    */
-  parent(opts: any = {}): Component|null {
-    const coll: Components = this.collection as any || (opts.prev && this.prevColl);
+  parent(opts: any = {}): Component | null {
+    const coll: Components =
+      (this.collection as any) || (opts.prev && this.prevColl);
     return coll?.parent ?? null;
   }
 
@@ -1139,7 +1160,8 @@ get traits(): Traits{
       if (model.collection) {
         tb.push({
           attributes: { class: "fa fa-arrow-up" },
-          command: (ed: Editor) => ed.runCommand("core:component-exit", { force: 1 })
+          command: (ed: Editor) =>
+            ed.runCommand("core:component-exit", { force: 1 })
         });
       }
       if (model.get("draggable")) {
@@ -1168,7 +1190,7 @@ get traits(): Traits{
     }
   }
 
-  __loadTraits(tr?: Traits|Trait[]|Function, opts = {}) {
+  __loadTraits(tr?: Traits | Trait[] | Function, opts = {}) {
     let traitsI = tr || this.traits;
 
     if (!(traitsI instanceof Traits)) {
@@ -1271,7 +1293,7 @@ get traits(): Traits{
    * component.removeTrait('title');
    * component.removeTrait(['title', 'id']);
    */
-  removeTrait(id: string|string[]) {
+  removeTrait(id: string | string[]) {
     const ids = isArray(id) ? id : [id];
     const toRemove = ids.map(id => this.getTrait(id));
     const traits = this.traits;
@@ -1306,14 +1328,16 @@ get traits(): Traits{
    * @return {Array}
    * @private
    */
-  normalizeClasses(arr: string[]|Selector[]|Selectors): Selector[]|undefined {
+  normalizeClasses(
+    arr: string[] | Selector[] | Selectors
+  ): Selector[] | undefined {
     const { em } = this;
     const clm = em && em.SelectorManager;
     if (!clm) return;
 
     if (arr instanceof Selectors) return [...arr.models];
-    return arr.flatMap((val) => clm.add(val)) as Selector[]
-
+    //@ts-ignore
+    else return arr.map(val => clm.add(val));
   }
 
   /**
@@ -1348,7 +1372,7 @@ get traits(): Traits{
 
     attr.status = "";
     opts.collection = null;
-//@ts-ignore
+    //@ts-ignore
     const cloned = new this.constructor(attr, opts);
 
     // Clone component specific rules
@@ -1605,7 +1629,7 @@ get traits(): Traits{
    * @param {String} id
    * @return {this}
    */
-  setId(id: string, opts={}) {
+  setId(id: string, opts = {}) {
     const attrs = { ...this.get("attributes") };
     attrs.id = id;
     this.set("attributes", attrs, opts);
@@ -1646,7 +1670,7 @@ get traits(): Traits{
 
   __getScriptProps(): any[] {
     const modelProps = this.props();
-    const scrProps:any[] = this.get("script-props") || [];
+    const scrProps: any[] = this.get("script-props") || [];
     return scrProps.reduce((acc, prop) => {
       acc[prop] = modelProps[prop];
       return acc;
@@ -1660,7 +1684,7 @@ get traits(): Traits{
    * @return {string}
    * @private
    */
-  getScriptString(script?: string|Function): string {
+  getScriptString(script?: string | Function): string {
     let scr = script || this.get("script");
 
     if (!scr) {
@@ -1697,20 +1721,16 @@ get traits(): Traits{
     return scr;
   }
 
-  emitUpdate(property: string, ...args: any) {
+  emitUpdate(property?: string, ...args: any) {
     const { em } = this;
     const event = keyUpdate + (property ? `:${property}` : "");
     const item = property && this.get(property);
     property &&
-      this.updated(
-        property,
-        item,
-        property && this.previous(property),
-        ...args
-      );
+      this.updated(property, item, property && this.previous(property));
     this.trigger(event, ...args);
     em && em.trigger(event, this, ...args);
-    ["components", "classes"].indexOf(property) >= 0 &&
+    property &&
+      ["components", "classes"].indexOf(property) >= 0 &&
       this.__propSelfToParent({
         component: this,
         changed: { [property]: item },
@@ -1739,7 +1759,7 @@ get traits(): Traits{
    * Remove the component
    * @return {this}
    */
-  remove(opts:any = {}) {
+  remove(opts: any = {}) {
     const { em } = this;
     const coll = this.collection;
     const remove = () => {
@@ -1788,7 +1808,7 @@ get traits(): Traits{
     return this;
   }
 
-  _getStyleRule({ id}:{id?: string } = {}) {
+  _getStyleRule({ id }: { id?: string } = {}) {
     const { em } = this;
     const idS = id || this.getId();
     return em && em.CssComposer.getIdRule(idS);
@@ -1824,181 +1844,188 @@ get traits(): Traits{
   createId: any;
 
   /**
- * Detect if the passed element is a valid component.
- * In case the element is valid an object abstracted
- * from the element will be returned
- * @param {HTMLElement}
- * @return {Object}
- * @private
- */
-static isComponent = (el: HTMLElement) => {
-  return { tagName: toLowerCase(el.tagName) };
-};
-
-static ensureInList = (model: Component) => {
-  const list = Component.getList(model);
-  const id = model.getId();
-  const current = list[id];
-
-  if (!current) {
-    // Insert in list
-    list[id] = model;
-  } else if (current !== model) {
-    // Create new ID
-    const nextId = Component.getIncrementId(id, list);
-    model.setId(nextId);
-    list[nextId] = model;
+   * Detect if the passed element is a valid component.
+   * In case the element is valid an object abstracted
+   * from the element will be returned
+   * @param {HTMLElement}
+   * @return {Object}
+   * @private
+   */
+  isComponent(el: HTMLElement): any | { tagName: string } | false {
+    return { tagName: toLowerCase(el.tagName) };
   }
 
-  model.components?.forEach(i => Component.ensureInList(i));
-};
+  static ensureInList = (model: Component) => {
+    const list = Component.getList(model);
+    const id = model.getId();
+    const current = list[id];
 
-/**
- * Relying simply on the number of components becomes a problem when you
- * store and load them back, you might hit collisions with new components
- * @param  {Model} model
- * @return {string}
- * @private
- */
- static createId = (model: Component, opts: any = {}) => {
-  const list = Component.getList(model);
-  const { idMap = {} } = opts;
-  let { id } = model.get("attributes");
-  let nextId;
-
-  if (id) {
-    nextId = Component.getIncrementId(id, list, opts);
-    model.setId(nextId);
-    if (id !== nextId) idMap[id] = nextId;
-  } else {
-    nextId = Component.getNewId(list);
-  }
-
-  list[nextId] = model;
-  return nextId;
-};
-
-static getNewId = (list: {[id: string]: Component}) => {
-  const count = Object.keys(list).length;
-  // Testing 1000000 components with `+ 2` returns 0 collisions
-  const ilen = count.toString().length + 2;
-  const uid = (Math.random() + 1.1).toString(36).slice(-ilen);
-  let newId = `i${uid}`;
-
-  while (list[newId]) {
-    newId = Component.getNewId(list);
-  }
-
-  return newId;
-};
-
-static getIncrementId = (id: string, list: {[id: string]: Component}, opts:any = {}) => {
-  const { keepIds = [] } = opts;
-  let counter = 1;
-  let newId = id;
-
-  if (keepIds.indexOf(id) < 0) {
-    while (list[newId]) {
-      counter++;
-      newId = `${id}-${counter}`;
+    if (!current) {
+      // Insert in list
+      list[id] = model;
+    } else if (current !== model) {
+      // Create new ID
+      const nextId = Component.getIncrementId(id, list);
+      model.setId(nextId);
+      list[nextId] = model;
     }
-  }
 
-  return newId;
-};
-
-/**
- * The list of components is taken from the Components module.
- * Initially, the list, was set statically on the Component object but it was
- * not ok, as it was shared between multiple editor instances
- */
-static getList = (model: Component) => {
-  const { opt = {} } = model;
-  const { domc, em } = opt;
-  const dm = domc || (em && em.DomComponents);
-  return dm ? dm.componentsById : {};
-};
-
-/**
- * This method checks, for each parsed component and style object
- * (are not Components/CSSRules yet), for duplicated id and fixes them
- * This method is used in Components.js just after the parsing
- */
-static checkId = (components?: Component[]|Component, styles:CssRule[]|CssRules = [], list:{[id: string]: Component} = {}, opts: any = {}) => {
-  if(components){
-    const comps = isArray(components) ? components : [components];
-    const { keepIds = [] } = opts;
-    comps.forEach(comp => {
-      const { attributes = {}, components } = comp;
-      const { id } = attributes;
-
-      // Check if we have collisions with current components
-      if (id && list[id] && keepIds.indexOf(id) < 0) {
-        const newId = Component.getIncrementId(id, list);
-        attributes.id = newId;
-        // Update passed styles
-        isArray(styles) &&
-          styles.forEach(style => {
-            const { selectors } = style;
-            selectors.forEach((sel, idx) => {
-              //@ts-ignore
-              if (sel === `#${id}`) selectors[idx] = `#${newId}`;
-            });
-          });
-      }
-
-      //@ts-ignore
-      components && Component.checkId(components, styles, list, opts);
-      
-    });
-  }
-};
-
-static getDefaults = function() {
-  return result(Component.prototype, "defaults");
-};
-defaults(){
-  return {
-    tagName: "div",
-    type: "",
-    name: "",
-    removable: true,
-    draggable: true,
-    droppable: true,
-    badgable: true,
-    stylable: true,
-    "stylable-require": "",
-    "style-signature": "",
-    unstylable: "",
-    highlightable: true,
-    copyable: true,
-    resizable: false,
-    editable: false,
-    layerable: true,
-    selectable: true,
-    hoverable: true,
-    void: false,
-    state: "", // Indicates if the component is in some CSS state like ':hover', ':active', etc.
-    status: "", // State, eg. 'selected'
-    content: "",
-    icon: "",
-    style: "",
-    styles: "", // Component related styles
-    classes: "", // Array of classes
-    script: "",
-    "script-props": "",
-    "script-export": "",
-    attributes: "",
-    traits: ["id", "title"],
-    propagate: "",
-    dmode: "",
-    toolbar: null,
-    [keySymbol]: 0,
-    [keySymbols]: 0,
-    [keySymbolOvrd]: 0,
-    _undo: true,
-    _undoexc: ["status", "open"]
+    model.components?.forEach(i => Component.ensureInList(i));
   };
-}
-}
 
+  /**
+   * Relying simply on the number of components becomes a problem when you
+   * store and load them back, you might hit collisions with new components
+   * @param  {Model} model
+   * @return {string}
+   * @private
+   */
+  static createId = (model: Component, opts: any = {}) => {
+    const list = Component.getList(model);
+    const { idMap = {} } = opts;
+    let { id } = model.get("attributes");
+    let nextId;
+
+    if (id) {
+      nextId = Component.getIncrementId(id, list, opts);
+      model.setId(nextId);
+      if (id !== nextId) idMap[id] = nextId;
+    } else {
+      nextId = Component.getNewId(list);
+    }
+
+    list[nextId] = model;
+    return nextId;
+  };
+
+  static getNewId = (list: { [id: string]: Component }) => {
+    const count = Object.keys(list).length;
+    // Testing 1000000 components with `+ 2` returns 0 collisions
+    const ilen = count.toString().length + 2;
+    const uid = (Math.random() + 1.1).toString(36).slice(-ilen);
+    let newId = `i${uid}`;
+
+    while (list[newId]) {
+      newId = Component.getNewId(list);
+    }
+
+    return newId;
+  };
+
+  static getIncrementId = (
+    id: string,
+    list: { [id: string]: Component },
+    opts: any = {}
+  ) => {
+    const { keepIds = [] } = opts;
+    let counter = 1;
+    let newId = id;
+
+    if (keepIds.indexOf(id) < 0) {
+      while (list[newId]) {
+        counter++;
+        newId = `${id}-${counter}`;
+      }
+    }
+
+    return newId;
+  };
+
+  /**
+   * The list of components is taken from the Components module.
+   * Initially, the list, was set statically on the Component object but it was
+   * not ok, as it was shared between multiple editor instances
+   */
+  static getList = (model: Component) => {
+    const { opt = {} } = model;
+    const { domc, em } = opt;
+    const dm = domc || (em && em.DomComponents);
+    return dm ? dm.componentsById : {};
+  };
+
+  /**
+   * This method checks, for each parsed component and style object
+   * (are not Components/CSSRules yet), for duplicated id and fixes them
+   * This method is used in Components.js just after the parsing
+   */
+  static checkId = (
+    components?: Component[] | Component,
+    styles: CssRule[] | CssRules = [],
+    list: { [id: string]: Component } = {},
+    opts: any = {}
+  ) => {
+    if (components) {
+      const comps = isArray(components) ? components : [components];
+      const { keepIds = [] } = opts;
+      comps.forEach(comp => {
+        const { attributes = {}, components } = comp;
+        const { id } = attributes;
+
+        // Check if we have collisions with current components
+        if (id && list[id] && keepIds.indexOf(id) < 0) {
+          const newId = Component.getIncrementId(id, list);
+          attributes.id = newId;
+          // Update passed styles
+          isArray(styles) &&
+            styles.forEach(style => {
+              const { selectors } = style;
+              selectors.forEach((sel, idx) => {
+                //@ts-ignore
+                if (sel === `#${id}`) selectors[idx] = `#${newId}`;
+              });
+            });
+        }
+
+        //@ts-ignore
+        components && Component.checkId(components, styles, list, opts);
+      });
+    }
+  };
+
+  static getDefaults = function() {
+    return result(Component.prototype, "defaults");
+  };
+  defaults(): any {
+    return {
+      tagName: "div",
+      type: "",
+      name: "",
+      removable: true,
+      draggable: true,
+      droppable: true,
+      badgable: true,
+      stylable: true,
+      "stylable-require": "",
+      "style-signature": "",
+      unstylable: "",
+      highlightable: true,
+      copyable: true,
+      resizable: false,
+      editable: false,
+      layerable: true,
+      selectable: true,
+      hoverable: true,
+      void: false,
+      state: "", // Indicates if the component is in some CSS state like ':hover', ':active', etc.
+      status: "", // State, eg. 'selected'
+      content: "",
+      icon: "",
+      style: "",
+      styles: "", // Component related styles
+      classes: "", // Array of classes
+      script: "",
+      "script-props": "",
+      "script-export": "",
+      attributes: "",
+      traits: ["id", "title"],
+      propagate: "",
+      dmode: "",
+      toolbar: null,
+      [keySymbol]: 0,
+      [keySymbols]: 0,
+      [keySymbolOvrd]: 0,
+      _undo: true,
+      _undoexc: ["status", "open"]
+    };
+  }
+}

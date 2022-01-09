@@ -176,12 +176,16 @@ var componentTypes = [
     view: ComponentView
   }
 ];
-
-export type ComponentType =   {
-  id: string,
-  model: Component,
-  view: View
+export interface IComponent {
+  new (props: any, opt: any): Component;
+  isComponent(el: HTMLElement, opts?: any): any;
 }
+
+export type ComponentType = {
+  id: string;
+  model: IComponent;
+  view: View;
+};
 export default class DomComponentsModule extends Module<DomComponentsConfig>
   implements IStorableModule {
   Component = Component;
@@ -213,7 +217,6 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    */
   get storageKey() {
     var keys = [];
-    console.log(this);
     var smc = this.config.stm?.getConfig() || {};
     if (smc.storeHtml) keys.push("html");
     if (smc.storeComponents) keys.push("components");
@@ -371,7 +374,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    */
   getComponents() {
     const wrp = this.getWrapper();
-    return wrp && wrp.get("components") as Components;
+    return wrp && (wrp.get("components") as Components);
   }
 
   /**
@@ -403,7 +406,10 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    *   attributes: { title: 'here' }
    * });
    */
-  addComponent(component: object|Component|(object|Component)[], opt = {}) {
+  addComponent(
+    component: object | Component | (object | Component)[],
+    opt = {}
+  ) {
     return this.getComponents().add(component, opt);
   }
 
@@ -423,7 +429,9 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    * @return {this}
    */
   clear(opts = {}) {
-    this.getComponents().map(i => i).forEach(i => i.remove(opts));
+    this.getComponents()
+      .map(i => i)
+      .forEach(i => i.remove(opts));
     return this;
   }
 
@@ -434,7 +442,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    * @return {this}
    * @private
    */
-  setComponents(components: Component[]|Component, opt = {}) {
+  setComponents(components: Component[] | Component, opt = {}) {
     this.clear(opt).addComponent(components, opt);
   }
 
@@ -463,7 +471,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
       ? extendType
       : compType
       ? compType
-      : this.getType("default") as ComponentType;
+      : (this.getType("default") as ComponentType);
     const modelToExt = typeToExtend.model;
     const viewToExt = extendViewType ? extendViewType.view : typeToExtend.view;
 
@@ -483,12 +491,13 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
 
     // If the model/view is a simple object I need to extend it
     if (typeof model === "object") {
+      //@ts-ignore
       methods.model = modelToExt.extend(
         {
           ...model,
           ...getExtendedObj(extendFn, model, modelToExt),
           defaults: {
-            ...(result(modelToExt.prototype, "defaults") || {}),
+            ...(result(modelToExt, "defaults") || {}),
             ...(result(model, "defaults") || {})
           }
         },
@@ -502,6 +511,7 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
     }
 
     if (typeof view === "object") {
+      //@ts-ignore
       methods.view = viewToExt.extend({
         ...view,
         ...getExtendedObj(extendFnView, view, viewToExt)

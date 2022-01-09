@@ -36,8 +36,7 @@ export default class Frame extends Model {
   constructor(props: any, attr: any) {
     super(props);
     const { styles, component } = this.attributes;
-    const { em } = attr;
-    console.log(em);
+    const em: EditorModel = attr.em;
     const domc = em.DomComponents;
     const conf = domc.getConfig();
     const allRules = em.CssComposer.getAll();
@@ -48,8 +47,8 @@ export default class Frame extends Model {
     if (!isComponent(component)) {
       const wrp = isObject(component) ? component : { components: component };
       !wrp.type && (wrp.type = "wrapper");
-      const Wrapper = domc.getType("wrapper").model;
-      this.set("component", new Wrapper(wrp, modOpts));
+      const Wrapper = domc.getType("wrapper")?.model;
+      Wrapper && this.set("component", new Wrapper(wrp, modOpts));
     }
 
     if (!styles) {

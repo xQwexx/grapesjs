@@ -1,16 +1,27 @@
 import Backbone, { Model } from "backbone";
-import { ModuleConfig } from "./module";
+import CanvasModule from "canvas";
+import EditorModel from "editor/model/Editor";
+import { IModule, Module, ModuleConfig } from "./module";
 
-export default class View<TModel extends Model> extends Backbone.View<TModel> {
+export default class View<
+  TModel extends Model,
+  TUI extends Element = HTMLElement
+> extends Backbone.View<TModel, TUI> {
+  module: Module;
 
-  protected config: ModuleConfig;
+  get em() {
+    return this.module.em;
+  }
 
-  get em() {return this.config.em}
+  get pfx() {
+    return this.module.config.stylePrefix;
+  }
+  get ppfx() {
+    return this.module.config.stylePrefix;
+  }
 
-  get pfx() {return this.config.stylePrefix}
-  get ppfx() {return this.config.stylePrefix}
-  constructor(model: TModel, config: ModuleConfig) {
-    super({model: model});
-    this.config = config;
+  constructor(module: Module, model: TModel) {
+    super({ model: model });
+    this.module = module;
   }
 }

@@ -1,8 +1,8 @@
-import Backbone from 'backbone';
-import { bindAll, isString, debounce, isUndefined } from 'underscore';
-import CssRulesView from 'css_composer/view/CssRulesView';
-import ComponentView from 'dom_components/view/ComponentView';
-import Droppable from 'utils/Droppable';
+import Backbone from "backbone";
+import { bindAll, isString, debounce, isUndefined } from "underscore";
+import CssRulesView from "css_composer/view/CssRulesView";
+import ComponentView from "dom_components/view/ComponentView";
+import Droppable from "utils/Droppable";
 import {
   appendVNodes,
   empty,
@@ -10,55 +10,60 @@ import {
   createEl,
   createCustomEvent,
   motionsEv
-} from 'utils/dom';
-import { on, off, setViewEl, hasDnd, getPointerEvent } from 'utils/mixins';
-import Frame from 'canvas/model/Frame';
-import EditorModel from 'editor/model/Editor';
-import { scriptIncludeAttr, styleIncludeAttr } from 'canvas/model/Canvas';
+} from "utils/dom";
+import { on, off, setViewEl, hasDnd, getPointerEvent } from "utils/mixins";
+import Frame from "canvas/model/Frame";
+import EditorModel from "editor/model/Editor";
+import { scriptIncludeAttr, styleIncludeAttr } from "canvas/model/Canvas";
+import View from "common/View";
+import CanvasConfig from "canvas/config/config";
+import CanvasModule from "canvas";
+import { Module } from "common/module";
+import FrameWrapView from "./FrameWrapView";
 
 interface styleLinkAttr {
-  tag: string,
+  tag: string;
   attributes: {
-    rel: string,
-    href: string
-  }
+    rel: string;
+    href: string;
+  };
 }
-export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
-  tagName = 'iframe';
+export default class FrameView extends View<Frame, HTMLIFrameElement> {
+  tagName = "iframe";
 
   attributes = {
-    allowfullscreen: 'allowfullscreen',
-    'data-frame-el': true
-  }
+    allowfullscreen: "allowfullscreen",
+    "data-frame-el": true
+  };
   dragging = false;
-  em: EditorModel;
   jsContainer: any;
   wrapper?: any;
-  droppable?: Droppable|false;
+  droppable?: Droppable | false;
   rect?: DOMRect;
-  tools:{[id: string]: any} = {};
+  tools: { [id: string]: any } = {};
+  frameWrapView: FrameWrapView;
+  lastClientY?: number;
+  lastMaxHeight = 0;
 
-  initialize(o) {
+  get config() {
+    return this.module.config as CanvasConfig;
+  }
+
+  constructor(module: Module, model: Frame, frameWrapView: FrameWrapView) {
+    super(module, model);
     bindAll(
       this,
-      'updateClientY',
-      'stopAutoscroll',
-      'autoscroll',
-      '_emitUpdate'
+      "updateClientY",
+      "stopAutoscroll",
+      "autoscroll",
+      "_emitUpdate"
     );
-    const { model, el } = this;
-    this.tools = {};
-    this.config = {
-      ...(o.config || {}),
-      frameView: this
-    };
-    this.ppfx = this.config.pStylePrefix || '';
-    this.em = this.config.em;
+    this.frameWrapView = frameWrapView;
     const cvModel = this.getCanvasModel();
-    this.listenTo(model, 'change:head', this.updateHead);
-    this.listenTo(cvModel, 'change:styles', this.renderStyles);
+    this.listenTo(model, "change:head", this.updateHead);
+    this.listenTo(cvModel, "change:styles", this.renderStyles);
     model.view = this;
-    setViewEl(el, this);
+    setViewEl(this.el, this);
   }
 
   /**
@@ -67,16 +72,16 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
   updateHead() {
     const { model } = this;
     const headEl = this.getHead();
-    const toRemove = [];
-    const toAdd = [];
-    const current = model.get('head');
-    const prev = model.previous('head');
-    const attrStr = (attr = {}) =>
+    const toRemove: any[] = [];
+    const toAdd: any[] = [];
+    const current: any[] = model.get("head");
+    const prev: any[] = model.previous("head");
+    const attrStr = (attr: { [id: string]: any } = {}) =>
       Object.keys(attr)
         .sort()
         .map(i => `[${i}="${attr[i]}"]`)
-        .join('');
-    const find = (items, stack, res) => {
+        .join("");
+    const find = (items: any[], stack: any[], res: any[]) => {
       items.forEach(item => {
         const { tag, attributes } = item;
         const has = stack.some(
@@ -88,10 +93,10 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
     find(current, prev, toAdd);
     find(prev, current, toRemove);
     toRemove.forEach(stl => {
-      const el = headEl.querySelector(`${stl.tag}${attrStr(stl.attributes)}`);
-      el && el.parentNode.removeChild(el);
+      const el = headEl?.querySelector(`${stl.tag}${attrStr(stl.attributes)}`);
+      el?.parentNode?.removeChild(el);
     });
-    appendVNodes(headEl, toAdd);
+    headEl && appendVNodes(headEl, toAdd);
   }
 
   getEl() {
@@ -111,28 +116,29 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
   }
 
   getHead() {
-    return this.getDoc()?.querySelector('head');
+    return this.getDoc()?.querySelector("head");
   }
 
   getBody() {
-    return this.getDoc()?.querySelector('body');
+    return this.getDoc()?.querySelector("body");
   }
 
   getWrapper() {
-    return this.getBody()?.querySelector('[data-gjs-type=wrapper]');
+    return this.getBody()?.querySelector(
+      "[data-gjs-type=wrapper]"
+    ) as HTMLElement;
   }
 
   getJsContainer() {
     if (!this.jsContainer) {
-      this.jsContainer = createEl('div', { class: `${this.ppfx}js-cont` });
+      this.jsContainer = createEl("div", { class: `${this.ppfx}js-cont` });
     }
 
     return this.jsContainer;
   }
 
   getToolsEl() {
-    const { frameWrapView } = this.config;
-    return frameWrapView && frameWrapView.elTools;
+    return this.frameWrapView.elTools;
   }
 
   getGlobalToolsEl() {
@@ -140,15 +146,15 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
   }
 
   getHighlighter() {
-    return this._getTool('[data-hl]');
+    return this._getTool("[data-hl]");
   }
 
   getBadgeEl() {
-    return this._getTool('[data-badge]');
+    return this._getTool("[data-badge]");
   }
 
   getOffsetViewerEl() {
-    return this._getTool('[data-offset]');
+    return this._getTool("[data-offset]");
   }
 
   getRect() {
@@ -185,18 +191,19 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
     const toolsEl = this.getToolsEl();
 
     if (!tools[name]) {
-      tools[name] = toolsEl.querySelector(name);
+      tools[name] = toolsEl?.querySelector(name);
     }
 
     return tools[name];
   }
 
-  remove() {
+  remove(arg?: any) {
     const wrp = this.wrapper;
     this._toggleEffects(false);
     this.tools = {};
     wrp && wrp.remove();
-    Backbone.View.prototype.remove.apply(this, arguments);
+    Backbone.View.prototype.remove.apply(this, arg);
+    return this;
   }
 
   startAutoscroll() {
@@ -216,7 +223,7 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
       const canvas = this.em.Canvas;
       const win = this.getWindow();
       const body = this.getBody();
-      const actualTop = body?.scrollTop ?? 0
+      const actualTop = body?.scrollTop ?? 0;
       const clientY = lastClientY || 0;
       const limitTop = canvas.getConfig().autoscrollLimit;
       const limitBottom = this.getRect().height - limitTop;
@@ -237,7 +244,7 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
         nextTop < this.lastMaxHeight
       ) {
         const toolsEl = this.getGlobalToolsEl();
-        if(toolsEl) toolsEl.style.opacity = '0';
+        if (toolsEl) toolsEl.style.opacity = "0";
         this.showGlobalTools();
         win?.scrollTo(0, nextTop);
       }
@@ -253,8 +260,8 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
 
   showGlobalTools = debounce(() => {
     const gtel = this.getGlobalToolsEl();
-    if(gtel) gtel.style.opacity = '';
-  }, 50)
+    if (gtel) gtel.style.opacity = "";
+  }, 50);
 
   stopAutoscroll() {
     this.dragging && this._toggleAutoscrollFx();
@@ -263,12 +270,11 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
   _toggleAutoscrollFx(enable: boolean = false) {
     this.dragging = enable;
     const win = this.getWindow();
-    if (win)
-    {
-      const method = enable ? 'on' : 'off';
+    if (win) {
+      const method = enable ? "on" : "off";
       const mt = { on, off };
-      mt[method](win, 'mousemove dragover', this.updateClientY);
-      mt[method](win, 'mouseup', this.stopAutoscroll);
+      mt[method](win, "mousemove dragover", this.updateClientY);
+      mt[method](win, "mouseup", this.stopAutoscroll);
     }
   }
 
@@ -281,14 +287,14 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
 
   renderScripts() {
     const { el, model, em } = this;
-    const evLoad = 'frame:load';
+    const evLoad = "frame:load";
     const evOpts = { el, model, view: this };
     const canvas = this.getCanvasModel();
-    const appendScript = (scripts: (string|scriptIncludeAttr)[]) => {
+    const appendScript = (scripts: (string | scriptIncludeAttr)[]) => {
       if (scripts.length > 0) {
-        const src = scripts.shift() ;
-        const scriptEl = createEl('script', {
-          type: 'text/javascript',
+        const src = scripts.shift();
+        const scriptEl = createEl("script", {
+          type: "text/javascript",
           ...(isString(src) ? { src } : src)
         });
         scriptEl.onerror = scriptEl.onload = appendScript.bind(null, scripts);
@@ -305,24 +311,27 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
     };
   }
 
-  renderStyles(opts:{prev?:(string|styleIncludeAttr)[]}) {
+  renderStyles(opts: { prev?: (string | styleIncludeAttr)[] }) {
     const head = this.getHead();
     const canvas = this.getCanvasModel();
-    if(head)
-    {
-      const normalize = (stls: (string|styleIncludeAttr)[]) =>
+    if (head) {
+      const normalize = (stls: (string | styleIncludeAttr)[]) =>
         stls.map(href => ({
-          tag: 'link',
+          tag: "link",
           attributes: {
-            rel: 'stylesheet',
+            rel: "stylesheet",
             ...(isString(href) ? { href } : href)
           }
         }));
-      const prevStyles = normalize(opts.prev || canvas.previous('styles'));
+      const prevStyles = normalize(opts.prev || canvas.previous("styles"));
       const styles = normalize(canvas.styles);
       const toRemove: styleLinkAttr[] = [];
       const toAdd: styleLinkAttr[] = [];
-      const find = (items: styleLinkAttr[], stack: styleLinkAttr[], res: styleLinkAttr[]) => {
+      const find = (
+        items: styleLinkAttr[],
+        stack: styleLinkAttr[],
+        res: styleLinkAttr[]
+      ) => {
         items.forEach(item => {
           const { href } = item.attributes;
           const has = stack.some(s => s.attributes.href === href);
@@ -345,26 +354,26 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
     const doc = this.getDoc();
     const body = this.getBody();
     const win = this.getWindow();
-    const conf = em.get('Config');
-    win?._isEditor = true;
+    const conf = em.get("Config");
+    //@ts-ignore
+    win && (win._isEditor = true);
     this.renderStyles({ prev: [] });
 
-    const colorWarn = '#ffca6f';
+    const colorWarn = "#ffca6f";
 
-    if (doc && body && win)
-    {
-    // I need all this styles to make the editor work properly
-    // Remove `html { height: 100%;}` from the baseCss as it gives jumpings
-    // effects (on ENTER) with RTE like CKEditor (maybe some bug there?!?)
-    // With `body {height: auto;}` jumps in CKEditor are removed but in
-    // Firefox is impossible to drag stuff in empty canvas, so bring back
-    // `body {height: 100%;}`.
-    // For the moment I give the priority to Firefox as it might be
-    // CKEditor's issue
-    append(
-      body,
-      `<style>
-      ${conf.baseCss || ''}
+    if (doc && body && win) {
+      // I need all this styles to make the editor work properly
+      // Remove `html { height: 100%;}` from the baseCss as it gives jumpings
+      // effects (on ENTER) with RTE like CKEditor (maybe some bug there?!?)
+      // With `body {height: auto;}` jumps in CKEditor are removed but in
+      // Firefox is impossible to drag stuff in empty canvas, so bring back
+      // `body {height: 100%;}`.
+      // For the moment I give the priority to Firefox as it might be
+      // CKEditor's issue
+      append(
+        body,
+        `<style>
+      ${conf.baseCss || ""}
 
       .${ppfx}dashed *[data-highlightable] {
         outline: 1px dashed rgba(170,170,170,0.7);
@@ -420,59 +429,62 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
         cursor: grabbing !important;
       }
 
-      ${conf.canvasCss || ''}
-      ${conf.protectedCss || ''}
+      ${conf.canvasCss || ""}
+      ${conf.protectedCss || ""}
     </style>`
-    );
-    const component = model.getComponent();
-    this.wrapper = new ComponentView({
-      model: component,
-      config: {
-        ...component.config,
-        frameView: this
-      }
-    }).render();
-    append(body, this.wrapper.el);
-    append(
-      body,
-      new CssRulesView({
-        collection: model.getStyles(),
+      );
+      const component = model.getComponent();
+      this.wrapper = new ComponentView({
+        model: component,
         config: {
-          ...em.CssComposer.getConfig(),
+          ...component.config,
           frameView: this
         }
-      }).render().el
-    );
-    append(body, this.getJsContainer());
-    // em.trigger('loaded'); // I need to manage only the first one maybe
-    //this.updateOffset(); // TOFIX (check if I need it)
+      }).render();
+      append(body, this.wrapper.el);
+      append(
+        body,
+        new CssRulesView({
+          collection: model.getStyles(),
+          config: {
+            ...em.CssComposer.getConfig(),
+            frameView: this
+          }
+        }).render().el
+      );
+      append(body, this.getJsContainer());
+      // em.trigger('loaded'); // I need to manage only the first one maybe
+      //this.updateOffset(); // TOFIX (check if I need it)
 
-    // Avoid some default behaviours
-    on(
-      body,
-      'click',
-      (ev: Event) => ev?.target && ev.target.tagName == 'A' && ev.preventDefault()
-    );
-    on(body, 'submit', (ev: SubmitEvent) => ev && ev.preventDefault());
+      // Avoid some default behaviours
+      on(
+        body,
+        "click",
+        (ev: Event) =>
+          ev?.target &&
+          (ev.target as HTMLElement).tagName == "A" &&
+          ev.preventDefault()
+      );
+      on(body, "submit", (ev: Event) => ev && ev.preventDefault());
 
-    // When the iframe is focused the event dispatcher is not the same so
-    // I need to delegate all events to the parent document
-    [
-      { event: 'keydown keyup keypress', class: 'KeyboardEvent' },
-      { event: 'mousedown mousemove mouseup', class: 'MouseEvent' },
-      { event: 'pointerdown pointermove pointerup', class: 'PointerEvent' },
-      { event: 'wheel', class: 'WheelEvent' }
-    ].forEach(obj =>
-      obj.event.split(' ').forEach(event => {
-        doc.addEventListener(event, ev =>
-          this.el.dispatchEvent(createCustomEvent(ev, obj.class))
-        );
-      })
-    );
+      // When the iframe is focused the event dispatcher is not the same so
+      // I need to delegate all events to the parent document
+      [
+        { event: "keydown keyup keypress", class: "KeyboardEvent" },
+        { event: "mousedown mousemove mouseup", class: "MouseEvent" },
+        { event: "pointerdown pointermove pointerup", class: "PointerEvent" },
+        { event: "wheel", class: "WheelEvent" }
+      ].forEach(obj =>
+        obj.event.split(" ").forEach(event => {
+          doc.addEventListener(event, ev =>
+            this.el.dispatchEvent(createCustomEvent(ev, obj.class))
+          );
+        })
+      );
 
-    this._toggleEffects(true);
-    this.droppable = hasDnd(em) && new Droppable(em, this.wrapper.el);
-    model.trigger('loaded');
+      this._toggleEffects(true);
+      this.droppable = hasDnd(em) && new Droppable(em, this.wrapper.el);
+      model.trigger("loaded");
     }
   }
 
@@ -485,4 +497,4 @@ export default class FrameView extends Backbone.View<Frame, HTMLIFrameElement>{
   _emitUpdate() {
     this.model._emitUpdated();
   }
-};
+}

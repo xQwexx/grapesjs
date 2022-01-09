@@ -102,7 +102,7 @@ export default ComponentView.extend({
     const { model, rte, rteEnabled } = this;
     if (!rteEnabled && !opts.force) return;
     const content = this.getContent();
-    const comps = model.components();
+    const comps = model.components;
     const contentOpt = { fromDisable: 1, ...opts };
     model.set('content', '', contentOpt);
 

@@ -1,60 +1,68 @@
-import Backbone from 'backbone';
-import FrameView from './FrameView';
-import { bindAll, isNumber, isNull, debounce } from 'underscore';
-import { createEl, removeEl } from 'utils/dom';
-import Dragger from 'utils/Dragger';
-import Frame from 'canvas/model/Frame';
+import Backbone from "backbone";
+import FrameView from "./FrameView";
+import { bindAll, isNumber, isNull, debounce } from "underscore";
+import { createEl, removeEl } from "utils/dom";
+import Dragger from "utils/Dragger";
+import Frame from "canvas/model/Frame";
+import View from "common/View";
+import CanvasModule from "canvas";
+import { Module } from "common/module";
 
-export default class FrameWrapView extends Backbone.View<Frame>{
-  events(){ return {
-    'click [data-action-remove]': 'remove',
-    'mousedown [data-action-move]': 'startDrag'
+export default class FrameWrapView extends View<Frame> {
+  events() {
+    return {
+      "click [data-action-remove]": "remove",
+      "mousedown [data-action-move]": "startDrag"
+    };
   }
-  }
-  constructor(opts = {}, conf = {}) {
-    super(opts)
+  constructor(module: Module, model: Frame) {
+    super(module, model);
     bindAll(
       this,
-      'onScroll',
-      'frameLoaded',
-      'updateOffset',
-      'remove',
-      'startDrag'
+      "onScroll",
+      "frameLoaded",
+      "updateOffset",
+      "remove",
+      "startDrag"
     );
-    const { model } = this;
-    const config = {
+    /*const config = {
       ...(opts.config || conf),
       frameWrapView: this
     };
-    const { canvasView, em } = config;
-    this.cv = canvasView;
-    this.config = config;
-    this.em = em;
-    this.canvas = em && em.Canvas;
-    this.ppfx = config.pStylePrefix || '';
-    this.frame = new FrameView({ model, config });
+    const { canvasView, em } = config;*/
+    //this.cv = canvasView;
+    this.frame = new FrameView(module, model, this);
     this.classAnim = `${this.ppfx}frame-wrapper--anim`;
-    this.updateOffset = debounce(this.updateOffset.bind(this));
-    this.updateSize = debounce(this.updateSize.bind(this));
-    this.listenTo(model, 'loaded', this.frameLoaded);
-    this.listenTo(model, 'change:x change:y', this.updatePos);
-    this.listenTo(model, 'change:width change:height', this.updateSize);
-    this.listenTo(model, 'destroy remove', this.remove);
+    this.updateOffset = debounce(this.updateOffset.bind(this), 10);
+    this.updateSize = debounce(this.updateSize.bind(this), 10);
+    this.listenTo(model, "loaded", this.frameLoaded);
+    this.listenTo(model, "change:x change:y", this.updatePos);
+    this.listenTo(model, "change:width change:height", this.updateSize);
+    this.listenTo(model, "destroy remove", this.remove);
     this.updatePos();
-    this.setupDragger();
+    this.dragger = this.setupDragger();
   }
   dragger: Dragger;
   frame: FrameView;
   elTools?: HTMLElement;
+  classAnim: string;
 
-  setupDragger() {
+  get canvas() {
+    return this.module as CanvasModule;
+  }
+
+  get cv() {
+    return this.canvas.CanvasView;
+  }
+
+  private setupDragger() {
     const { canvas, model } = this;
-    let dragX: number, dragY: number, zoom;
+    let dragX: number, dragY: number, zoom: number;
     const toggleEffects = (on = false) => {
       canvas.toggleFramesEvents(on);
     };
 
-    this.dragger = new Dragger({
+    return new Dragger({
       onStart: () => {
         const { x, y } = model.attributes;
         zoom = this.em.getZoomMultiplier();
@@ -63,7 +71,7 @@ export default class FrameWrapView extends Backbone.View<Frame>{
         toggleEffects();
       },
       onEnd: () => toggleEffects(true),
-      setPosition: posOpts => {
+      setPosition: (posOpts: any) => {
         model.set({
           x: dragX + posOpts.x * zoom,
           y: dragY + posOpts.y * zoom
@@ -76,16 +84,17 @@ export default class FrameWrapView extends Backbone.View<Frame>{
     ev && this.dragger.start(ev);
   }
 
-  __clear(opts) {
+  __clear(opts?: any) {
     const { frame } = this;
     frame && frame.remove(opts);
     removeEl(this.elTools);
   }
 
-  remove(opts={}) {
+  remove(opts: any = {}) {
     this.__clear(opts);
-    Backbone.View.prototype.remove.apply(this, arguments);
-    ['frame', 'dragger', 'cv', 'em', 'canvas', 'elTools'].forEach(
+    Backbone.View.prototype.remove.apply(this, opts);
+    ["frame", "dragger", "cv", "em", "elTools"].forEach(
+      //@ts-ignore
       i => (this[i] = 0)
     );
     return this;
@@ -99,11 +108,11 @@ export default class FrameWrapView extends Backbone.View<Frame>{
     frame.model._emitUpdated();
   }
 
-  updatePos(md) {
+  updatePos(md = false) {
     const { model, el } = this;
     const { x, y } = model.attributes;
     const { style } = el;
-    this.frame.rect = 0;
+    this.frame.rect = undefined;
     style.left = isNaN(x) ? x : `${x}px`;
     style.top = isNaN(y) ? y : `${y}px`;
     md && this.updateOffset();
@@ -120,7 +129,7 @@ export default class FrameWrapView extends Backbone.View<Frame>{
   updateDim() {
     const { em, el, $el, model, classAnim, frame } = this;
     if (!frame) return;
-    frame.rect = 0;
+    frame.rect = undefined;
     $el.addClass(classAnim);
     const { noChanges, width, height } = this.__handleSize();
 
@@ -143,7 +152,7 @@ export default class FrameWrapView extends Backbone.View<Frame>{
 
   onScroll() {
     const { frame, em } = this;
-    em.trigger('frame:scroll', {
+    em.trigger("frame:scroll", {
       frame,
       body: frame.getBody(),
       target: frame.getWindow()
@@ -152,19 +161,20 @@ export default class FrameWrapView extends Backbone.View<Frame>{
 
   frameLoaded() {
     const { frame } = this;
-    frame.getWindow().onscroll = this.onScroll;
+    const wdw = frame.getWindow();
+    wdw && (wdw.onscroll = this.onScroll);
     this.updateDim();
   }
 
   __handleSize() {
-    const un = 'px';
+    const un = "px";
     const { model, el } = this;
     const { style } = el;
     const { width, height } = model.attributes;
-    const currW = style.width || '';
-    const currH = style.height || '';
-    const newW = width || '';
-    const newH = height || '';
+    const currW = style.width || "";
+    const currH = style.height || "";
+    const newW = width || "";
+    const newH = height || "";
     const noChanges = currW == newW && currH == newH;
     style.width = isNumber(newW) ? `${newW}${un}` : newW;
     style.height = isNumber(newH) ? `${newH}${un}` : newH;
@@ -184,7 +194,7 @@ export default class FrameWrapView extends Backbone.View<Frame>{
         `
       <div class="${ppfx}frame-wrapper__top gjs-two-color" data-frame-top>
         <div class="${ppfx}frame-wrapper__name" data-action-move>
-          ${model.get('name') || ''}
+          ${model.get("name") || ""}
         </div>
         <div class="${ppfx}frame-wrapper__top-r">
           <div class="${ppfx}frame-wrapper__icon" data-action-remove style="display: none">
@@ -199,10 +209,10 @@ export default class FrameWrapView extends Backbone.View<Frame>{
       )
       .append(frame.el);
     const elTools = createEl(
-      'div',
+      "div",
       {
         class: `${ppfx}tools`,
-        style: 'pointer-events:none; display: none'
+        style: "pointer-events:none; display: none"
       },
       `
       <div class="${ppfx}highlighter" data-hl></div>
@@ -231,15 +241,15 @@ export default class FrameWrapView extends Backbone.View<Frame>{
     `
     );
     this.elTools = elTools;
-    const twrp = cv.toolsWrapper;
-    twrp && twrp.appendChild(elTools); // TODO remove on frame remove
+    const twrp = cv?.toolsWrapper;
+    twrp?.appendChild(elTools); // TODO remove on frame remove
     onRender &&
       onRender({
         el,
-        elTop: el.querySelector('[data-frame-top]'),
-        elRight: el.querySelector('[data-frame-right]'),
-        elBottom: el.querySelector('[data-frame-bottom]'),
-        elLeft: el.querySelector('[data-frame-left]'),
+        elTop: el.querySelector("[data-frame-top]"),
+        elRight: el.querySelector("[data-frame-right]"),
+        elBottom: el.querySelector("[data-frame-bottom]"),
+        elLeft: el.querySelector("[data-frame-left]"),
         frame: model,
         frameWrapperView: this,
         remove: this.remove,
@@ -247,4 +257,4 @@ export default class FrameWrapView extends Backbone.View<Frame>{
       });
     return this;
   }
-};
+}

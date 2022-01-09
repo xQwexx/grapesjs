@@ -84,7 +84,9 @@ interface ICommand {
 type CommandRunFunction = (em: Editor, sender: Button, opts: any) => void;
 
 export default class CommandsModule extends Module<CommandsConfig> {
-  commands: { [id: string]: CommandAbstract } = {};
+  commands: {
+    [id: string]: { new (o: any): CommandAbstract } | CommandAbstract;
+  } = {};
   defaultCommands: { [id: string]: ICommand | CommandRunFunction } = {};
   active: { [id: string]: CommandAbstract } = {};
 
@@ -252,7 +254,7 @@ export default class CommandsModule extends Module<CommandsConfig> {
     let el = this.commands[id];
 
     if (isFunction(el)) {
-      //@ts-ignore
+      console.log(el);
       el = new el(this.config);
       this.commands[id] = el;
     } else if (!el) {

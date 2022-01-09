@@ -1,33 +1,40 @@
-import { includes } from 'underscore';
-import Backbone, { View } from 'backbone';
-import { ModuleConfig } from 'common/module';
-import EditorModel from 'editor/model/Editor';
-export interface somr{
-
-}
-export default abstract class DomainViews<T extends Backbone.Model> extends Backbone.View<T>{
-  itemsView: View<T>[] =[];
+import { includes } from "underscore";
+import Backbone, { Collection, View } from "backbone";
+import { Module, ModuleConfig } from "common/module";
+import EditorModel from "editor/model/Editor";
+export interface somr {}
+export default abstract class DomainViews<
+  T extends Backbone.Model
+> extends Backbone.View<T> {
+  itemsView: View<T>[] = [];
   autoAdd = false;
 
-  constructor(config: ModuleConfig, ) {
-    super();
-    this.config = config;
-    this.em = config.em;
-    this.autoAdd && this.listenTo(this.collection, 'add', this.addTo);
+  module: Module;
+
+  get em() {
+    return this.module.em;
   }
-  config: any;
-  em: EditorModel;
+
+  get pfx() {
+    return this.module.config.stylePrefix;
+  }
+  get ppfx() {
+    return this.module.config.stylePrefix;
+  }
+  constructor(module: Module, collection?: Collection) {
+    super({ collection });
+    this.module = module;
+    this.autoAdd && this.listenTo(this.collection, "add", this.addTo);
+  }
 
   /**
    * Add new model to the collection
    * @param {Model} model
    * @private
    * */
-  private addTo(model :T) {
+  private addTo(model: T) {
     this.add(model);
   }
-
-
 
   /**
    * Render new model inside the view
@@ -35,8 +42,8 @@ export default abstract class DomainViews<T extends Backbone.Model> extends Back
    * @param {Object} fragment Fragment collection
    * @private
    * */
-  add(model: T, fragment?:DocumentFragment) {
-    const {itemsView } = this;
+  add(model: T, fragment?: DocumentFragment) {
+    const { itemsView } = this;
     var frag = fragment || null;
     const view = this.getModelView(model);
     itemsView.push(view);
@@ -52,7 +59,7 @@ export default abstract class DomainViews<T extends Backbone.Model> extends Back
     this.$el.empty();
 
     if (this.collection.length)
-      this.collection.each((model) => {
+      this.collection.each(model => {
         this.add(model, frag);
       });
 
@@ -61,14 +68,14 @@ export default abstract class DomainViews<T extends Backbone.Model> extends Back
     return this;
   }
 
-  abstract getModelView(model: T): View<T>
+  abstract getModelView(model: T): View<T>;
 
   onRender() {}
 
-  onRemoveBefore(itemsView: View<T>[], opts ={}) {}
-  onRemove(itemsView: View<T>[], opts ={}) {}
+  onRemoveBefore(itemsView: View<T>[], opts = {}) {}
+  onRemove(itemsView: View<T>[], opts = {}) {}
 
-  remove(opts:any = {}) {
+  remove(opts: any = {}) {
     const { itemsView } = this;
     this.onRemoveBefore(itemsView, opts);
     this.clearItems();
@@ -83,4 +90,4 @@ export default abstract class DomainViews<T extends Backbone.Model> extends Back
     // items.forEach(item => item.remove());
     // this.items = [];
   }
-};
+}

@@ -37,6 +37,7 @@
 import { Module } from "common/module";
 import Component from "dom_components/model/Component";
 import EditorModel from "editor/model/Editor";
+import config from "plugin_manager/config/config";
 import { isUndefined } from "underscore";
 import { getElement, getViewEl } from "utils/mixins";
 import CanvasConfig from "./config/config";
@@ -44,11 +45,10 @@ import Canvas from "./model/Canvas";
 import Frame from "./model/Frame";
 import CanvasView from "./view/CanvasView";
 
-
 export default class CanvasModule extends Module<CanvasConfig> {
   constructor(em: EditorModel) {
     super(em, CanvasConfig);
-    
+
     this.canvas = new Canvas(this.config);
     this.model = this.canvas;
     this.startAutoscroll = this.startAutoscroll.bind(this);
@@ -109,7 +109,7 @@ export default class CanvasModule extends Module<CanvasConfig> {
    * @returns {Window}
    */
   getWindow() {
-    return this.getFrameEl()?.contentWindow;
+    return this.getFrameEl()?.contentWindow ?? undefined;
   }
 
   /**
@@ -134,7 +134,7 @@ export default class CanvasModule extends Module<CanvasConfig> {
     return compView && compView._getFrame();
   }
 
-  _getLocalEl(globalEl: any, compView: any, method: any) {
+  _getLocalEl(globalEl: any, compView: any, method: any): HTMLElement {
     let result = globalEl;
     const frameView = this._getCompFrame(compView);
     result = frameView ? frameView[method]() : result;
@@ -148,7 +148,9 @@ export default class CanvasModule extends Module<CanvasConfig> {
    * @private
    */
   getGlobalToolsEl() {
-    return this.CanvasView?.toolsGlobEl;
+    return (this.CanvasView?.toolsGlobEl ?? undefined) as
+      | HTMLElement
+      | undefined;
   }
 
   /**
@@ -238,10 +240,7 @@ export default class CanvasModule extends Module<CanvasConfig> {
 
   render() {
     this.CanvasView?.remove();
-    this.CanvasView = new CanvasView(
-      this.canvas,
-      this.config
-    );
+    this.CanvasView = new CanvasView(this, this.canvas);
     return this.CanvasView?.render().el;
   }
 
@@ -272,7 +271,7 @@ export default class CanvasModule extends Module<CanvasConfig> {
       width: 0,
       height: 0
     };
-    return this.CanvasView?.offset(el)?? def;
+    return this.CanvasView?.offset(el) ?? def;
   }
 
   /**
@@ -336,7 +335,11 @@ export default class CanvasModule extends Module<CanvasConfig> {
    * @return {Object}
    * @private
    */
-  getTargetToElementDim(target: HTMLElement, element: HTMLElement, options: any = {}) {
+  getTargetToElementDim(
+    target: HTMLElement,
+    element: HTMLElement,
+    options: any = {}
+  ) {
     var opts = options || {};
     var canvasPos = this.CanvasView?.getPosition();
     if (!canvasPos) return;
@@ -379,7 +382,7 @@ export default class CanvasModule extends Module<CanvasConfig> {
   }
 
   canvasRectOffset(el: HTMLElement, pos: any, opts: any = {}) {
-    const getFrameElFromDoc = (doc: Document):HTMLElement => {
+    const getFrameElFromDoc = (doc: Document): HTMLElement => {
       return (doc.defaultView?.frameElement ?? {}) as HTMLElement;
     };
 
@@ -407,7 +410,11 @@ export default class CanvasModule extends Module<CanvasConfig> {
     };
   }
 
-  getTargetToElementFixed(el: HTMLElement, elToMove: HTMLElement, opts: any = {}) {
+  getTargetToElementFixed(
+    el: HTMLElement,
+    elToMove: HTMLElement,
+    opts: any = {}
+  ) {
     const pos = opts.pos || this.getElementPos(el);
     const cvOff = opts.canvasOff || this.canvasRectOffset(el, pos);
     const toolbarH = elToMove.offsetHeight || 0;
@@ -419,9 +426,14 @@ export default class CanvasModule extends Module<CanvasConfig> {
     const { event } = opts;
 
     let top = -toolbarH;
-    let left: number = !isUndefined(opts.left) ? opts.left : pos.width - toolbarW;
+    let left: number = !isUndefined(opts.left)
+      ? opts.left
+      : pos.width - toolbarW;
     left = pos.left < -left ? -pos.left : left;
-    left = frCvOff && elRight > frCvOff.width ? left - (elRight - frCvOff.width) : left;
+    left =
+      frCvOff && elRight > frCvOff.width
+        ? left - (elRight - frCvOff.width)
+        : left;
 
     // Scroll with the window if the top edge is reached and the
     // element is bigger than the canvas
@@ -489,11 +501,11 @@ export default class CanvasModule extends Module<CanvasConfig> {
    */
   getMouseRelativeCanvas(ev: any, opts: any) {
     const zoom = this.getZoomDecimal();
-    const { top, left } = this.CanvasView?.getPosition(opts)??{};
+    const { top, left } = this.CanvasView?.getPosition(opts) ?? {};
 
     return {
-      y: ev.clientY * zoom + (top??0),
-      x: ev.clientX * zoom + (left??0)
+      y: ev.clientY * zoom + (top ?? 0),
+      x: ev.clientX * zoom + (left ?? 0)
     };
   }
 
@@ -515,11 +527,9 @@ export default class CanvasModule extends Module<CanvasConfig> {
     const frame = this.getFrameEl();
     const toIgnore = ["body", ...this.getConfig().notTextable];
     const docActive = frame && document.activeElement === frame;
-    const focused = docActive
-      ? doc?.activeElement
-      : document.activeElement;
+    const focused = docActive ? doc?.activeElement : document.activeElement;
 
-    return focused && !toIgnore.some(item => focused.matches(item)) || false;
+    return (focused && !toIgnore.some(item => focused.matches(item))) || false;
   }
 
   /**
@@ -537,7 +547,7 @@ export default class CanvasModule extends Module<CanvasConfig> {
    * // Force the scroll, even if the element is alredy visible
    * canvas.scrollTo(selected, { force: true });
    */
-  scrollTo(el: HTMLElement|Component, opts = {}) {
+  scrollTo(el: HTMLElement | Component, opts = {}) {
     const elem = getElement(el);
     const view = elem && getViewEl(elem);
     view?.scrollIntoView(opts);
@@ -620,8 +630,7 @@ export default class CanvasModule extends Module<CanvasConfig> {
   }
 
   toggleFramesEvents(on: boolean) {
-    if(this.getFramesEl())
-    {
+    if (this.getFramesEl()) {
       const { style } = this.getFramesEl() as HTMLElement;
       style.pointerEvents = on ? "" : "none";
     }
@@ -654,14 +663,16 @@ export default class CanvasModule extends Module<CanvasConfig> {
    * });
    */
   addFrame(props = {}, opts = {}): Frame | Frame[] {
-    return this.canvas.frames.add(new Frame(
-      {
-        ...props
-      },
-      {
-        ...opts,
-        em: this.em
-      })
+    return this.canvas.frames.add(
+      new Frame(
+        {
+          ...props
+        },
+        {
+          ...opts,
+          em: this.em
+        }
+      )
     );
   }
 

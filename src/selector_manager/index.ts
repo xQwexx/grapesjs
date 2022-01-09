@@ -110,7 +110,8 @@ const events = {
 };
 
 export default class SelectorManagerModule extends CollectionModule<
-  SelectorManagerConfig, Selectors
+  SelectorManagerConfig,
+  Selectors
 > {
   selectorTags: any;
   states: Collection;
@@ -221,6 +222,7 @@ export default class SelectorManagerModule extends CollectionModule<
     const selector = cname ? this.get(cname, props.type) : all.where(props)[0];
 
     if (!selector) {
+      //@ts-ignore
       return all.add(props, { ...cOpts, config: config });
     }
 
@@ -251,8 +253,8 @@ export default class SelectorManagerModule extends CollectionModule<
    * const selector = selectorManager.add('.my-class');
    * console.log(selector.toString()) // `.my-class`
    * */
-  add(props: any, opts?: any): Selector
-  add(props: any[], opts?: any): Selector[]
+  add(props: any, opts?: any): Selector;
+  add(props: any[], opts?: any): Selector[];
   add(props: unknown, opts = {}) {
     const cOpts = isString(props) ? {} : opts;
     // Keep support for arrays but avoid it in docs

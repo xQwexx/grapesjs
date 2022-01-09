@@ -2,14 +2,18 @@ import { bindAll } from "underscore";
 import { Collection } from "common";
 import model from "./Frame";
 import Frame from "./Frame";
-import { AddOptions, CollectionFetchOptions, CollectionSetOptions } from "backbone";
+import {
+  AddOptions,
+  CollectionFetchOptions,
+  CollectionSetOptions
+} from "backbone";
 import Page from "pages/model/Page";
 
 export default class Frames extends Collection<Frame> {
   config: any = {};
   loadedItems: number = 0;
   itemsToLoad: number = 0;
-  //page: Page;
+  page?: Page;
   initialize(models: any, config = {}) {
     bindAll(this, "itemLoaded");
     this.config = config;
@@ -49,7 +53,7 @@ export default class Frames extends Collection<Frame> {
   add(models: ({} | Frame)[], options?: AddOptions): Frame[];
   add(m: unknown, o: unknown): unknown {
     const { config } = this;
-    console.log(config);
+
     return Collection.prototype.add.call(this, m as any, {
       ...(o as any),
       em: config.em

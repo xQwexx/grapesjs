@@ -5,9 +5,13 @@ import { evPageSelect } from "pages";
 import Page from "pages/model/Page";
 import Frames from "./Frames";
 
-export interface scriptIncludeAttr { src: string };
+export interface scriptIncludeAttr {
+  src: string;
+}
 
-export interface styleIncludeAttr { href: string };
+export interface styleIncludeAttr {
+  href: string;
+}
 
 export default class Canvas extends Model {
   defaults() {
@@ -27,8 +31,12 @@ export default class Canvas extends Model {
   em: EditorModel;
   config: CanvasConfig;
 
-  get scripts(): (string|scriptIncludeAttr)[]{return this.get("scripts")}
-  get styles(): (string|styleIncludeAttr)[]{return this.get("styles")}
+  get scripts(): (string | scriptIncludeAttr)[] {
+    return this.get("scripts");
+  }
+  get styles(): (string | styleIncludeAttr)[] {
+    return this.get("styles");
+  }
 
   constructor(config: CanvasConfig) {
     super();
@@ -38,15 +46,17 @@ export default class Canvas extends Model {
     this.listenTo(config.em, "change:device", this.updateDevice);
     this.listenTo(config.em, evPageSelect, this._pageUpdated);
     const { em } = this;
+    console.log(em.PageManager.getMain());
     const mainPage = em.PageManager.getMain();
-    const frame = mainPage.getMainFrame();
-    this.set("frames", mainPage.getFrames());
+    const frame = mainPage?.getMainFrame() ?? "";
+    this.set("frames", mainPage?.getMainFrame() ?? "");
     this.set("scripts", config.scripts);
     this.set("styles", config.styles);
     this.updateDevice({ frame });
   }
-  get frames():Frames{return this.get("frames")}
-
+  get frames(): Frames {
+    return this.get("frames");
+  }
 
   _pageUpdated(page: Page, prev?: Page) {
     const { em } = this;

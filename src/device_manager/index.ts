@@ -63,8 +63,9 @@ const events = {
   removeBefore: evRemoveBefore
 };
 
-export default class DeviceManagerCollectionModule extends CollectionModule<
-  DeviceManagerConfig
+export default class DeviceManagerModule extends CollectionModule<
+  DeviceManagerConfig,
+  Devices
 > {
   postRender(view: any): void {}
 

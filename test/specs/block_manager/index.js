@@ -20,7 +20,7 @@ describe('BlockManager', () => {
         content: '<h1>Test</h1>'
       };
 
-      obj = editor.Blocks;
+      obj = editor.BlockManager;
     });
 
     afterEach(() => {

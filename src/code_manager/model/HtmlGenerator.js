@@ -2,7 +2,7 @@ import { Model } from 'backbone';
 
 export default class HTMLGenerator extends Model {
   build(model, opts = {}) {
-    const models = model.components();
+    const models = model.components;
     const htmlOpts = {};
     const { em } = opts;
 

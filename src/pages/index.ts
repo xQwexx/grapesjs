@@ -49,9 +49,9 @@ import { createId } from "utils/mixins";
 import { Model } from "backbone";
 import Pages from "./model/Pages";
 import Page from "./model/Page";
-import { Module, ModuleConfig } from "common/module";
+import { IStorableModule, Module, ModuleConfig } from "common/module";
 import EditorModel from "editor/model/Editor";
-import { Component } from "dom_components/model/Component";
+import Component from "dom_components/model/Component";
 
 export const evAll = "page";
 export const evPfx = `${evAll}:`;
@@ -80,6 +80,10 @@ export class PageManagerConfig extends ModuleConfig {
     super(em, module);
     const { config } = em;
     this.stm = em.StorageManager;
+    const modConf = config.pageManager;
+    if (modConf?.pages) {
+      this.pages = modConf.pages;
+    }
   }
 
   name = "PageManager";
@@ -87,13 +91,14 @@ export class PageManagerConfig extends ModuleConfig {
   stm: any;
 }
 
-export default class PageManagerModule extends Module<PageManagerConfig> {
+export default class PageManagerModule extends Module<PageManagerConfig>
+  implements IStorableModule {
   constructor(em: EditorModel) {
     super(em, PageManagerConfig);
-    console.log(this.config);
     bindAll(this, "_onPageChange");
-    console.log(this.config);
-    const pages = new Pages([], { ...this.config, em: em });
+    console.log(this.config.pages);
+    const pages = new Pages(this.config.pages, { config: this.config, em: em });
+    console.log(pages.length);
     this.pages = pages;
     const model = new Model({ _undo: true });
     this.model = model;
@@ -106,6 +111,7 @@ export default class PageManagerModule extends Module<PageManagerConfig> {
     pages.on("all", this.__onChange, this);
     model.on(chnSel, this._onPageChange);
   }
+  events = events;
 
   storageKey = "pages";
 
@@ -167,13 +173,10 @@ export default class PageManagerModule extends Module<PageManagerConfig> {
    */
   add(props: any, opts: any = {}): false | Page {
     const { em } = this;
-    console.log(props);
-    console.log(opts);
     props.id = props.id || this._createId();
     const add = (): Page => {
-      console.log(this.pages);
       const page = this.pages.add(props, opts);
-      console.log(this.pages);
+      console.log(page);
       opts.select && this.select(page);
       return page;
     };

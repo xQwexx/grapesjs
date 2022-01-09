@@ -35,6 +35,7 @@ export default class CommandAbstract extends Model {
   badgeClass: any;
   plhClass: any;
   freezClass: any;
+  id: string = "";
 
   /**
    * On frame scroll callback
@@ -103,7 +104,7 @@ export default class CommandAbstract extends Model {
     }
 
     const sender = options.sender || editor;
-    const result = this.run(editor, sender, options);
+    const result = this.run(editor.getModel(), sender, options);
     editor.trigger(`run:${id}`, result, options);
     editor.trigger("run", id, result, options);
     return result;
@@ -119,7 +120,7 @@ export default class CommandAbstract extends Model {
     const id = this.id;
     const sender = options.sender || editor;
     editor.trigger(`stop:${id}:before`, options);
-    const result = this.stop(editor, sender, options);
+    const result = this.stop(editor.getModel(), sender, options);
     editor.trigger(`stop:${id}`, result, options);
     editor.trigger("stop", id, result, options);
     return result;
@@ -138,7 +139,7 @@ export default class CommandAbstract extends Model {
    * @param  {Object}  sender  Button sender
    * @private
    * */
-  run(em: Editor, sender: Button, opts: any) {}
+  run(em: EditorModel, sender: any, opts: any) {}
 
   /**
    * Method that stop command
@@ -146,5 +147,5 @@ export default class CommandAbstract extends Model {
    * @param  {Object}  sender  Button sender
    * @private
    * */
-  stop(em: Editor, sender: Button, opts: any) {}
+  stop(em: EditorModel, sender: any, opts: any) {}
 }

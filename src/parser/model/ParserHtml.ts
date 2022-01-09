@@ -5,6 +5,7 @@ import { Collection } from "backbone";
 import { EditorConfig } from "editor/config/config";
 import { ComponentType } from "dom_components";
 import Component from "dom_components/model/Component";
+import CssRule from "css_composer/model/CssRule";
 export interface IComponent {
   //Component type, eg. `text`, `image`, `video`, etc.
   type: string;
@@ -201,7 +202,7 @@ export default class ParserHtml {
       const nodePrev = result[result.length - 1];
       const nodeChild = node.childNodes.length;
       const ct = this.compTypes;
-      
+
       let model: any = {};
 
       // Start with understanding what kind of component it is
@@ -217,6 +218,10 @@ export default class ParserHtml {
           // the first with a valid result will be that component
           for (let it = 0; it < ct.length; it++) {
             const compType = ct[it];
+            const p: any = ParserHtml;
+            const a = new p(this.c);
+            const aa = typeof p;
+
             let obj = compType.model.isComponent(node, opts);
             if (obj) {
               if (typeof obj !== "object") {
@@ -255,12 +260,12 @@ export default class ParserHtml {
           const modelAttr = nodeName.replace(modelAttrStart, "");
           const value = this.parseAttrValue(nodeValue);
 
-
           model[modelAttr] = value;
         } else {
           // Check for attributes from props (eg. required, disabled)
           model.attributes[nodeName] = nodeValue;
 
+          //@ts-ignore
           if (nodeValue === "" && node[nodeName] === true) {
             model.attributes[nodeName] = true;
           }
@@ -358,7 +363,7 @@ export default class ParserHtml {
     const { em } = this.c;
     opts = { ...this.c, ...opts };
     const conf = (em && em.get("Config")) || {};
-    const res: { html?: Component[]; css?: string } = {};
+    const res: { html?: Component[]; css?: CssRule[] } = {};
     const el = isFunction(opts.parserHtml)
       ? opts.parserHtml(str, opts)
       : BrowserParserHtml(str, opts);

@@ -36,11 +36,12 @@ import CssRulesView from "./view/CssRulesView";
 import Selectors from "selector_manager/model/Selectors";
 import Selector from "selector_manager/model/Selector";
 import { SelectorType } from "selector_manager/utils/SelectorUtils";
-import { Module } from "common/module";
+import { IStorableModule, Module } from "common/module";
 import EditorModel from "editor/model/Editor";
 import CssComposerConfig from "./config/config";
 
-export default class CssComposerModule extends Module<CssComposerConfig> {
+export default class CssComposerModule extends Module<CssComposerConfig>
+  implements IStorableModule {
   rules: CssRules;
   rulesView?: any;
 
@@ -55,7 +56,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
    * @type {String}
    * @private
    */
-  storageKey() {
+  get storageKey() {
     var keys = [];
     var smc = this.config.stm?.getConfig() || {};
     if (smc.storeCss) keys.push("css");
@@ -133,7 +134,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
   store(noStore: boolean) {
     if (!this.config.stm) return;
     const obj: any = {};
-    const keys = this.storageKey();
+    const keys = this.storageKey;
     const hasPages = this.em?.get("hasPages");
     if (keys.indexOf("css") >= 0 && !hasPages) obj.css = this.em.getCss();
     if (keys.indexOf("styles") >= 0) obj.styles = JSON.stringify(this.rules);
@@ -208,19 +209,26 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
    *   color: '#000',
    * });
    * */
-  get(selectors: Selector[]|string, state: string, width: string, ruleProps?: any) {
+  get(
+    selectors: Selector[] | string,
+    state: string,
+    width: string,
+    ruleProps?: any
+  ) {
     let slc = selectors;
     if (isString(selectors)) {
       const sm = this.em.SelectorManager;
       const singleSel = selectors.split(",")[0].trim();
+      //@ts-ignore
       const node = this.em.Parser.parserCss.checkNode({
         selectors: singleSel
       })[0];
       slc = sm.get(node.selectors);
     }
     return (
-      this.rules.find(rule => rule.compare(slc as Selector[], state, width, ruleProps)) ||
-      null
+      this.rules.find(rule =>
+        rule.compare(slc as Selector[], state, width, ruleProps)
+      ) || null
     );
   }
 
@@ -317,6 +325,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
    */
   setRule(selectors: string, style: string, opts: any = {}) {
     const { atRuleType, atRuleParams } = opts;
+    //@ts-ignore
     const node = this.em.Parser.parserCss.checkNode({
       selectors,
       style
@@ -349,6 +358,7 @@ export default class CssComposerModule extends Module<CssComposerConfig> {
    */
   getRule(selectors: string, opts: any = {}) {
     const sm = this.em.SelectorManager;
+    //@ts-ignore
     const node = this.em.Parser.parserCss.checkNode({ selectors })[0];
     const selector = sm.get(node.selectors);
     const { state, selectorsAdd } = node;

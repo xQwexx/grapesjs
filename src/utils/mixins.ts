@@ -1,39 +1,35 @@
-import Component from 'dom_components/model/Component';
-import Components from 'dom_components/model/Components';
-import EditorModel from 'editor/model/Editor';
-import { keys, isUndefined, isElement, isArray } from 'underscore';
+import Component from "dom_components/model/Component";
+import Components from "dom_components/model/Components";
+import EditorModel from "editor/model/Editor";
+import { keys, isUndefined, isElement, isArray } from "underscore";
 
-export const isDef = value => typeof value !== 'undefined';
+export const isDef = (value: any) => typeof value !== "undefined";
 
-export const hasWin = () => typeof window !== 'undefined';
+export const hasWin = () => typeof window !== "undefined";
 
 export const getGlobal = () =>
-  typeof globalThis !== 'undefined'
+  typeof globalThis !== "undefined"
     ? globalThis
-    : typeof window !== 'undefined'
+    : typeof window !== "undefined"
     ? window
     : global;
 
-export const toLowerCase = (str?: string) => (str || '').toLowerCase();
+export const toLowerCase = (str?: string) => (str || "").toLowerCase();
 
 const elProt: any = hasWin() ? window.Element.prototype : {};
-const matches =
-  elProt.matches ||
-  elProt.webkitMatchesSelector ||
-  elProt.mat
-  elProt.mozMatchesSelector ||
-  elProt.msMatchesSelector;
+const matches = elProt.matches || elProt.webkitMatchesSelector || elProt.mat;
+elProt.mozMatchesSelector || elProt.msMatchesSelector;
 
 export const getUiClass = (em: EditorModel, defCls: string) => {
   const { stylePrefix, customUI } = em.getConfig();
-  return [customUI && `${stylePrefix}cui`, defCls].filter(i => i).join(' ');
+  return [customUI && `${stylePrefix}cui`, defCls].filter(i => i).join(" ");
 };
 
 /**
  * Import styles asynchronously
  * @param {String|Array<String>} styles
  */
-const appendStyles = (styles: string|string[], opts = {}) => {
+const appendStyles = (styles: string | string[], opts: any = {}) => {
   const stls = isArray(styles) ? [...styles] : [styles];
 
   if (stls.length) {
@@ -44,9 +40,9 @@ const appendStyles = (styles: string|string[], opts = {}) => {
       (!opts.unique || !document.querySelector(`link[href="${href}"]`))
     ) {
       const { head } = document;
-      const link = document.createElement('link');
+      const link = document.createElement("link");
       link.href = href;
-      link.rel = 'stylesheet';
+      link.rel = "stylesheet";
 
       if (opts.prepand) {
         head.insertBefore(link, head.firstChild);
@@ -100,7 +96,12 @@ const shallowDiff = (objOrig: any, objNew: any) => {
   return result;
 };
 
-const on = (el: HTMLElement|Window| HTMLElement[], ev:string, fn, opts={}) => {
+const on = (
+  el: HTMLElement | Window | Document | HTMLElement[],
+  ev: string,
+  fn: any,
+  opts = {}
+) => {
   const evs = ev.split(/\s+/);
   const res = el instanceof Array ? el : [el];
 
@@ -109,7 +110,12 @@ const on = (el: HTMLElement|Window| HTMLElement[], ev:string, fn, opts={}) => {
   }
 };
 
-const off = (el: HTMLElement|Window| HTMLElement[], ev:string, fn: Function, opts = {}) => {
+const off = (
+  el: HTMLElement | Window | Document | HTMLElement[],
+  ev: string,
+  fn: any,
+  opts = {}
+) => {
   const evs = ev.split(/\s+/);
   const res = el instanceof Array ? el : [el];
 
@@ -118,23 +124,24 @@ const off = (el: HTMLElement|Window| HTMLElement[], ev:string, fn: Function, opt
   }
 };
 
-const getUnitFromValue = (value:string) => {
-  return value.replace(parseFloat(value), '');
+const getUnitFromValue = (value: any) => {
+  return value.replace(parseFloat(value), "");
 };
 
-const upFirst = (value:string) => value[0].toUpperCase() + value.toLowerCase().slice(1);
+const upFirst = (value: string) =>
+  value[0].toUpperCase() + value.toLowerCase().slice(1);
 
-const camelCase = (value:string) => {
-  const values = value.split('-').filter(String);
+const camelCase = (value: string) => {
+  const values = value.split("-").filter(String);
   return values[0].toLowerCase() + values.slice(1).map(upFirst);
 };
 
-const normalizeFloat = (value:number, step = 1, valueDef = 0) => {
+const normalizeFloat = (value: number, step = 1, valueDef = 0) => {
   let stepDecimals = 0;
   if (isNaN(value)) return valueDef;
 
   if (Math.floor(value) !== value) {
-    const side = step.toString().split('.')[1];
+    const side = step.toString().split(".")[1];
     stepDecimals = side ? side.length : 0;
   }
 
@@ -143,7 +150,7 @@ const normalizeFloat = (value:number, step = 1, valueDef = 0) => {
 
 const hasDnd = (em: EditorModel) => {
   return (
-    'draggable' in document.createElement('i') &&
+    "draggable" in document.createElement("i") &&
     (em ? em.getConfig().nativeDnD : true)
   );
 };
@@ -153,7 +160,7 @@ const hasDnd = (em: EditorModel) => {
  * @param  {HTMLElement|Component} el Component or HTML element
  * @return {HTMLElement}
  */
-const getElement = (el: HTMLElement|Component) => {
+const getElement = (el: any | Component) => {
   if (isElement(el) || isTextNode(el)) {
     return el as HTMLElement;
   } else if (el && el.getEl) {
@@ -173,29 +180,30 @@ const isTextNode = (el: Node) => el && el.nodeType === 3;
  * @param  {HTMLElement} el
  * @return {Boolean}
  */
-export const isCommentNode = (el: HTMLElement)  => el && el.nodeType === 8;
+export const isCommentNode = (el: HTMLElement) => el && el.nodeType === 8;
 
 /**
  * Check if element is a comment node
  * @param  {HTMLElement} el
  * @return {Boolean}
  */
-export const isTaggableNode = (el: HTMLElement) => el && !isTextNode(el) && !isCommentNode(el);
+export const isTaggableNode = (el: HTMLElement) =>
+  el && !isTextNode(el) && !isCommentNode(el);
 
-export const find = (arr, test) => {
-  let result = null;
+export const find = (arr: any[], test: any) => {
+  let result: any | null = null;
   arr.some((el, i) => (test(el, i, arr) ? ((result = el), 1) : 0));
   return result;
 };
 
-export const escape = (str = '') => {
+export const escape = (str = "") => {
   return `${str}`
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-    .replace(/`/g, '&#96;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+    .replace(/`/g, "&#96;");
 };
 
 /**
@@ -203,8 +211,8 @@ export const escape = (str = '') => {
  * @param  {HTMLElement|Component} el Component or HTML element
  * @return {Component}
  */
-const getModel = (el: HTMLElement|Component, $):Component => {
-  return isElement(el) ?  $(el).data('model') : el;
+const getModel = (el: HTMLElement | Component, $: any): Component => {
+  return isElement(el) ? $(el).data("model") : el;
 };
 
 const getElRect = (el?: Element) => {
@@ -234,7 +242,7 @@ const getElRect = (el?: Element) => {
  * @param  {Event} ev
  * @return {Event}
  */
-const getPointerEvent = (ev: any):PointerEvent =>
+const getPointerEvent = (ev: any): PointerEvent =>
   ev.touches && ev.touches[0] ? ev.touches[0] : ev;
 
 /**
@@ -247,22 +255,23 @@ const getKeyChar = (ev: KeyboardEvent) => String.fromCharCode(getKeyCode(ev));
 const isEscKey = (ev: KeyboardEvent) => getKeyCode(ev) === 27;
 const isEnterKey = (ev: KeyboardEvent) => getKeyCode(ev) === 13;
 const isObject = (val: unknown) =>
-  val !== null && !Array.isArray(val) && typeof val === 'object';
+  val !== null && !Array.isArray(val) && typeof val === "object";
 const isEmptyObj = (val: object) => Object.keys(val).length <= 0;
 
-const capitalize = (str: string) => str && str.charAt(0).toUpperCase() + str.substring(1);
-const isComponent = (obj: object) => obj && obj.toHTML;
-const isRule = obj => obj && obj.toCSS;
+const capitalize = (str: string) =>
+  str && str.charAt(0).toUpperCase() + str.substring(1);
+const isComponent = (obj: any) => obj && obj.toHTML;
+const isRule = (obj: any) => obj && obj.toCSS;
 
-const getViewEl = el => el.__gjsv;
-const setViewEl = (el, view) => {
+const getViewEl = (el: any) => el.__gjsv;
+const setViewEl = (el: any, view: any) => {
   el.__gjsv = view;
 };
 
 const createId = (length = 16) => {
-  let result = '';
+  let result = "";
   const chars =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const len = chars.length;
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * len));

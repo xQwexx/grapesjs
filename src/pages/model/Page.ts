@@ -17,6 +17,7 @@ export default class Page extends Model {
   initialize(props: any, opts: any = {}) {
     const { config = {} } = opts;
     const { em } = config;
+    console.log(props);
     const defFrame: any = {};
     this.em = em;
     if (!props.frames) {

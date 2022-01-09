@@ -1,7 +1,8 @@
 import Backbone from "backbone";
-import DomComponentsModule from "dom_components";
+import DomComponentsModule, { IComponent } from "dom_components";
 import DomComponentsConfig from "dom_components/config/config";
 import EditorModel from "editor/model/Editor";
+
 import {
   isEmpty,
   isArray,
@@ -14,7 +15,7 @@ import {
 } from "underscore";
 import Component, { keySymbol, keySymbols } from "./Component";
 
-const getIdsToKeep = (prev: Components|null, res: string[] = []) => {
+const getIdsToKeep = (prev: Components | null, res: string[] = []) => {
   const pr = prev || [];
   pr?.forEach(comp => {
     res.push(comp.getId());
@@ -23,7 +24,7 @@ const getIdsToKeep = (prev: Components|null, res: string[] = []) => {
   return res;
 };
 
-const getNewIds = (items: Components|null, res: string[] = []) => {
+const getNewIds = (items: Components | null, res: string[] = []) => {
   items?.map(item => {
     res.push(item.getId());
     getNewIds(item.components, res);
@@ -95,7 +96,8 @@ export default class Components extends Backbone.Collection<Component> {
 
       // Remove all component related styles
       const rulesRemoved = canRemoveStyle
-        ? rules.filter(r => r.getSelectors().getFullString() === `#${id}`)
+        ? rules
+            .filter(r => r.getSelectors().getFullString() === `#${id}`)
             .map(r => rules.remove(r, opts))
         : [];
 
@@ -124,9 +126,10 @@ export default class Components extends Backbone.Collection<Component> {
     removed.__postRemove();
   }
 
-  model(attrs: any, options: any): {new (attrs: any, options: any): Component} {
+  //@ts-ignore
+  model = function(attrs?: any, options?: any): Component {
     const { opt } = options.collection;
-    const { em } = opt;
+    const em: EditorModel = opt.em;
     let model;
     const df = em.DomComponents.componentTypes;
     options.em = em;
@@ -141,6 +144,7 @@ export default class Components extends Backbone.Collection<Component> {
         break;
       }
     }
+    console.log(attrs.type);
 
     // If no model found, get the default one
     if (!model) {
@@ -152,9 +156,10 @@ export default class Components extends Backbone.Collection<Component> {
           options
         });
     }
+    console.log(model);
 
     return new model(attrs, options);
-  }
+  };
 
   parseString(value: string, opt: any = {}) {
     const { em, domc } = this;
@@ -175,8 +180,8 @@ export default class Components extends Backbone.Collection<Component> {
   }
   __firstAdd?: Component | Component[];
 
-  add(models: Component |object, opt?: any): Component;
-  add(models: (Component | object)[]|Components, opt?: any): Component[];
+  add(models: Component | object, opt?: any): Component;
+  add(models: (Component | object)[] | Components, opt?: any): Component[];
   add(models: unknown, opt: any = {}): any {
     opt.keepIds = getIdsToKeep(opt.previousModels);
 

@@ -113,11 +113,11 @@ import CanvasModule from "canvas";
 import UtilsModule from "utils";
 import PanelsModule from "panels";
 import ParserModule from "parser";
-import BlockManagerCollectionModule from "block_manager";
-import AssetManagerCollectionModule from "asset_manager";
+import BlockManagerModule from "block_manager";
+import AssetManagerModule from "asset_manager";
 import StorageManagerModule from "storage_manager";
 import PageManagerModule from "pages";
-import DeviceManagerCollectionModule from "device_manager";
+import DeviceManagerModule from "device_manager";
 import SelectorManagerCollectionModule from "selector_manager";
 import TraitManagerModule from "trait_manager";
 import UndoManagerModule from "undo_manager";
@@ -208,10 +208,10 @@ export default class Editor {
   get StorageManager(): StorageManagerModule {
     return this.em.StorageManager;
   }
-  get AssetManager(): AssetManagerCollectionModule {
+  get AssetManager(): AssetManagerModule {
     return this.em.AssetManager;
   }
-  get BlockManager(): BlockManagerCollectionModule {
+  get BlockManager(): BlockManagerModule {
     return this.em.BlockManager;
   }
   get TraitManager(): TraitManagerModule {
@@ -223,7 +223,7 @@ export default class Editor {
   get StyleManager(): StyleManagerModule {
     return this.em.StyleManager;
   }
-  get DeviceManager(): DeviceManagerCollectionModule {
+  get DeviceManager(): DeviceManagerModule {
     return this.em.DeviceManager;
   }
 
@@ -277,7 +277,7 @@ export default class Editor {
         //@ts-ignore
         this[prop] = this.em.get(prop);
       }
-    });
+    });*/
 
     // Do post render stuff after the iframe is loaded otherwise it'll
     // be empty during tests
@@ -288,7 +288,7 @@ export default class Editor {
         //@ts-ignore
         module?.postRender(this.editorView);
       });
-    });*/
+    });
 
     return this;
   }
@@ -760,7 +760,7 @@ export default class Editor {
    * @param  {Function} callback Callback function
    * @return {this}
    */
-  on(event: string, callback: EventHandler) {
+  public on(event: string, callback: EventHandler) {
     this.em.on(event, callback);
     return this;
   }
@@ -801,7 +801,7 @@ export default class Editor {
   /**
    * Destroy the editor
    */
-  destroy() {
+  public destroy() {
     return this.em.destroyAll();
   }
 

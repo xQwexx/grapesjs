@@ -5,6 +5,7 @@ import { Module } from "common/module";
 import LayerManagerConfig from "./config/config";
 import EditorModel from "editor/model/Editor";
 import Component from "dom_components/model/Component";
+import Components from "dom_components/model/Components";
 
 export default class LayerManagerModule extends Module<LayerManagerConfig> {
   constructor(em: EditorModel) {
@@ -68,7 +69,8 @@ export default class LayerManagerModule extends Module<LayerManagerConfig> {
     const opened = this.em.get("opened");
     const model = this.em.getSelected();
     const scroll = this.config.scrollLayers;
-    let parent = model && model.collection ? model.collection.parent : null;
+    let parent =
+      model && model.collection ? (model.collection as any).parent : null;
     for (let cid in opened) opened[cid].set("open", 0);
 
     while (parent) {

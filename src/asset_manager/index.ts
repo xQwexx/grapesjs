@@ -80,8 +80,8 @@ const events = {
   close: evClose
 };
 
-export default class AssetManagerCollectionModule
-  extends CollectionModule<AssetManagerConfig>
+export default class AssetManagerModule
+  extends CollectionModule<AssetManagerConfig, Assets>
   implements IStorableModule {
   get storageKey() {
     return "assets";

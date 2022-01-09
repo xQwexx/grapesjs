@@ -15,12 +15,13 @@ export default class Selected extends Collection<Component> {
     return this.filter(s => this.getComponent(s) === component)[0];
   }
 
-  addComponent(component: Component|Component[], opts?: AddOptions) {
-    const toAdd = (isArray(component) ? component : [component])
-      .filter(c => !this.hasComponent(c))
-      .map(component => ( {component}));
-
-    return this.push(toAdd, opts);
+  addComponent(component: Component | Component[], opts?: AddOptions) {
+    const toAdd = (isArray(component) ? component : [component]).filter(
+      c => !this.hasComponent(c)
+    );
+    //.map(component => ( {component}));
+    toAdd.forEach(c => this.push(c, opts));
+    return toAdd;
   }
 
   getComponent(model: Model) {
@@ -41,7 +42,7 @@ export default class Selected extends Collection<Component> {
     return this.map(s => this.getComponent(s)).filter(i => i);
   }
 
-  removeComponent(component: Component|Component[], opts?: Silenceable) {
+  removeComponent(component: Component | Component[], opts?: Silenceable) {
     const toRemove = (isArray(component) ? component : [component]).map(c =>
       this.getByComponent(c)
     );

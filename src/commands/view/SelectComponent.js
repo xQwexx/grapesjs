@@ -524,10 +524,7 @@ export default {
       if (!this.toolbar) {
         toolbarEl.innerHTML = '';
         this.toolbar = new Toolbar(toolbar);
-        const toolbarView = new ToolbarView(
-          this.toolbar,
-          em.Command.getConfig()
-        );
+        const toolbarView = new ToolbarView(em.Command, this.toolbar);
         toolbarEl.appendChild(toolbarView.render().el);
       }
 

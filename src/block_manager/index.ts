@@ -79,11 +79,12 @@ const events = {
   dragEnd: evDragStop,
   custom: evCustom
 };
-export class CollectionCollectionModuleConfig {
+export class CollectionModuleConfig {
   em?: EditorModel;
 }
-export default class BlockManagerCollectionModule extends CollectionModule<
-  BlockManagerConfig
+export default class BlockManagerModule extends CollectionModule<
+  BlockManagerConfig,
+  Blocks
 > {
   //...CollectionModule,
 
@@ -120,7 +121,7 @@ export default class BlockManagerCollectionModule extends CollectionModule<
     this.blocks.on("reset", coll => this.blocksVisible.reset(coll.models));
   }
 
-  init(config?: CollectionCollectionModuleConfig) {
+  init(config?: CollectionModuleConfig) {
     /*c: defaults = { ...new defaults(), ...config };
       const { em } = c;
       this.em = em;
@@ -294,7 +295,7 @@ export default class BlockManagerCollectionModule extends CollectionModule<
    * console.log(JSON.stringify(blocks));
    * // [{label: 'Heading', content: '<h1>Put your ...'}, ...]
    */
-  getAll() {
+  public getAll() {
     return this.blocks;
   }
 

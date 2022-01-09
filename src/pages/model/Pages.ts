@@ -6,7 +6,7 @@ export default class Pages extends Collection<Page> {
 
   initialize(models: any, config = {}) {
     this.config = config;
-    console.log(config);
+    console.log(this.models.length);
     this.on("reset", this.onReset);
     this.on("remove", this.onRemove);
   }
@@ -20,16 +20,18 @@ export default class Pages extends Collection<Page> {
     removed?.onRemove();
   }
 
-  add(model: {} | Page, options?: AddOptions): Page;
-  add(models: ({} | Page)[], options?: AddOptions): Page[];
+  add(model: Page, options?: AddOptions): Page;
+  add(models: Page[], options?: AddOptions): Page[];
 
   add(m: unknown, o?: unknown): unknown {
     const { config } = this;
-    console.log(config);
-    return Collection.prototype.add.call(this, m as any, {
-      ...(o as any),
-      config: config
-    });
+    console.log((m as any).length);
+    return console.log(
+      Collection.prototype.add.call(this, m as any, {
+        ...(o as any),
+        config: config
+      }).length
+    );
   }
 }
 

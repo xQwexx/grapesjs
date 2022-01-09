@@ -1,34 +1,37 @@
-import Backbone from 'backbone';
-import { isEmpty, each, keys } from 'underscore';
-import Components from '../model/Components';
-import ComponentsView from './ComponentsView';
-import Selectors from 'selector_manager/model/Selectors';
-import { replaceWith } from 'utils/dom';
-import { setViewEl } from 'utils/mixins';
-import { any } from 'promise-polyfill';
-import Component from 'dom_components/model/Component';
-import EditorModel from 'editor/model/Editor';
-import FrameView from 'canvas/view/FrameView';
+import Backbone from "backbone";
+import { isEmpty, each, keys } from "underscore";
+import Components from "../model/Components";
+import ComponentsView from "./ComponentsView";
+import Selectors from "selector_manager/model/Selectors";
+import { replaceWith } from "utils/dom";
+import { setViewEl } from "utils/mixins";
+import Component from "dom_components/model/Component";
+import EditorModel from "editor/model/Editor";
+import FrameView from "canvas/view/FrameView";
 
-export default class ComponentView extends Backbone.View<Component>{
+export default class ComponentView extends Backbone.View<Component> {
+  // @ts-ignore
   get className() {
     return this.getClasses();
   }
 
-  tagName() {
-    return this.model.get('tagName');
+  // @ts-ignore
+  tagName(): string {
+    return this.model.get("tagName");
   }
-  opts: any,
-  modelOpt: any,
-  config: any,
+  opts: any;
+  modelOpt: any;
+  config: any;
   em: EditorModel;
-  pfx: any,
-  ppfx: any,
-  attr: any,
-  classe: any,
+  pfx: any;
+  ppfx: any;
+  attr: any;
+  classe: any;
   childrenView?: ComponentsView;
+  scriptContainer?: any;
   //el?: HTMLElement;
-  initialize(opt:any = {}) {
+  constructor(opt: any = {}) {
+    super(opt);
     const model = this.model;
     const config = opt.config || {};
     const em = config.em;
@@ -38,25 +41,25 @@ export default class ComponentView extends Backbone.View<Component>{
     this.opts = opt;
     this.modelOpt = modelOpt;
     this.config = config;
-    this.em = em || '';
-    this.pfx = config.stylePrefix || '';
-    this.ppfx = config.pStylePrefix || '';
-    this.attr = model.get('attributes');
+    this.em = em || "";
+    this.pfx = config.stylePrefix || "";
+    this.ppfx = config.pStylePrefix || "";
+    this.attr = model.get("attributes");
     this.classe = this.attr.class || [];
-    this.listenTo(model, 'change:style', this.updateStyle);
+    this.listenTo(model, "change:style", this.updateStyle);
     this.listenTo(
       model,
-      'change:attributes change:_innertext',
+      "change:attributes change:_innertext",
       this.renderAttributes
     );
-    this.listenTo(model, 'change:highlightable', this.updateHighlight);
-    this.listenTo(model, 'change:status', this.updateStatus);
-    this.listenTo(model, 'change:script rerender', this.reset);
-    this.listenTo(model, 'change:content', this.updateContent);
-    this.listenTo(model, 'change', this.handleChange);
-    this.listenTo(model, 'active', this.onActive);
-    this.listenTo(model, 'disable', this.onDisable);
-    $el.data('model', model);
+    this.listenTo(model, "change:highlightable", this.updateHighlight);
+    this.listenTo(model, "change:status", this.updateStatus);
+    this.listenTo(model, "change:script rerender", this.reset);
+    this.listenTo(model, "change:content", this.updateContent);
+    this.listenTo(model, "change", this.handleChange);
+    this.listenTo(model, "active", this.onActive);
+    this.listenTo(model, "disable", this.onDisable);
+    $el.data("model", model);
     setViewEl(el, this);
     model.view = this;
     this._getFrame() && model.views.push(this);
@@ -64,7 +67,7 @@ export default class ComponentView extends Backbone.View<Component>{
     this.initComponents({ avoidRender: true });
     this.events = {
       ...this.events,
-      ...(this.__isDraggable() && { dragstart: 'handleDragStart' })
+      ...(this.__isDraggable() && { dragstart: "handleDragStart" })
     };
     this.delegateEvents();
     !modelOpt.temporary && this.init(this._clbObj());
@@ -105,13 +108,13 @@ export default class ComponentView extends Backbone.View<Component>{
    */
   onDisable() {}
 
-  remove() {
+  remove(args?: any) {
     const view = this;
-    Backbone.View.prototype.remove.apply(view, arguments);
+    Backbone.View.prototype.remove.apply(view, args);
     const { model } = view;
     const frame = view._getFrame() || {};
     const frameM = frame.model;
-    model.components.forEach(comp => {
+    model.components?.forEach(comp => {
       const view = comp.getView(frameM);
       view && view.remove();
     });
@@ -120,14 +123,14 @@ export default class ComponentView extends Backbone.View<Component>{
     const { views } = model;
     views.splice(views.indexOf(view), 1);
     view.removed(view._clbObj());
-    view.$el.data({ model: '', collection: '', view: '' });
+    view.$el.data({ model: "", collection: "", view: "" });
     return view;
   }
 
   handleDragStart(event: DragEvent) {
     event.preventDefault();
     event.stopPropagation();
-    this.em.Commands.run('tlb-move', {
+    this.em.Commands.run("tlb-move", {
       target: this.model,
       event
     });
@@ -135,24 +138,24 @@ export default class ComponentView extends Backbone.View<Component>{
 
   initClasses() {
     const { model } = this;
-    const event = 'change:classes';
-    const classes = model.get('classes');
+    const event = "change:classes";
+    const classes = model.get("classes");
 
     if (classes instanceof Selectors) {
       this.stopListening(model, event, this.initClasses);
       this.listenTo(model, event, this.initClasses);
-      this.listenTo(classes, 'add remove change', this.updateClasses);
+      this.listenTo(classes, "add remove change", this.updateClasses);
       classes.length && this.importClasses();
     }
   }
 
-  initComponents(opts: {avoidRender?:boolean = false} = {}) {
+  initComponents(opts: { avoidRender?: boolean } = {}) {
     const { model, $el, childrenView } = this;
-    const event = 'change:components';
-    const comps = model.get('components');
+    const event = "change:components";
+    const comps = model.get("components");
 
     if (comps instanceof Components) {
-      $el.data('collection', comps);
+      $el.data("collection", comps);
       childrenView && childrenView.remove();
       this.stopListening(model, event, this.initComponents);
       !opts.avoidRender && this.renderChildren();
@@ -167,7 +170,7 @@ export default class ComponentView extends Backbone.View<Component>{
   handleChange() {
     const { model } = this;
     const chgArr = keys(model.changed);
-    if (chgArr.length === 1 && chgArr[0] === 'status') return;
+    if (chgArr.length === 1 && chgArr[0] === "status") return;
     model.emitUpdate();
 
     for (let prop in model.changed) {
@@ -184,7 +187,7 @@ export default class ComponentView extends Backbone.View<Component>{
 
     if (clm) {
       this.model.classes.each(m => {
-        clm.add(m.get('name'));
+        clm.add(m.get("name"));
       });
     }
   }
@@ -194,42 +197,42 @@ export default class ComponentView extends Backbone.View<Component>{
    * @param  {Event} e
    * @private
    * */
-  updateStatus(opts:{noExtHl?: boolean = false, avoidHover?: boolean = false} = {}) {
+  updateStatus(opts: { noExtHl?: boolean; avoidHover?: boolean } = {}) {
     const { em } = this;
-    const { extHl } = em ? em.Canvas.getConfig() : {};
+    const { extHl } = em.Canvas.getConfig();
     const el = this.el;
-    const status = this.model.get('status');
+    const status = this.model.get("status");
     const ppfx = this.ppfx;
     const selectedCls = `${ppfx}selected`;
     const selectedParentCls = `${selectedCls}-parent`;
     const freezedCls = `${ppfx}freezed`;
     const hoveredCls = `${ppfx}hovered`;
     const toRemove = [selectedCls, selectedParentCls, freezedCls, hoveredCls];
-    const selCls = extHl && !opts.noExtHl ? '' : selectedCls;
-    this.$el.removeClass(toRemove.join(' '));
-    var actualCls = el.getAttribute('class') || '';
-    var cls = '';
+    const selCls = extHl && !opts.noExtHl ? "" : selectedCls;
+    this.$el.removeClass(toRemove.join(" "));
+    var actualCls = el.getAttribute("class") || "";
+    var cls = "";
 
     switch (status) {
-      case 'selected':
+      case "selected":
         cls = `${actualCls} ${selCls}`;
         break;
-      case 'selected-parent':
+      case "selected-parent":
         cls = `${actualCls} ${selectedParentCls}`;
         break;
-      case 'freezed':
+      case "freezed":
         cls = `${actualCls} ${freezedCls}`;
         break;
-      case 'freezed-selected':
+      case "freezed-selected":
         cls = `${actualCls} ${freezedCls} ${selCls}`;
         break;
-      case 'hovered':
-        cls = !opts.avoidHover ? `${actualCls} ${hoveredCls}` : '';
+      case "hovered":
+        cls = !opts.avoidHover ? `${actualCls} ${hoveredCls}` : "";
         break;
     }
 
     cls = cls.trim();
-    cls && el.setAttribute('class', cls);
+    cls && el.setAttribute("class", cls);
   }
 
   /**
@@ -237,29 +240,28 @@ export default class ComponentView extends Backbone.View<Component>{
    * @private
    * */
   updateHighlight() {
-    const hl = this.model.get('highlightable');
-    this.setAttribute('data-highlightable', hl ? 1 : '');
+    const hl = this.model.get("highlightable");
+    this.setAttribute("data-highlightable", hl ? 1 : "");
   }
 
   /**
    * Update style attribute
    * @private
    * */
-  updateStyle(m?: any, v?: any, opts: {inline?: boolean} = {}) {
+  updateStyle(m?: any, v?: any, opts: { inline?: boolean } = {}) {
     const { model, em, el } = this;
-    const {inline, ...fwdOpts} = opts;
+    const { inline, ...fwdOpts } = opts;
     if (em && em.getConfig().avoidInlineStyle && !inline) {
       const style = model.getStyle();
       const empty = isEmpty(style);
       !empty && model.setStyle(style);
-      if (model.get('_innertext') && empty) {
-        el.removeAttribute('id');
+      if (model.get("_innertext") && empty) {
+        el.removeAttribute("id");
       } else {
         el.id = model.getId();
       }
     } else {
-      
-      this.setAttribute('style', model.styleToString(fwdOpts));
+      this.setAttribute("style", model.styleToString(fwdOpts));
     }
   }
 
@@ -269,10 +271,10 @@ export default class ComponentView extends Backbone.View<Component>{
    * */
   updateClasses() {
     const str = this.model
-      .get('classes')
-      .pluck('name')
-      .join(' ');
-    this.setAttribute('class', str);
+      .get("classes")
+      .pluck("name")
+      .join(" ");
+    this.setAttribute("class", str);
 
     // Regenerate status class
     this.updateStatus();
@@ -297,7 +299,7 @@ export default class ComponentView extends Backbone.View<Component>{
    * @private
    * */
   getClasses() {
-    return this.model.getClasses().join(' ');
+    return this.model.getClasses().join(" ");
   }
 
   /**
@@ -310,13 +312,13 @@ export default class ComponentView extends Backbone.View<Component>{
     const { highlightable, textable, type } = model.attributes;
 
     const defaultAttr = {
-      'data-gjs-type': type || 'default',
+      "data-gjs-type": type || "default",
       ...(this.__isDraggable() ? { draggable: true } : {}),
-      ...(highlightable ? { 'data-highlightable': 1 } : {}),
+      ...(highlightable ? { "data-highlightable": 1 } : {}),
       ...(textable
         ? {
-            contenteditable: 'false',
-            'data-gjs-textable': 'true'
+            contenteditable: "false",
+            "data-gjs-textable": "true"
           }
         : {})
     };
@@ -341,9 +343,9 @@ export default class ComponentView extends Backbone.View<Component>{
    * @private
    * */
   updateContent() {
-    const content = this.model.get('content');
-    const hasComps = this.model.components.length;
-    this.getChildrenContainer().innerHTML = hasComps ? '' : content;
+    const content = this.model.get("content");
+    const hasComps = this.model.components?.length;
+    this.getChildrenContainer().innerHTML = hasComps ? "" : content;
   }
 
   /**
@@ -361,12 +363,8 @@ export default class ComponentView extends Backbone.View<Component>{
    */
   updateScript() {
     const { model, em } = this;
-    if (!model.get('script')) return;
-    em &&
-      em
-        .Canvas
-        .getCanvasView()
-        ?.updateScript(this);
+    if (!model.get("script")) return;
+    em && em.Canvas.getCanvasView()?.updateScript(this);
   }
 
   /**
@@ -396,9 +394,12 @@ export default class ComponentView extends Backbone.View<Component>{
   getChildrenContainer() {
     var container = this.el;
 
-    if (typeof this.getChildrenSelector == 'function') {
+    //@ts-ignore
+    if (typeof this.getChildrenSelector == "function") {
+      //@ts-ignore
       container = this.el.querySelector(this.getChildrenSelector());
-    } else if (typeof this.getTemplate == 'function') {
+      //@ts-ignore
+    } else if (typeof this.getTemplate == "function") {
       // Need to find deepest first child
     }
 
@@ -411,7 +412,7 @@ export default class ComponentView extends Backbone.View<Component>{
    * have to take in account offsetParent
    */
   getOffsetRect() {
-    const rect = {top = 0, left = 0, bottom = 0, right = 0};
+    const rect = { top: 0, left: 0, bottom: 0, right: 0 };
     const target = this.el;
     let gtop = 0;
     let gleft = 0;
@@ -435,12 +436,12 @@ export default class ComponentView extends Backbone.View<Component>{
     return rect;
   }
 
-  isInViewport( rect?: {top?: number, left?: number}) {
+  isInViewport(rect?: { top?: number; left?: number }) {
     const { el } = this;
     const elDoc = el.ownerDocument;
     const { body } = elDoc;
     const { frameElement } = elDoc.defaultView ?? {};
-    const offsetWidth = (frameElement as HTMLElement)?.offsetWidth
+    const offsetWidth = (frameElement as HTMLElement)?.offsetWidth;
     const { top = 0, left = 0 } = rect || this.getOffsetRect();
     const frame = this._getFrame().getOffsetRect();
 
@@ -460,12 +461,12 @@ export default class ComponentView extends Backbone.View<Component>{
       const { el } = this;
 
       // PATCH: scrollIntoView won't work with multiple requests from iframes
-      if (opts.behavior !== 'smooth') {
+      if (opts.behavior !== "smooth") {
         el.ownerDocument.defaultView?.scrollTo(0, rect.top);
       } else {
         el.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
+          behavior: "smooth",
+          block: "nearest",
           ...opts
         });
       }
@@ -506,6 +507,7 @@ export default class ComponentView extends Backbone.View<Component>{
     const view =
       this.childrenView ||
       new ComponentsView({
+        //@ts-ignore
         collection: this.model.components,
         config: this.config,
         componentTypes: this.opts.componentTypes
@@ -543,7 +545,7 @@ export default class ComponentView extends Backbone.View<Component>{
 
     if (!modelOpt.temporary) {
       this.onRender(this._clbObj());
-      em && em.trigger('component:mount', model);
+      em && em.trigger("component:mount", model);
     }
   }
 

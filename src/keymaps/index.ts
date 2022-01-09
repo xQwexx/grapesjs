@@ -149,7 +149,7 @@ export default class KeymapsModule extends Module<KeymapsConfig> {
       handler = isString(handler) ? cmd.get(handler) : handler;
       const ableTorun = !em.isEditing() && !editor.Canvas.isInputFocused();
       if (ableTorun || opts.force) {
-        opts.prevent && canvas.getCanvasView().preventDefault(e);
+        opts.prevent && canvas.getCanvasView()?.preventDefault(e);
         typeof handler == "object"
           ? cmd.runCommand(handler, opt)
           : handler(editor, 0, opt);

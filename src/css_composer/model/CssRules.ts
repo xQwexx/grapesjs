@@ -43,6 +43,7 @@ export default class CssRules extends Collection<CssRule> {
     if (typeof models === "string") {
       models = this.editor?.Parser.parseCss(models);
     }
+    opt = opt ?? {};
     opt.em = this.editor;
     return Collection.prototype.add.apply(this, [models as any, opt]);
   }

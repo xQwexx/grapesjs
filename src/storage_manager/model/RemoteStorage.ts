@@ -1,30 +1,31 @@
-import Backbone from 'backbone';
-import fetch from 'utils/fetch';
-import { isUndefined, isFunction } from 'underscore';
-import { any } from 'promise-polyfill';
-import IStorage from './IStorage';
+import Backbone from "backbone";
+import fetch from "utils/fetch";
+import { isUndefined, isFunction } from "underscore";
+import IStorage from "./IStorage";
 
-export default class RemoteStorage extends Backbone.Model implements IStorage{
+export default class RemoteStorage extends Backbone.Model implements IStorage {
   //fetch = fetch;
 
-  defaults(){ return{
-    urlStore: '',
-    urlLoad: '',
-    params: {},
-    beforeSend() {},
-    onComplete() {},
-    contentTypeJson: false,
-    credentials: 'include',
-    fetchOptions: ''
-  }}
+  defaults() {
+    return {
+      urlStore: "",
+      urlLoad: "",
+      params: {},
+      beforeSend() {},
+      onComplete() {},
+      contentTypeJson: false,
+      credentials: "include",
+      fetchOptions: ""
+    };
+  }
 
   /**
    * Triggered before the request is started
    * @private
    */
   onStart() {
-    const em = this.get('em');
-    const before = this.get('beforeSend');
+    const em = this.get("em");
+    const before = this.get("beforeSend");
     before && before();
   }
 
@@ -38,9 +39,9 @@ export default class RemoteStorage extends Backbone.Model implements IStorage{
     if (clbErr) {
       clbErr(err);
     } else {
-      const em = this.get('em');
+      const em = this.get("em");
       console.error(err);
-      em && em.trigger('storage:error', err);
+      em && em.trigger("storage:error", err);
     }
   }
 
@@ -49,29 +50,33 @@ export default class RemoteStorage extends Backbone.Model implements IStorage{
    * @param  {string} text Response text
    * @private
    */
-  onResponse(text: string, clb?:(res: any) => void) {
-    const em = this.get('em');
-    const complete = this.get('onComplete');
-    const typeJson = this.get('contentTypeJson');
-    const parsable = text && typeof text === 'string';
+  onResponse(text: string, clb?: (res: any) => void) {
+    const em = this.get("em");
+    const complete = this.get("onComplete");
+    const typeJson = this.get("contentTypeJson");
+    const parsable = text && typeof text === "string";
     const res = typeJson && parsable ? JSON.parse(text) : text;
     complete && complete(res);
     clb && clb(res);
-    em?.trigger('storage:response', res);
+    em?.trigger("storage:response", res);
   }
 
-  store(data: {[id: string]:string}, clb?:(res: any) => void, clbErr?: (err: any) => void) {
-    const body:{[id: string]:string} = {};
+  store(
+    data: { [id: string]: string },
+    clb?: (res: any) => void,
+    clbErr?: (err: any) => void
+  ) {
+    const body: { [id: string]: string } = {};
 
     for (let key in data) {
       body[key] = data[key];
     }
 
-    this.request(this.get('urlStore'), { body }, clb, clbErr);
+    this.request(this.get("urlStore"), { body }, clb, clbErr);
   }
 
-  load(keys:string[], clb?:(res: any) => void, clbErr?: (err: any) => void) {
-    this.request(this.get('urlLoad'), { method: 'get' }, clb, clbErr);
+  load(keys: string[], clb?: (res: any) => void, clbErr?: (err: any) => void) {
+    this.request(this.get("urlLoad"), { method: "get" }, clb, clbErr);
   }
 
   /**
@@ -82,12 +87,17 @@ export default class RemoteStorage extends Backbone.Model implements IStorage{
    * @param  {Function} [clbErr=null] Error callback
    * @private
    */
-  request(url: string, opts: any = {}, clb?:(res: any) => void, clbErr?: (err: any) => void) {
-    const typeJson = this.get('contentTypeJson');
-    const headers = this.get('headers') || {};
-    const params = this.get('params');
-    const reqHead = 'X-Requested-With';
-    const typeHead = 'Content-Type';
+  request(
+    url: string,
+    opts: any = {},
+    clb?: (res: any) => void,
+    clbErr?: (err: any) => void
+  ) {
+    const typeJson = this.get("contentTypeJson");
+    const headers = this.get("headers") || {};
+    const params = this.get("params");
+    const reqHead = "X-Requested-With";
+    const typeHead = "Content-Type";
     const bodyObj = opts.body || {};
     let fetchOptions: any;
     let body;
@@ -97,14 +107,14 @@ export default class RemoteStorage extends Backbone.Model implements IStorage{
     }
 
     if (isUndefined(headers[reqHead])) {
-      headers[reqHead] = 'XMLHttpRequest';
+      headers[reqHead] = "XMLHttpRequest";
     }
 
     // With `fetch`, have to send FormData without any 'Content-Type'
     // https://stackoverflow.com/questions/39280438/fetch-missing-boundary-in-multipart-form-data-post
 
     if (isUndefined(headers[typeHead]) && typeJson) {
-      headers[typeHead] = 'application/json; charset=utf-8';
+      headers[typeHead] = "application/json; charset=utf-8";
     }
 
     if (typeJson) {
@@ -117,17 +127,17 @@ export default class RemoteStorage extends Backbone.Model implements IStorage{
       }
     }
     fetchOptions = {
-      method: opts.method || 'post',
-      credentials: this.get('credentials'),
-      headers,
+      method: opts.method || "post",
+      credentials: this.get("credentials"),
+      headers
     };
 
     // Body should only be included on POST method
-    if (fetchOptions.method === 'post') {
+    if (fetchOptions.method === "post") {
       fetchOptions.body = body;
     }
 
-    const fetchOpts = this.get('fetchOptions') || {};
+    const fetchOpts = this.get("fetchOptions") || {};
     const addOpts = isFunction(fetchOpts)
       ? fetchOpts(fetchOptions)
       : fetchOptions;
@@ -142,7 +152,7 @@ export default class RemoteStorage extends Backbone.Model implements IStorage{
           ? res.text()
           : res.text().then((text: any) => Promise.reject(text))
       )
-      .then(text => this.onResponse(text, clb))
+      .then((text: any) => this.onResponse(text, clb))
       .catch((err: any) => this.onError(err, clbErr));
   }
-};
+}

@@ -55,7 +55,7 @@ import SectorsView from "./view/SectorsView";
 import EditorModel from "editor/model/Editor";
 import StyleManagerConfig from "./config/config";
 import Styleable from "domain_abstract/model/Styleable";
-import { CssRule } from "css_composer/model/CssRule";
+import CssRule from "css_composer/model/CssRule";
 import CssRules from "css_composer/model/CssRules";
 
 export default class StyleManagerModule extends Module<StyleManagerConfig> {
@@ -315,7 +315,7 @@ export default class StyleManagerModule extends Module<StyleManagerConfig> {
       } else if (config.avoidInlineStyle) {
         rule = cssC.getIdRule(id, opts);
         !rule && !skipAdd && (rule = cssC.setIdRule(id, {}, opts));
-        if (model.is("wrapper")) rule.set("wrapper", 1, addOpts);
+        if (model.is("wrapper")) rule.set("wrapper", 1, addOpts as any);
       }
 
       rule && (model = rule);

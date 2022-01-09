@@ -1,3 +1,4 @@
+import { Collection } from "backbone";
 import { EditorConfig } from "editor/config/config";
 import EditorModel from "editor/model/Editor";
 import { isString, isElement } from "underscore";
@@ -46,9 +47,7 @@ export abstract class Module<T extends ModuleConfig = ModuleConfig>
     confClass: { new (em: EditorModel, module: Module<T>): T }
   ) {
     this.em = em;
-    console.log(confClass);
     this.config = new confClass(em, this);
-    console.log(this.config);
   }
   //abstract name: string;
   private: boolean = false;
@@ -86,7 +85,8 @@ export interface ICollectionModule {
 }
 
 export default abstract class CollectionModule<
-  TConf extends ModuleConfig, TModel extends any
+  TConf extends ModuleConfig,
+  TModel extends Collection
 > extends Module<TConf> {
   cls: any[] = [];
   protected all: TModel;
@@ -116,8 +116,7 @@ export default abstract class CollectionModule<
   }
 
   getAllMap() {
-    return this.getAll().reduce((acc: any[], i: any) => {
-      console.log(i);
+    return this.getAll().reduce((acc: { [id: string]: TModel }, i: any) => {
       acc[i.get(i.idAttribute)] = i;
       return acc;
     }, {});

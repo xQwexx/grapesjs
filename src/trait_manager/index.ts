@@ -1,4 +1,4 @@
-import { defaults, isElement } from "underscore";
+import { any, defaults, isElement } from "underscore";
 import defaultOpts from "./config/config";
 import TraitsView from "./view/TraitsView";
 import TraitView from "./view/TraitView";
@@ -21,8 +21,8 @@ const typesDef = {
   button: TraitButtonView
 };
 export default class TraitManagerModule extends Module<TraitManagerConfig> {
-  TraitsViewer?: typeof TraitsView;
-  types: { [id: string]: Trait };
+  TraitsViewer?: TraitsView;
+  types: { [id: string]: any };
 
   constructor(em: EditorModel) {
     super(em, TraitManagerConfig);
@@ -85,19 +85,15 @@ export default class TraitManagerModule extends Module<TraitManagerConfig> {
 
   render() {
     const el = this.TraitsViewer?.el;
-    this.TraitsViewer = new TraitsView({
-      el,
-      collection: [],
-      editor: this.em,
-      config: this.config
-    });
-    this.TraitsViewer.itemsView = this.getTypes();
+    this.TraitsViewer = new TraitsView(this, undefined, el);
+    this.TraitsViewer.itemsViewLookup = this.getTypes();
     this.TraitsViewer.updatedCollection();
     return this.TraitsViewer.el;
   }
 
   destroy() {
     this.TraitsViewer?.remove();
+    //@ts-ignore
     [this.config, this.TraitsViewer].forEach(i => (i = {}));
   }
 }
