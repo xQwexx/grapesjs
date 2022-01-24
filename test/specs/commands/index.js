@@ -1,6 +1,8 @@
-import Backbone from 'backbone';
 import Commands from 'commands';
+import { getConfigFileParsingDiagnostics } from 'typescript';
+import utils from '../../test_utils';
 
+const mockEditor = utils.mockEditor;
 describe('Commands', () => {
   describe('Main', () => {
     let obj,
@@ -11,27 +13,6 @@ describe('Commands', () => {
       commResultRun = 'Run executed',
       commResultStop = 'Stop executed';
 
-    const mockEditor = {
-      ...Backbone.Events,
-      get(id) {
-        switch (id) {
-          case 'Canvas':
-            return {
-              getElement: () => ({}),
-              getWrapperEl: () => ({}),
-              getFrameEl: () => ({}),
-              getToolsEl: () => ({}),
-              getBody: () => ({})
-            };
-          case 'Editor':
-            return { ...Backbone.Events };
-          default:
-        }
-        return null;
-      },
-      logWarning() {}
-    };
-
     beforeEach(() => {
       commSimple = {
         run: () => commResultRun,
@@ -41,7 +22,7 @@ describe('Commands', () => {
         run: () => commResultRun
       };
       commFunc = () => commResultRun;
-      obj = new Commands().init({ em: mockEditor });
+      obj = new Commands(mockEditor);
     });
 
     afterEach(() => {

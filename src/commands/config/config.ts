@@ -4,11 +4,12 @@ import EditorModel from "editor/model/Editor";
 export default class CommandsConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
-    this.stylePrefix += "com-";
 
     this.model = em.get("Canvas");
   }
   name = "Commands";
+
+  protected stylePrefix = "com-";
   model: any;
 
   // Default array of commands

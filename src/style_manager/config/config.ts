@@ -33,16 +33,17 @@ export default class StyleManagerConfig extends ModuleConfig
   implements IStyleManagerConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
-    this.stylePrefix += "sm-";
     const { config } = em;
 
     const smc = config.styleManager as IStyleManagerConfig;
-    Object.keys(smc).forEach(k => {
+    /*Object.keys(smc).forEach(k => {
       const key = k as keyof IStyleManagerConfig;
       //@ts-ignore
       if (!isUndefined(smc[key])) this[key] = smc[key] ?? "";
-    });
+    });*/
   }
+  stylePrefix = "sm-";
+
   name = "StyleManager";
 
   sectors: any[] = [];

@@ -9,11 +9,10 @@ const helperCls = 'hc-state';
 export default Backbone.View.extend({
   initialize(o = {}) {
     const config = o.config || {};
-    this.pfx = config.stylePrefix || '';
-    this.ppfx = config.pStylePrefix || '';
     this.target = o.target || {};
     this.config = config;
-
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     // The target that will emit events for properties
     const target = {};
     extend(target, Backbone.Events);

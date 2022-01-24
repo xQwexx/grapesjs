@@ -29,8 +29,8 @@ export default Backbone.View.extend(
       this.module = opts.module;
       this.config = c;
       this.em = this.config.em;
-      this.pfx = c.stylePrefix || '';
-      this.ppfx = c.pStylePrefix || '';
+      this.pfx = this.config.pfx;
+      this.ppfx = this.config.ppfx;
       this.target = this.options.globalCollection || {};
       this.uploadId = this.pfx + 'uploadFile';
       this.disabled =

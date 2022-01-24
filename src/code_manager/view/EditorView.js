@@ -13,7 +13,7 @@ export default class EditorView extends View {
 
   initialize(o) {
     this.config = o.config || {};
-    this.pfx = this.config.stylePrefix;
+    this.pfx = this.config.pfx;
   }
 
   render() {

@@ -4,7 +4,7 @@ import { appendAtIndex } from 'utils/dom';
 export default Backbone.View.extend({
   initialize(o) {
     this.config = o.config || {};
-    this.pfx = this.config.stylePrefix || '';
+    this.pfx = this.config.pfx || '';
     this.target = o.target || {};
     this.propTarget = o.propTarget || {};
     this.onChange = o.onChange;

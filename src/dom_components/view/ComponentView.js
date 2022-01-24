@@ -26,8 +26,8 @@ export default Backbone.View.extend({
     this.modelOpt = modelOpt;
     this.config = config;
     this.em = em || '';
-    this.pfx = config.stylePrefix || '';
-    this.ppfx = config.pStylePrefix || '';
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     this.attr = model.get('attributes');
     this.classe = this.attr.class || [];
     this.listenTo(model, 'change:style', this.updateStyle);

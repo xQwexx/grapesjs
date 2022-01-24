@@ -31,6 +31,7 @@ import { Module, ModuleConfig } from "common/module";
 
 export class UndoManagerConfig extends ModuleConfig {
   name = "UndoManager";
+  stylePrefix = undefined;
   maximumStackLength = 500;
   trackSelection = 1;
 }

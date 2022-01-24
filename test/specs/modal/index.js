@@ -1,11 +1,12 @@
 import Modal from 'modal_dialog';
+import utils from '../../test_utils';
 
 describe('Modal dialog', () => {
   describe('Main', () => {
     var obj;
 
     beforeEach(() => {
-      obj = new Modal().init();
+      obj = new Modal(utils.mockEditor).init();
     });
 
     afterEach(() => {

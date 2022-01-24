@@ -5,7 +5,7 @@ export default Backbone.View.extend({
   initialize(o) {
     this.opt = o || {};
     this.config = this.opt.config || {};
-    this.pfx = this.config.stylePrefix || '';
+    this.pfx = this.config.pfx;
     const items = this.collection;
     this.listenTo(items, 'add', this.addTo);
     this.listenTo(items, 'reset', this.render);

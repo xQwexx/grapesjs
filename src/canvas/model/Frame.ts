@@ -1,4 +1,6 @@
+import FrameView from "canvas/view/FrameView";
 import { Collection, Model } from "common";
+import Component from "dom_components/model/Component";
 import EditorModel from "editor/model/Editor";
 import Page from "pages/model/Page";
 import { result, forEach, isEmpty, isString } from "underscore";
@@ -34,11 +36,10 @@ export default class Frame extends Model {
   constructor(props: any, attr: any) {
     super(props);
     const { styles, component } = this.attributes;
-    const { em } = attr;
-    console.log(em);
-    const domc = em.get("DomComponents");
+    const em: EditorModel = attr.em;
+    const domc = em.DomComponents;
     const conf = domc.getConfig();
-    const allRules = em.get("CssComposer").getAll();
+    const allRules = em.CssComposer.getAll();
     const idMap: any = {};
     this.em = em;
     const modOpts = { em, config: conf, frame: this, idMap };
@@ -46,8 +47,8 @@ export default class Frame extends Model {
     if (!isComponent(component)) {
       const wrp = isObject(component) ? component : { components: component };
       !wrp.type && (wrp.type = "wrapper");
-      const Wrapper = domc.getType("wrapper").model;
-      this.set("component", new Wrapper(wrp, modOpts));
+      const Wrapper: {new (o: any, w: any): any } = domc.getType("wrapper")?.model;
+      Wrapper && this.set("component", new Wrapper(wrp, modOpts));
     }
 
     if (!styles) {
@@ -83,7 +84,7 @@ export default class Frame extends Model {
 
   em: EditorModel;
   page?: Page;
-  view?: any;
+  view?: FrameView;
   //collection: Collection<Frame>
 
   onRemove() {
@@ -97,7 +98,7 @@ export default class Frame extends Model {
     this.set("changesCount", this.get("changesCount") + 1);
   }
 
-  getComponent() {
+  getComponent(): Component {
     return this.get("component");
   }
 
@@ -110,7 +111,7 @@ export default class Frame extends Model {
   }
 
   remove() {
-    this.view = 0;
+    this.view = undefined;
     const coll = this.collection;
     return coll && coll.remove(this);
   }
@@ -193,7 +194,7 @@ export default class Frame extends Model {
   toJSON(opts: any = {}) {
     const obj = Model.prototype.toJSON.call(this, opts);
     const { em } = this;
-    const sm = em && em.get("StorageManager");
+    const sm = em && em.StorageManager;
     const smc = sm && sm.getConfig();
     const defaults = result(this, "defaults");
 

@@ -35,8 +35,8 @@ export default Backbone.View.extend({
     this.stackModel = o.stackModel;
     this.config = o.config || {};
     this.em = this.config.em;
-    this.pfx = this.config.stylePrefix || '';
-    this.ppfx = this.config.pStylePrefix || '';
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     this.sorter = o.sorter || null;
     this.propsConfig = o.propsConfig || {};
     this.customPreview = o.onPreview;

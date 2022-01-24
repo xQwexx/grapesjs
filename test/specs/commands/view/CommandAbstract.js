@@ -1,5 +1,5 @@
 import CommandAbstract from 'commands/view/CommandAbstract';
-import Editor from 'editor/model/Editor';
+import Editor from 'editor';
 
 describe('CommandAbstract', () => {
   let editor, editorTriggerSpy, command;

@@ -53,7 +53,7 @@ describe('BlocksView', () => {
           collection: model
         },
         {
-          pStylePrefix: ppfx
+          StylePrefix: ppfx
         }
       );
       document.body.innerHTML = '<div id="fixtures"></div>';

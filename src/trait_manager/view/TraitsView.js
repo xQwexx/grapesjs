@@ -8,12 +8,12 @@ export default DomainViews.extend({
 
   initialize(o = {}) {
     const config = o.config || {};
-    const pfx = config.stylePrefix || '';
+    const pfx = config.pfx || '';
     const em = o.editor;
     this.config = config;
     this.em = em;
     this.pfx = pfx;
-    this.ppfx = config.pStylePrefix || '';
+    this.ppfx = config.ppfx || '';
     this.className = `${pfx}traits`;
     this.listenTo(em, 'component:toggled', this.updatedCollection);
   },

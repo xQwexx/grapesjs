@@ -3,6 +3,15 @@ import { Model } from "common";
 import EditorModel from "editor/model/Editor";
 import { evPageSelect } from "pages";
 import Page from "pages/model/Page";
+import Frames from "./Frames";
+
+export interface scriptIncludeAttr {
+  src: string;
+}
+
+export interface styleIncludeAttr {
+  href: string;
+}
 
 export default class Canvas extends Model {
   defaults() {
@@ -22,20 +31,36 @@ export default class Canvas extends Model {
   em: EditorModel;
   config: CanvasConfig;
 
-  constructor(config: CanvasConfig, props: any = {}) {
-    super(props);
+  get scripts(): (string | scriptIncludeAttr)[] {
+    return this.get("scripts");
+  }
+  get styles(): (string | styleIncludeAttr)[] {
+    return this.get("styles");
+  }
+
+  constructor(config: CanvasConfig) {
+    super();
     this.config = config;
     this.em = config.em;
     this.listenTo(this, "change:zoom", this.onZoomChange);
     this.listenTo(config.em, "change:device", this.updateDevice);
     this.listenTo(config.em, evPageSelect, this._pageUpdated);
-  }
-
-  init() {
     const { em } = this;
-    const mainPage = em.get("PageManager").getMain();
-    const frame = mainPage.getMainFrame();
-    this.set("frames", mainPage.getFrames());
+    const mainPage = em.PageManager.getMain();
+    const frame = mainPage?.getMainFrame() ?? "";
+    this.set("frames", mainPage?.getMainFrame() ?? "");
+    this.set("scripts", config.scripts);
+    this.set("styles", config.styles);
+    this.updateDevice({ frame });
+  }
+  get frames(): Frames {
+    return this.get("frames");
+  }
+  onLoad(){
+    const { em } = this;
+    const mainPage = em.PageManager.getMain();
+    const frame = mainPage?.getMainFrame() ?? "";
+    this.set("frames", mainPage?.getMainFrame() ?? "");
     this.updateDevice({ frame });
   }
 

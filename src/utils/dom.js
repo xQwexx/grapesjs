@@ -56,7 +56,7 @@ export const appendAtIndex = (parent, child, index) => {
 
 export const append = (parent, child) => appendAtIndex(parent, child);
 
-export const createEl = (tag, attrs = '', child) => {
+export const createEl = (tag, attrs = {}, child) => {
   const el = document.createElement(tag);
   attrs && each(attrs, (value, key) => el.setAttribute(key, value));
 

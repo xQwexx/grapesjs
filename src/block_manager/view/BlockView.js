@@ -16,7 +16,7 @@ export default Backbone.View.extend({
     this.em = config.em;
     this.config = config;
     this.endDrag = this.endDrag.bind(this);
-    this.ppfx = config.pStylePrefix || '';
+    this.ppfx = config.ppfx;
     this.listenTo(model, 'destroy remove', this.remove);
     this.listenTo(model, 'change', this.render);
   },

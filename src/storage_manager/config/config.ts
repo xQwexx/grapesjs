@@ -5,11 +5,13 @@ export default class StorageManagerConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
     const config = em.getConfig();
+    this.type = config?.storageManager?.type ?? this.type;
     //@ts-ignore
     if (config._disable) this.type = 0;
   }
   name = "StorageManager";
 
+  protected stylePrefix = undefined;
   // Prefix identifier that will be used inside storing and loading
   id = "gjs-";
 

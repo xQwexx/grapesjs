@@ -9,7 +9,7 @@ export default Backbone.View.extend({
     this.config = config || {};
     this.categories = opts.categories || '';
     this.renderedCategories = [];
-    var ppfx = this.config.pStylePrefix || '';
+    var ppfx = this.config.ppfx;
     this.ppfx = ppfx;
     this.noCatClass = `${ppfx}blocks-no-cat`;
     this.blockContClass = `${ppfx}blocks-c`;

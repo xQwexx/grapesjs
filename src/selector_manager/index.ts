@@ -72,439 +72,442 @@
  * @module SelectorManager
  */
 
-import { isString, debounce, isObject, isArray } from "underscore";
-import { isComponent, isRule } from "utils/mixins";
-import { Model, Collection } from "common";
-import CollectionModule from "common/module";
-import defaults from "./config/config";
-import Selector from "./model/Selector";
-import Selectors from "./model/Selectors";
-import State from "./model/State";
-import ClassTagsView from "./view/ClassTagsView";
-import EditorModel from "editor/model/Editor";
-import SelectorManagerConfig from "./config/config";
-import SelectorUtils, { SelectorType } from "./utils/SelectorUtils";
-
-const isId = (str: any) => isString(str) && str[0] == "#";
-const isClass = (str: any) => isString(str) && str[0] == ".";
-
-export const evAll = "selector";
-export const evPfx = `${evAll}:`;
-export const evAdd = `${evPfx}add`;
-export const evUpdate = `${evPfx}update`;
-export const evRemove = `${evPfx}remove`;
-export const evRemoveBefore = `${evRemove}:before`;
-export const evCustom = `${evPfx}custom`;
-export const evState = `${evPfx}state`;
-
-const events = {
-  all: evAll,
-  update: evUpdate,
-  add: evAdd,
-  remove: evRemove,
-  removeBefore: evRemoveBefore,
-  state: evState,
-  custom: evCustom
-};
-
-export default class SelectorManagerCollectionModule extends CollectionModule<
-  SelectorManagerConfig
-> {
-  selectorTags: any;
-  states: Collection;
-  selected: Selectors;
-  model: Model;
-  constructor(em: EditorModel) {
-    super(em, SelectorManagerConfig, new Selectors([]), events);
-    const config = this.config;
-
-    // Global selectors container
-    //this.all = new Selectors(config.selectors);
-    this.selected = new Selectors([], { em, config });
-    this.states = new Collection(config.states, { model: State });
-    this.model = new Model({ cFirst: config.componentFirst, _undo: true });
-    this.__initListen({
-      collections: [this.states, this.selected],
-      propagate: [{ entity: this.states, event: events.state }]
-    });
-    em.on("change:state", (m, value) => em.trigger("selector:state", value));
-    this.model.on("change:cFirst", (m, value) =>
-      em.trigger("selector:type", value)
-    );
-    const listenTo =
-      "component:toggled component:update:classes styleManager:update selector:state selector:type";
-    this.model.listenTo(em, listenTo, () => this.__update());
-  }
-  /**
-   * Get configuration object
-   * @name getConfig
-   * @function
-   * @return {Object}
-   */
-
-  init(conf = {}) {
-    return this;
-  }
-
-  __update() {
-    this.__trgCustom();
-  }
-
-  __trgCustom(opts?: any) {
-    this.em.trigger(this.events.custom, this.__customData(opts));
-  }
-
-  __customData(opts: any = {}) {
-    const { container } = opts;
-    return {
-      states: this.getStates(),
-      selected: this.getSelected(),
-      container
-    };
-  }
-
-  // postLoad() {
-  //   this.__postLoad();
-  //   const { em, model } = this;
-  //   const um = em.get('UndoManager');
-  //   um && um.add(model);
-  //   um && um.add(this.pages);
-  // },
-
-  postRender(view: any) {
-    this.__appendTo();
-    this.__trgCustom();
-  }
-
-  select(value: any, opts = {}) {
-    const targets = Array.isArray(value) ? value : [value];
-    const toSelect: any[] = this.em
-      .get("StyleManager")
-      .setTarget(targets, opts);
-    const selTags = this.selectorTags;
-    const res = toSelect
-      .filter(i => i)
-      .map(sel =>
-        isComponent(sel)
-          ? sel
-          : isRule(sel) && !sel.get("selectorsAdd")
-          ? sel
-          : sel.getSelectorsString()
-      );
-    selTags && selTags.componentChanged({ targets: res });
-    return this;
-  }
-
-  addSelector(name: any, opts = {}, cOpts = {}) {
-    let props: any = { ...opts };
-
-    if (isObject(name)) {
-      props = name;
-    } else {
-      props.name = name;
-    }
-
-    if (isId(props.name)) {
-      props.name = props.name.substr(1);
-      props.type = SelectorType.id;
-    } else if (isClass(props.name)) {
-      props.name = props.name.substr(1);
-    }
-
-    if (props.label && !props.name) {
-      props.name = this.escapeName(props.label);
-    }
-
-    const cname = props.name;
-    const config = this.getConfig();
-    const all = this.getAll();
-    const selector = cname ? this.get(cname, props.type) : all.where(props)[0];
-
-    if (!selector) {
-      return all.add(props, { ...cOpts, config });
-    }
-
-    return selector;
-  }
-
-  getSelector(name: any, type = SelectorType.class) {
-    if (isId(name)) {
-      name = name.substr(1);
-      type = SelectorType.id;
-    } else if (isClass(name)) {
-      name = name.substr(1);
-    }
-
-    return this.getAll().where({ name, type })[0];
-  }
-
-  /**
-   * Add a new selector to the collection if it does not already exist.
-   * You can pass selectors properties or string identifiers.
-   * @param {Object|String} props Selector properties or string identifiers, eg. `{ name: 'my-class', label: 'My class' }`, `.my-cls`
-   * @param {Object} [opts] Selector options
-   * @return {[Selector]}
-   * @example
-   * const selector = selectorManager.add({ name: 'my-class', label: 'My class' });
-   * console.log(selector.toString()) // `.my-class`
-   * // Same as
-   * const selector = selectorManager.add('.my-class');
-   * console.log(selector.toString()) // `.my-class`
-   * */
-  add(props: any, opts = {}) {
-    const cOpts = isString(props) ? {} : opts;
-    // Keep support for arrays but avoid it in docs
-    if (isArray(props)) {
-      return props.map(item => this.addSelector(item, opts, cOpts));
-    } else {
-      return this.addSelector(props, opts, cOpts);
-    }
-  }
-
-  /**
-   * Add class selectors
-   * @param {Array|string} classes Array or string of classes
-   * @return {Array} Array of added selectors
-   * @private
-   * @example
-   * sm.addClass('class1');
-   * sm.addClass('class1 class2');
-   * sm.addClass(['class1', 'class2']);
-   * // -> [SelectorObject, ...]
-   */
-  addClass(classes: any) {
-    const added: any = [];
-
-    if (isString(classes)) {
-      classes = classes.trim().split(" ");
-    }
-
-    classes.forEach((name: any) => added.push(this.addSelector(name)));
-    return added;
-  }
-
-  /**
-   * Get the selector by its name/type
-   * @param {String} name Selector name or string identifier
-   * @returns {[Selector]|null}
-   * @example
-   * const selector = selectorManager.get('.my-class');
-   * // Get Id
-   * const selectorId = selectorManager.get('#my-id');
-   * */
-  get(name: any, type: any) {
-    // Keep support for arrays but avoid it in docs
-    if (isArray(name)) {
-      const result: any = [];
-      const selectors = name
-        .map(item => this.getSelector(item))
-        .filter(item => item);
-      selectors.forEach(item => result.indexOf(item) < 0 && result.push(item));
-      return result;
-    } else {
-      return this.getSelector(name, type) || null;
-    }
-  }
-
-  /**
-   * Remove Selector.
-   * @param {String|[Selector]} selector Selector instance or Selector string identifier
-   * @returns {[Selector]} Removed Selector
-   * @example
-   * const removed = selectorManager.remove('.myclass');
-   * // or by passing the Selector
-   * selectorManager.remove(selectorManager.get('.myclass'));
-   */
-  remove(selector: any, opts: any) {
-    return this.__remove(selector, opts);
-  }
-
-  /**
-   * Change the selector state
-   * @param {String} value State value
-   * @returns {this}
-   * @example
-   * selectorManager.setState('hover');
-   */
-  setState(value: any) {
-    this.em.setState(value);
-    return this;
-  }
-
-  /**
-   * Get the current selector state value
-   * @returns {String}
-   */
-  getState() {
-    return this.em.getState();
-  }
-
-  /**
-   * Get states
-   * @returns {Array<[State]>}
-   */
-  getStates() {
-    return [...this.states.models];
-  }
-
-  /**
-   * Set a new collection of states
-   * @param {Array<Object>} states Array of new states
-   * @returns {Array<[State]>}
-   * @example
-   * const states = selectorManager.setStates([
-   *   { name: 'hover', label: 'Hover' },
-   *   { name: 'nth-of-type(2n)', label: 'Even/Odd' }
-   * ]);
-   */
-  setStates(states: any, opts: any) {
-    return this.states.reset(states, opts);
-  }
-
-  /**
-   * Get commonly selected selectors, based on all selected components.
-   * @returns {Array<[Selector]>}
-   * @example
-   * const selected = selectorManager.getSelected();
-   * console.log(selected.map(s => s.toString()))
-   */
-  getSelected() {
-    return this.__getCommon();
-  }
-
-  /**
-   * Add new selector to all selected components.
-   * @param {Object|String} props Selector properties or string identifiers, eg. `{ name: 'my-class', label: 'My class' }`, `.my-cls`
-   * @example
-   * selectorManager.addSelected('.new-class');
-   */
-  addSelected(props: any) {
-    const added = this.add(props);
-    // TODO: target should be the one from StyleManager
-    this.em.getSelectedAll().forEach(target => {
-      target.getSelectors().add(added);
-    });
-    // TODO: update selected collection
-  }
-
-  /**
-   * Remove a common selector from all selected components.
-   * @param {String|[Selector]} selector Selector instance or Selector string identifier
-   * @example
-   * selectorManager.removeSelected('.myclass');
-   */
-  removeSelected(selector: any) {
-    this.em.getSelectedAll().forEach(trg => {
-      !selector.get("protected") && trg && trg.getSelectors().remove(selector);
-    });
-  }
-
-  /**
-   * Get the array of currently selected targets.
-   * @returns {Array<[Component]|[CssRule]>}
-   * @example
-   * const targetsToStyle = selectorManager.getSelectedTargets();
-   * console.log(targetsToStyle.map(target => target.getSelectorsString()))
-   */
-  getSelectedTargets() {
-    return this.em.get("StyleManager").getSelected();
-  }
-
-  /**
-   * Update component-first option.
-   * If the component-first is enabled, all the style changes will be applied on selected components (ID rules) instead
-   * of selectors (which would change styles on all components with those classes).
-   * @param {Boolean} value
-   */
-  setComponentFirst(value: boolean) {
-    this.getConfig().componentFirst = value;
-    this.model.set({ cFirst: value });
-  }
-
-  /**
-   * Get the value of component-first option.
-   * @return {Boolean}
-   */
-  getComponentFirst() {
-    return this.getConfig().componentFirst;
-  }
-
-  getConfig() {
-    return super.getConfig() as SelectorManagerConfig;
-  }
-
-  /**
-   * Get all selectors
-   * @name getAll
-   * @function
-   * @return {Collection<[Selector]>}
-   * */
-
-  /**
-   * Return escaped selector name
-   * @param {String} name Selector name to escape
-   * @returns {String} Escaped name
-   * @private
-   */
-  escapeName(name: string) {
-    const { escapeName } = this.getConfig();
-    //@ts-ignore
-    return escapeName ? escapeName(name) : SelectorUtils.escapeName(name);
-  }
-
-  /**
-   * Render class selectors. If an array of selectors is provided a new instance of the collection will be rendered
-   * @param {Array<Object>} selectors
-   * @return {HTMLElement}
-   * @private
-   */
-  render(selectors?: any) {
-    const { em, selectorTags } = this;
-    const config = this.getConfig();
-    const el = selectorTags && selectorTags.el;
-    this.selected.reset(selectors);
-    this.selectorTags = new ClassTagsView({
-      el,
-      collection: this.selected,
-      module: this,
-      config
-    });
-
-    return this.selectorTags.render().el;
-  }
-
-  destroy() {
-    const { selectorTags, model } = this;
-    model.stopListening();
-    this.__destroy();
-    selectorTags && selectorTags.remove();
-    this.selectorTags = {};
-  }
-
-  /**
-   * Get common selectors from the current selection.
-   * @return {Array<Selector>}
-   * @private
-   */
-  __getCommon() {
-    return this.__getCommonSelectors(this.em.getSelectedAll());
-  }
-
-  __getCommonSelectors(components: any[], opts = {}) {
-    const selectors = components
-      .map(cmp => cmp.getSelectors && cmp.getSelectors().getValid(opts))
-      .filter(Boolean);
-    return this.__common(...selectors);
-  }
-
-  __common(...args: any[]): any[] {
-    if (!args.length) return [];
-    if (args.length === 1) return args[0];
-    if (args.length === 2)
-      return args[0].filter((item: any) => args[1].indexOf(item) >= 0);
-
-    return args
-      .slice(1)
-      .reduce((acc, item) => this.__common(acc, item), args[0]);
-  }
-}
+ import { isString, debounce, isObject, isArray } from "underscore";
+ import { isComponent, isRule } from "utils/mixins";
+ import { Model, Collection } from "common";
+ import CollectionModule from "common/module";
+ import defaults from "./config/config";
+ import Selector from "./model/Selector";
+ import Selectors from "./model/Selectors";
+ import State from "./model/State";
+ import ClassTagsView from "./view/ClassTagsView";
+ import EditorModel from "editor/model/Editor";
+ import SelectorManagerConfig from "./config/config";
+ import SelectorUtils, { SelectorType } from "./utils/SelectorUtils";
+ import Components from "dom_components/model/Components";
+ import Component from "dom_components/model/Component";
+ 
+ const isId = (str: any) => isString(str) && str[0] == "#";
+ const isClass = (str: any) => isString(str) && str[0] == ".";
+ 
+ export const evAll = "selector";
+ export const evPfx = `${evAll}:`;
+ export const evAdd = `${evPfx}add`;
+ export const evUpdate = `${evPfx}update`;
+ export const evRemove = `${evPfx}remove`;
+ export const evRemoveBefore = `${evRemove}:before`;
+ export const evCustom = `${evPfx}custom`;
+ export const evState = `${evPfx}state`;
+ 
+ const events = {
+   all: evAll,
+   update: evUpdate,
+   add: evAdd,
+   remove: evRemove,
+   removeBefore: evRemoveBefore,
+   state: evState,
+   custom: evCustom
+ };
+ 
+ export default class SelectorManagerModule extends CollectionModule<
+   SelectorManagerConfig,
+   Selectors
+ > {
+   selectorTags: any;
+   states: Collection;
+   selected: Selectors;
+   model: Model;
+   constructor(em: EditorModel) {
+     super(em, SelectorManagerConfig, new Selectors([]), events);
+     const config = this.config;
+ 
+     // Global selectors container
+     //this.all = new Selectors(config.selectors);
+     this.selected = new Selectors([], { em, config });
+     this.states = new Collection(config.states, { model: State });
+     this.model = new Model({ cFirst: config.componentFirst, _undo: true });
+     this.__initListen({
+       collections: [this.states, this.selected],
+       propagate: [{ entity: this.states, event: events.state }]
+     });
+     em.on("change:state", (m, value) => em.trigger("selector:state", value));
+     this.model.on("change:cFirst", (m, value) =>
+       em.trigger("selector:type", value)
+     );
+     const listenTo =
+       "component:toggled component:update:classes styleManager:update selector:state selector:type";
+     this.model.listenTo(em, listenTo, () => this.__update());
+   }
+   /**
+    * Get configuration object
+    * @name getConfig
+    * @function
+    * @return {Object}
+    */
+ 
+   init(conf = {}) {
+     return this;
+   }
+ 
+   __update() {
+     this.__trgCustom();
+   }
+ 
+   __trgCustom(opts?: any) {
+     this.em.trigger(this.events.custom, this.__customData(opts));
+   }
+ 
+   __customData(opts: any = {}) {
+     const { container } = opts;
+     return {
+       states: this.getStates(),
+       selected: this.getSelected(),
+       container
+     };
+   }
+ 
+   // postLoad() {
+   //   this.__postLoad();
+   //   const { em, model } = this;
+   //   const um = em.UndoManager;
+   //   um && um.add(model);
+   //   um && um.add(this.pages);
+   // },
+ 
+   postRender(view: any) {
+     this.__appendTo();
+     this.__trgCustom();
+   }
+ 
+   select(value: any, opts = {}) {
+     const targets = Array.isArray(value) ? value : [value];
+     const toSelect: any[] = this.em.StyleManager.setTarget(targets, opts);
+     const selTags = this.selectorTags;
+     const res = toSelect
+       .filter(i => i)
+       .map(sel =>
+         isComponent(sel)
+           ? sel
+           : isRule(sel) && !sel.get("selectorsAdd")
+           ? sel
+           : sel.getSelectorsString()
+       );
+     selTags && selTags.componentChanged({ targets: res });
+     return this;
+   }
+ 
+   addSelector(name: any, opts = {}, cOpts = {}): Selector {
+     let props: any = { ...opts };
+ 
+     if (isObject(name)) {
+       props = name;
+     } else {
+       props.name = name;
+     }
+ 
+     if (isId(props.name)) {
+       props.name = props.name.substr(1);
+       props.type = SelectorType.id;
+     } else if (isClass(props.name)) {
+       props.name = props.name.substr(1);
+     }
+ 
+     if (props.label && !props.name) {
+       props.name = this.escapeName(props.label);
+     }
+ 
+     const cname = props.name;
+     const config = this.getConfig();
+     const all = this.getAll();
+     const selector = cname ? this.get(cname, props.type) : all.where(props)[0];
+ 
+     if (!selector) {
+       //@ts-ignore
+       return all.add(props, { ...cOpts, config: config });
+     }
+ 
+     return selector;
+   }
+ 
+   getSelector(name: string, type = SelectorType.class) {
+     if (isId(name)) {
+       name = name.substr(1);
+       type = SelectorType.id;
+     } else if (isClass(name)) {
+       name = name.substr(1);
+     }
+ 
+     return this.getAll().where({ name, type })[0];
+   }
+ 
+   /**
+    * Add a new selector to the collection if it does not already exist.
+    * You can pass selectors properties or string identifiers.
+    * @param {Object|String} props Selector properties or string identifiers, eg. `{ name: 'my-class', label: 'My class' }`, `.my-cls`
+    * @param {Object} [opts] Selector options
+    * @return {[Selector]}
+    * @example
+    * const selector = selectorManager.add({ name: 'my-class', label: 'My class' });
+    * console.log(selector.toString()) // `.my-class`
+    * // Same as
+    * const selector = selectorManager.add('.my-class');
+    * console.log(selector.toString()) // `.my-class`
+    * */
+   add(props: any, opts?: any): Selector;
+   add(props: any[], opts?: any): Selector[];
+   add(props: unknown, opts = {}) {
+     const cOpts = isString(props) ? {} : opts;
+     // Keep support for arrays but avoid it in docs
+     if (isArray(props)) {
+       return props.map(item => this.addSelector(item, opts, cOpts));
+     } else {
+       return this.addSelector(props, opts, cOpts);
+     }
+   }
+ 
+   /**
+    * Add class selectors
+    * @param {Array|string} classes Array or string of classes
+    * @return {Array} Array of added selectors
+    * @private
+    * @example
+    * sm.addClass('class1');
+    * sm.addClass('class1 class2');
+    * sm.addClass(['class1', 'class2']);
+    * // -> [SelectorObject, ...]
+    */
+   addClass(classes: string[] | string) {
+     const added: Selector[] = [];
+ 
+     if (isString(classes)) {
+       classes = classes.trim().split(" ");
+     }
+ 
+     classes.forEach(name => added.push(this.addSelector(name)));
+     return added;
+   }
+ 
+   /**
+    * Get the selector by its name/type
+    * @param {String} name Selector name or string identifier
+    * @returns {[Selector]|null}
+    * @example
+    * const selector = selectorManager.get('.my-class');
+    * // Get Id
+    * const selectorId = selectorManager.get('#my-id');
+    * */
+   get(name: string, type?: SelectorType) {
+     // Keep support for arrays but avoid it in docs
+     if (isArray(name)) {
+       const result: any = [];
+       const selectors = name
+         .map(item => this.getSelector(item))
+         .filter(item => item);
+       selectors.forEach(item => result.indexOf(item) < 0 && result.push(item));
+       return result;
+     } else {
+       return this.getSelector(name, type) || null;
+     }
+   }
+ 
+   /**
+    * Remove Selector.
+    * @param {String|[Selector]} selector Selector instance or Selector string identifier
+    * @returns {[Selector]} Removed Selector
+    * @example
+    * const removed = selectorManager.remove('.myclass');
+    * // or by passing the Selector
+    * selectorManager.remove(selectorManager.get('.myclass'));
+    */
+   remove(selector: string | Selector, opts: any) {
+     return this.__remove(selector, opts);
+   }
+ 
+   /**
+    * Change the selector state
+    * @param {String} value State value
+    * @returns {this}
+    * @example
+    * selectorManager.setState('hover');
+    */
+   setState(value: string) {
+     this.em.setState(value);
+     return this;
+   }
+ 
+   /**
+    * Get the current selector state value
+    * @returns {String}
+    */
+   getState() {
+     return this.em.getState();
+   }
+ 
+   /**
+    * Get states
+    * @returns {Array<[State]>}
+    */
+   getStates() {
+     return [...this.states.models];
+   }
+ 
+   /**
+    * Set a new collection of states
+    * @param {Array<Object>} states Array of new states
+    * @returns {Array<[State]>}
+    * @example
+    * const states = selectorManager.setStates([
+    *   { name: 'hover', label: 'Hover' },
+    *   { name: 'nth-of-type(2n)', label: 'Even/Odd' }
+    * ]);
+    */
+   setStates(states: State[], opts: any) {
+     return this.states.reset(states, opts);
+   }
+ 
+   /**
+    * Get commonly selected selectors, based on all selected components.
+    * @returns {Array<[Selector]>}
+    * @example
+    * const selected = selectorManager.getSelected();
+    * console.log(selected.map(s => s.toString()))
+    */
+   getSelected() {
+     return this.__getCommon();
+   }
+ 
+   /**
+    * Add new selector to all selected components.
+    * @param {Object|String} props Selector properties or string identifiers, eg. `{ name: 'my-class', label: 'My class' }`, `.my-cls`
+    * @example
+    * selectorManager.addSelected('.new-class');
+    */
+   addSelected(props: State | string) {
+     const added = this.add(props);
+     // TODO: target should be the one from StyleManager
+     this.em.getSelectedAll().forEach(target => {
+       target.getSelectors().add(added);
+     });
+     // TODO: update selected collection
+   }
+ 
+   /**
+    * Remove a common selector from all selected components.
+    * @param {String|[Selector]} selector Selector instance or Selector string identifier
+    * @example
+    * selectorManager.removeSelected('.myclass');
+    */
+   removeSelected(selector: Selector | string) {
+     this.em.getSelectedAll().forEach(trg => {
+       (isString(selector) || !selector?.get("protected")) &&
+         trg &&
+         trg.getSelectors().remove(selector);
+     });
+   }
+ 
+   /**
+    * Get the array of currently selected targets.
+    * @returns {Array<[Component]|[CssRule]>}
+    * @example
+    * const targetsToStyle = selectorManager.getSelectedTargets();
+    * console.log(targetsToStyle.map(target => target.getSelectorsString()))
+    */
+   getSelectedTargets() {
+     return this.em.StyleManager.getSelected();
+   }
+ 
+   /**
+    * Update component-first option.
+    * If the component-first is enabled, all the style changes will be applied on selected components (ID rules) instead
+    * of selectors (which would change styles on all components with those classes).
+    * @param {Boolean} value
+    */
+   setComponentFirst(value: boolean) {
+     this.getConfig().componentFirst = value;
+     this.model.set({ cFirst: value });
+   }
+ 
+   /**
+    * Get the value of component-first option.
+    * @return {Boolean}
+    */
+   getComponentFirst() {
+     return this.getConfig().componentFirst;
+   }
+ 
+   /**
+    * Get all selectors
+    * @name getAll
+    * @function
+    * @return {Collection<[Selector]>}
+    * */
+ 
+   /**
+    * Return escaped selector name
+    * @param {String} name Selector name to escape
+    * @returns {String} Escaped name
+    * @private
+    */
+   escapeName(name: string) {
+     const { escapeName } = this.getConfig();
+     //@ts-ignore
+     return escapeName ? escapeName(name) : SelectorUtils.escapeName(name);
+   }
+ 
+   /**
+    * Render class selectors. If an array of selectors is provided a new instance of the collection will be rendered
+    * @param {Array<Object>} selectors
+    * @return {HTMLElement}
+    * @private
+    */
+   render(selectors?: Selector[]): HTMLElement {
+     const { em, selectorTags } = this;
+     const config = this.getConfig();
+     const el = selectorTags && selectorTags.el;
+     this.selected.reset(selectors);
+     this.selectorTags = new ClassTagsView({
+       el,
+       collection: this.selected,
+       module: this,
+       config
+     });
+ 
+     return this.selectorTags.render().el;
+   }
+ 
+   destroy() {
+     const { selectorTags, model } = this;
+     model.stopListening();
+     this.__destroy();
+     selectorTags && selectorTags.remove();
+     this.selectorTags = {};
+   }
+ 
+   /**
+    * Get common selectors from the current selection.
+    * @return {Array<Selector>}
+    * @private
+    */
+   __getCommon() {
+     return this.__getCommonSelectors(this.em.getSelectedAll());
+   }
+ 
+   __getCommonSelectors(components: Component[], opts = {}) {
+     const selectors = components
+     //@ts-ignore
+       .map(cmp => cmp.getSelectors && cmp.getSelectors().getValid(opts))
+       .filter(Boolean);
+     return this.__common(...selectors);
+   }
+ 
+   __common(...args: any[]): Selector[] {
+     if (!args.length) return [];
+     if (args.length === 1) return args[0];
+     if (args.length === 2)
+       return args[0].filter((item: any) => args[1].indexOf(item) >= 0);
+ 
+     return args
+       .slice(1)
+       .reduce((acc, item) => this.__common(acc, item), args[0]);
+   }
+ }

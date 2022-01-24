@@ -1105,7 +1105,7 @@ export default class Component extends Styleable {
   initToolbar() {
     const { em } = this;
     const model = this;
-    const ppfx = (em && em.getConfig('stylePrefix')) || '';
+    const ppfx = (em && em.getConfig().stylePrefix) || '';
 
     if (!model.get('toolbar')) {
       var tb = [];

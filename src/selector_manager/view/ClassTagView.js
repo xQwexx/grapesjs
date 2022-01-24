@@ -28,8 +28,8 @@ export default Backbone.View.extend({
     this.config = config;
     this.module = o.module;
     this.coll = o.coll || null;
-    this.pfx = config.stylePrefix || '';
-    this.ppfx = config.pStylePrefix || '';
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     this.em = config.em;
     this.listenTo(this.model, 'change:active', this.updateStatus);
   },

@@ -6,8 +6,8 @@ export default Backbone.View.extend({
     this.config = o.config || {};
     this.stackModel = o.stackModel;
     this.preview = o.preview;
-    this.pfx = this.config.stylePrefix || '';
-    this.ppfx = this.config.pStylePrefix || '';
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     this.propsConfig = o.propsConfig;
     let pfx = this.pfx;
     let ppfx = this.ppfx;
@@ -27,7 +27,7 @@ export default Backbone.View.extend({
           ignoreViewChildren: 1,
           containerSel: `.${pfx}layers`,
           itemSel: `.${pfx}layer`,
-          pfx: this.config.pStylePrefix
+          pfx: this.config.ppfx
         })
       : '';
 

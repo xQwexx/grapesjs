@@ -6,7 +6,7 @@ export default Backbone.View.extend({
   initialize(o) {
     this.opt = o || {};
     this.config = this.opt.config || {};
-    this.pfx = this.config.stylePrefix || '';
+    this.pfx = this.config.pfx;
     this.parentM = this.opt.parentM || null;
     this.listenTo(this.collection, 'add', this.addTo);
     this.listenTo(this.collection, 'reset remove', this.render);

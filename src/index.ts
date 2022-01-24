@@ -61,7 +61,6 @@ export default {
           ? els
           : document.querySelector(els) ?? undefined;
     }
-    console.log(config.el);
 
     const editor = new Editor(config, { $ }).init();
     const em = editor.getModel();

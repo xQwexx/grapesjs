@@ -5,10 +5,6 @@ export default class AssetManagerConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
     const config = em.getConfig();
-    const ppfx = config.stylePrefix;
-    if (ppfx) {
-      this.stylePrefix = ppfx + "am-";
-    }
   }
   name = "AssetManager";
 

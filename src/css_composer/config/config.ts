@@ -5,7 +5,6 @@ import EditorModel from "editor/model/Editor";
 export default class CssComposerConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
-    this.stylePrefix += "css-";
 
     var elStyle = em.config.style || "";
     //@ts-ignore
@@ -14,6 +13,9 @@ export default class CssComposerConfig extends ModuleConfig {
   }
 
   name = "CssComposer";
+
+  protected stylePrefix = "css-";
+  
   stm?: any;
 
   // Default CSS style

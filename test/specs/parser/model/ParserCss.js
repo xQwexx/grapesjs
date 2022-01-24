@@ -1,5 +1,5 @@
 import { parseSelector } from 'parser/model/BrowserParserCss';
-import ParserCss from 'parser/model/ParserCss';
+import { ParserCss } from 'parser/model/ParserCss';
 
 describe('ParserCss', () => {
   let obj;

@@ -26,7 +26,7 @@ export default class DevicesView extends View {
   initialize(o) {
     this.config = o.config || {};
     this.em = this.config.em;
-    this.ppfx = this.config.pStylePrefix || '';
+    this.ppfx = this.config.ppfx;
     this.events['click .' + this.ppfx + 'add-trasp'] = this.startAdd;
     this.listenTo(this.em, 'change:device', this.updateSelect);
     this.delegateEvents();

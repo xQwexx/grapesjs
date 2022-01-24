@@ -13,6 +13,7 @@ describe('ItemView', () => {
       getStyle: jest.fn(() => fakeModelStyle)
     };
 
+    console.log(config);
     itemView = new ItemView({
       model: fakeModel,
       config: {

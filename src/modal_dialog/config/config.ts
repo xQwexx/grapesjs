@@ -4,11 +4,10 @@ import EditorModel from "editor/model/Editor";
 export default class ModalConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
-    this.stylePrefix += "mdl-";
   }
+  stylePrefix = "mdl-";
 
   name = "Modal";
-  //stylePrefix = 'mdl-';
 
   title = "";
 

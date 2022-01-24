@@ -9,8 +9,8 @@ export default View.extend({
     this.level = o.level;
     this.config = config;
     this.preview = o.preview;
-    this.ppfx = config.pStylePrefix || '';
-    this.pfx = config.stylePrefix || '';
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     this.parent = o.parent;
     this.parentView = o.parentView;
     const pfx = this.pfx;

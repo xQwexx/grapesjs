@@ -5,6 +5,8 @@ export default class LayerManagerConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
   }
+  stylePrefix = undefined;
+
   name = "LayerManager";
 
   // Specify the element to use as a container, string (query) or HTMLElement

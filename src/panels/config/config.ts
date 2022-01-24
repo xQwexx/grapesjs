@@ -13,9 +13,10 @@ const prv = "preview";
 export default class PanelsConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
-    this.stylePrefix += "pn-";
   }
   name = "Panels";
+  
+  protected stylePrefix = "pn-";
 
   // Default panels fa-sliders for features
   defaults = [

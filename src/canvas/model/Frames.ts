@@ -48,7 +48,6 @@ export default class Frames extends Collection<Frame> {
   add(models: ({} | Frame)[], options?: AddOptions): Frame[];
   add(m: unknown, o: unknown): unknown {
     const { config } = this;
-    console.log(config);
     return Collection.prototype.add.call(this, m as any, {
       ...(o as any),
       em: config.em

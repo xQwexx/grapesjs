@@ -16,6 +16,32 @@ import { EditorConfig } from "../config/config";
 import tr from "i18n/locale/tr";
 import { IModule, IStorableModule } from "common/module";
 import Editor from "editor";
+import UtilsModule from "utils";
+import I18nModule from "i18n";
+import KeymapsModule from "keymaps";
+import UndoManagerModule from "undo_manager";
+import DeviceManagerModule from "device_manager";
+import StorageManagerModule from "storage_manager";
+import ParserModule from "parser";
+import StyleManagerModule from "style_manager";
+import SelectorManagerCollectionModule from "selector_manager";
+import CodeManagerConfig from "code_manager/config/config";
+import CodeManagerModule from "code_manager";
+import RichTextEditorModule from "rich_text_editor";
+import PanelsModule from "panels";
+import AssetManagerModule from "asset_manager";
+import CssComposerModule from "css_composer";
+import TraitManagerModule from "trait_manager";
+import CanvasModule from "canvas";
+import CommandsModule from "commands";
+import BlockManagerModule from "block_manager";
+import DomComponentsModule from "dom_components";
+import LayerManagerModule from "navigator";
+import ModalDialogModule from "modal_dialog";
+import PageManagerModule from "pages";
+import CssRule from "css_composer/model/CssRule";
+import Component from "dom_components/model/Component";
+import FrameView from "canvas/view/FrameView";
 
 //@ts-ignore
 Backbone.$ = $;
@@ -36,8 +62,8 @@ const deps: Function[] = [
   require("rich_text_editor").default,
   require("asset_manager").default,
   require("css_composer").default,
-  require("pages").default,
   require("trait_manager").default,
+  require("pages").default,
   require("dom_components").default,
   require("navigator").default,
   require("canvas").default,
@@ -48,14 +74,14 @@ const deps: Function[] = [
 Extender({
   //@ts-ignore
   Backbone: Backbone,
-  $: Backbone.$,
+  $: Backbone.$
 });
 
 const logs: { [id: string]: (...args: any[]) => void } = {
   debug: console.log,
   info: console.info,
   warning: console.warn,
-  error: console.error,
+  error: console.error
 };
 
 export type DragMode = boolean | "absolute" | "translate";
@@ -77,8 +103,29 @@ export interface IEditorModel extends ModelBase {
   //opened: {};
   device: DeviceMode;
   hasPages: any;
-
-  init(editor: any, opts?: any): void;
+  Utils: UtilsModule;
+  I18n: I18nModule;
+  Keymaps: KeymapsModule;
+  UndoManager: UndoManagerModule;
+  StorageManager: StorageManagerModule;
+  DeviceManager: DeviceManagerModule;
+  Parser: ParserModule;
+  StyleManager: StyleManagerModule;
+  SelectorManager: SelectorManagerCollectionModule;
+  ModalDialog: ModalDialogModule;
+  CodeManager: CodeManagerModule;
+  Panels: PanelsModule;
+  RichTextEditor: RichTextEditorModule;
+  AssetManager: AssetManagerModule;
+  CssComposer: CssComposerModule;
+  PageManager: PageManagerModule;
+  TraitManager: TraitManagerModule;
+  DomComponents: DomComponentsModule;
+  LayerManager: LayerManagerModule;
+  Canvas: CanvasModule;
+  Commands: CommandsModule;
+  BlockManager: BlockManagerModule;
+  getConfig(): EditorConfig;
 }
 export default class EditorModel extends Backbone.Model
   implements IEditorModel {
@@ -91,7 +138,7 @@ export default class EditorModel extends Backbone.Model
       previousModel: null,
       changesCount: false,
       opened: {},
-      device: '',
+      device: "Desktop"
     };
   }
 
@@ -138,9 +185,6 @@ export default class EditorModel extends Backbone.Model
         });
       }
     );
-
-    //@ts-ignore
-    console.log(this);
   }
   cacheLoad: any;
   attrsOrig: any;
@@ -188,7 +232,6 @@ export default class EditorModel extends Backbone.Model
 
   get toLoad(): any[] {
     const res = this.get("toLoad");
-    console.log(res);
     return isUndefined(res) ? this.set("toLoad", []).get("toLoad") : res;
   }
 
@@ -234,6 +277,73 @@ export default class EditorModel extends Backbone.Model
     }
   }
 
+  get Utils() {
+    return this.get("Utils") as UtilsModule;
+  }
+  get I18n() {
+    return this.get("I18n") as I18nModule;
+  }
+  get Keymaps() {
+    return this.get("Keymaps") as KeymapsModule;
+  }
+  get UndoManager() {
+    return this.get("UndoManager") as UndoManagerModule;
+  }
+  get StorageManager() {
+    return this.get("StorageManager") as StorageManagerModule;
+  }
+  get DeviceManager() {
+    return this.get("DeviceManager") as DeviceManagerModule;
+  }
+  get Parser() {
+    return this.get("Parser") as ParserModule;
+  }
+  get StyleManager() {
+    return this.get("StyleManager") as StyleManagerModule;
+  }
+  get SelectorManager() {
+    return this.get("SelectorManager") as SelectorManagerCollectionModule;
+  }
+  get ModalDialog() {
+    return this.get("ModalDialog") as ModalDialogModule;
+  }
+  get CodeManager() {
+    return this.get("CodeManager") as CodeManagerModule;
+  }
+  get Panels() {
+    return this.get("Panels") as PanelsModule;
+  }
+  get RichTextEditor() {
+    return this.get("RichTextEditor") as RichTextEditorModule;
+  }
+  get AssetManager() {
+    return this.get("AssetManager") as AssetManagerModule;
+  }
+  get CssComposer() {
+    return this.get("CssComposer") as CssComposerModule;
+  }
+  get PageManager() {
+    return this.get("PageManager") as PageManagerModule;
+  }
+  get TraitManager() {
+    return this.get("TraitManager") as TraitManagerModule;
+  }
+  get DomComponents() {
+    return this.get("DomComponents") as DomComponentsModule;
+  }
+  get LayerManager() {
+    return this.get("LayerManager") as LayerManagerModule;
+  }
+  get Canvas() {
+    return this.get("Canvas") as CanvasModule;
+  }
+  get Commands() {
+    return this.get("Commands") as CommandsModule;
+  }
+  get BlockManager() {
+    return this.get("BlockManager") as BlockManagerModule;
+  }
+
   getContainer() {
     return this.config.el;
   }
@@ -257,18 +367,16 @@ export default class EditorModel extends Backbone.Model
    * @private
    */
   loadOnStart(clb?: Function) {
-    const sm = this.get("StorageManager");
+    const sm = this.StorageManager;
 
     // Generally, with `onLoad`, the module will try to load the data from
     // its configurations
-
     this.toLoad.forEach(module => {
       module.onLoad();
     });
 
     // Stuff to do post load
     const postLoad = () => {
-      console.log(module);
       this.modules.forEach(module => module?.postLoad(this));
       this.set("readyLoad", 1);
       clb && clb();
@@ -287,7 +395,7 @@ export default class EditorModel extends Backbone.Model
    * @private
    */
   updateChanges() {
-    const stm = this.get("StorageManager");
+    const stm = this.StorageManager;
     const changes = this.get("changesCount");
     this.updateItr && clearTimeout(this.updateItr);
     //@ts-ignore
@@ -311,14 +419,13 @@ export default class EditorModel extends Backbone.Model
   loadModule(module: any) {
     const { config } = this;
     const Mod = new module(this) as IModule;
-    console.log(module);
     const name = (Mod.name.charAt(0).toLowerCase() +
       Mod.name.slice(1)) as keyof EditorConfig;
     const cfgParent = !isUndefined(config[name])
       ? config[name]
       : config[Mod.name as keyof EditorConfig];
     const cfg = cfgParent === true ? {} : cfgParent || {};
-    const sm = this.get("StorageManager");
+    const sm = this.StorageManager;
     cfg.pStylePrefix = config.stylePrefix || "";
 
     if (!isUndefined(cfgParent) && !cfgParent) {
@@ -330,11 +437,10 @@ export default class EditorModel extends Backbone.Model
       cfg.stm = sm;
       // DomComponents should be load before CSS Composer
       const mth = name == "domComponents" ? "unshift" : "push";
-      console.log(Mod);
       this.storables[mth](Mod as IStorableModule);
     }
 
-    console.log(Mod.name);
+    //console.log(Mod.name);
     cfg.em = this;
     Mod.init({ ...cfg });
 
@@ -418,7 +524,7 @@ export default class EditorModel extends Backbone.Model
    * @return {Array}
    * @private
    */
-  getSelectedAll(): any[] {
+  getSelectedAll() {
     return this.selected.allComponents();
   }
 
@@ -428,20 +534,22 @@ export default class EditorModel extends Backbone.Model
    * @param  {Object} [opts={}] Options, optional
    * @private
    */
-  setSelected(el?: any[], opts: any = {}) {
+  setSelected(
+    el?: Component | HTMLElement | (Component | HTMLElement)[],
+    opts: any = {}
+  ) {
     const { event } = opts;
     const ctrlKey = event && (event.ctrlKey || event.metaKey);
     const { shiftKey } = event || {};
-    const multiple = isArray(el);
-    const els = (multiple ? el : [el]).map((el) => getModel(el, $));
-
+    const els = el && (isArray(el) ? el : [el])?.map(el => getModel(el, $));
     const selected = this.getSelectedAll();
     const mltSel = this.getConfig().multipleSelection;
     let added;
 
     // If an array is passed remove all selected
     // expect those yet to be selected
-    multiple && this.removeSelected(selected.filter((s) => !contains(els, s)));
+    els && this.removeSelected(selected.filter(s => !contains(els, s)));
+
     let min: number, max: number;
     els?.forEach(el => {
       const model = getModel(el, $);
@@ -451,12 +559,12 @@ export default class EditorModel extends Backbone.Model
       if (ctrlKey && mltSel) {
         return this.toggleSelected(model);
       } else if (shiftKey && mltSel) {
-        this.clearSelection(this.get("Canvas").getWindow());
+        this.clearSelection(this.Canvas.getWindow());
         const coll = model.collection;
         const index = model.index();
 
         // Fin min and max siblings
-        this.getSelectedAll().forEach((sel) => {
+        this.getSelectedAll().forEach(sel => {
           const selColl = sel.collection;
           const selIndex = sel.index();
           if (selColl === coll) {
@@ -487,7 +595,7 @@ export default class EditorModel extends Backbone.Model
         return this.addSelected(model);
       }
 
-      !multiple && this.removeSelected(selected.filter((s) => s !== model));
+      !els && this.removeSelected(selected.filter(s => s !== model));
       this.addSelected(model, opts);
       added = model;
     });
@@ -565,7 +673,8 @@ export default class EditorModel extends Backbone.Model
    * @private
    */
   setComponents(components: Object | string, opt = {}) {
-    return this.get("DomComponents").setComponents(components, opt);
+    //@ts-ignore
+    return this.DomComponents.setComponents(components, opt);
   }
 
   /**
@@ -574,8 +683,8 @@ export default class EditorModel extends Backbone.Model
    * @private
    */
   getComponents() {
-    var cmp = this.get("DomComponents");
-    var cm = this.get("CodeManager");
+    var cmp = this.DomComponents;
+    var cm = this.CodeManager;
 
     if (!cmp || !cm) return;
 
@@ -590,8 +699,8 @@ export default class EditorModel extends Backbone.Model
    * @return {this}
    * @private
    */
-  setStyle(style: Object | string, opt = {}) {
-    const cssc = this.get("CssComposer");
+  setStyle(style: CssRule, opt = {}) {
+    const cssc = this.CssComposer;
     cssc.clear(opt);
     cssc.getAll().add(style, opt);
     return this;
@@ -604,6 +713,7 @@ export default class EditorModel extends Backbone.Model
    * @private
    */
   addStyle(style: Object | string, opts = {}) {
+    //@ts-ignore
     const res = this.getStyle().add(style, opts);
     return isArray(res) ? res : [res];
   }
@@ -614,7 +724,7 @@ export default class EditorModel extends Backbone.Model
    * @private
    */
   getStyle() {
-    return this.get("CssComposer").getAll();
+    return this.CssComposer.getAll();
   }
 
   /**
@@ -645,13 +755,13 @@ export default class EditorModel extends Backbone.Model
     const { config } = this;
     const { optsHtml, exportWrapper, wrapperIsBody } = config;
     const js = config.jsInHtml ? this.getJs(opts) : "";
-    const cmp = opts.component || this.get("DomComponents").getComponent();
+    const cmp = opts.component || this.DomComponents.getComponent();
     let html = cmp
-      ? this.get("CodeManager").getCode(cmp, "html", {
+      ? this.CodeManager.getCode(cmp, "html", {
           exportWrapper,
           wrapperIsBody,
           ...optsHtml,
-          ...opts,
+          ...opts
         })
       : "";
     html += js ? `<script>${js}</script>` : "";
@@ -671,17 +781,17 @@ export default class EditorModel extends Backbone.Model
     const keepUnusedStyles = !isUndefined(opts.keepUnusedStyles)
       ? opts.keepUnusedStyles
       : config.keepUnusedStyles;
-    const cssc = this.get("CssComposer");
-    const wrp = opts.component || this.get("DomComponents").getComponent();
+    const cssc = this.CssComposer;
+    const wrp = opts.component || this.DomComponents.getComponent();
     const protCss = !avoidProt ? config.protectedCss : "";
     const css =
       wrp &&
-      this.get("CodeManager").getCode(wrp, "css", {
+      this.CodeManager.getCode(wrp, "css", {
         cssc,
         wrapperIsBody,
         keepUnusedStyles,
         ...optsCss,
-        ...opts,
+        ...opts
       });
     return wrp ? (opts.json ? css : protCss + css) : "";
   }
@@ -692,12 +802,8 @@ export default class EditorModel extends Backbone.Model
    * @private
    */
   getJs(opts: any = {}) {
-    var wrp = opts.component || this.get("DomComponents").getWrapper();
-    return wrp
-      ? this.get("CodeManager")
-          .getCode(wrp, "js")
-          .trim()
-      : "";
+    var wrp = opts.component || this.DomComponents.getWrapper();
+    return wrp ? this.CodeManager.getCode(wrp, "js").trim() : "";
   }
 
   /**
@@ -707,7 +813,7 @@ export default class EditorModel extends Backbone.Model
    * @private
    */
   store(clb?: Function) {
-    const sm = this.get("StorageManager");
+    const sm = this.StorageManager;
     if (!sm) return;
 
     const store = this.storeData();
@@ -744,11 +850,11 @@ export default class EditorModel extends Backbone.Model
   }
 
   loadData(data = {}) {
-    const sm = this.get("StorageManager");
+    const sm = this.StorageManager;
     const result = sm.__clearKeys(data);
 
     this.storables.forEach(module => {
-      console.log(module);
+      //@ts-ignore
       module.load(result);
       module?.postLoad(this);
     });
@@ -765,7 +871,7 @@ export default class EditorModel extends Backbone.Model
    */
   getCacheLoad(force?: boolean, clb?: Function) {
     if (this.cacheLoad && !force) return this.cacheLoad;
-    const sm = this.get("StorageManager");
+    const sm = this.StorageManager;
     const load: string[] = [];
 
     if (!sm) return {};
@@ -773,7 +879,7 @@ export default class EditorModel extends Backbone.Model
     this.storables.forEach(m => {
       let key = m.storageKey;
       const keys = isArray(key) ? key : [key];
-      keys.forEach((k) => load.push(k));
+      keys.forEach(k => load.push(k));
     });
 
     sm.load(load, (res: any) => {
@@ -790,7 +896,7 @@ export default class EditorModel extends Backbone.Model
    */
   getDeviceModel() {
     var name = this.get("device");
-    return this.get("DeviceManager").get(name);
+    return this.DeviceManager.get(name);
   }
 
   /**
@@ -799,10 +905,10 @@ export default class EditorModel extends Backbone.Model
    * @private
    */
   runDefault(opts = {}) {
-    var command = this.get("Commands").get(this.config.defaultCommand);
+    var command = this.Commands.get(this.config.defaultCommand as string);
     if (!command || this.defaultRunning) return;
-    command.stop(this, this, opts);
-    command.run(this, this, opts);
+    command.callStop(this.getEditor(), opts);
+    command.callRun(this.getEditor(), opts);
     this.defaultRunning = true;
   }
 
@@ -812,10 +918,10 @@ export default class EditorModel extends Backbone.Model
    * @private
    */
   stopDefault(opts = {}) {
-    const commands = this.get("Commands");
-    const command = commands.get(this.config.defaultCommand);
+    const commands = this.Commands;
+    const command = commands.get(this.config.defaultCommand as string);
     if (!command || !this.defaultRunning) return;
-    command.stop(this, this, opts);
+    command.callStop(this.getEditor(), opts);
     this.defaultRunning = false;
   }
 
@@ -825,7 +931,7 @@ export default class EditorModel extends Backbone.Model
    */
   refreshCanvas(opts: any = {}) {
     this.set("canvasOffset", null);
-    this.set("canvasOffset", this.get("Canvas").getOffset());
+    this.set("canvasOffset", this.Canvas.getOffset());
     opts.tools && this.trigger("canvas:updateTools");
   }
 
@@ -835,7 +941,7 @@ export default class EditorModel extends Backbone.Model
    * @param {Window} win If not passed the current one will be used
    * @private
    */
-  clearSelection(win: Window) {
+  clearSelection(win?: Window) {
     var w = win || window;
     w.getSelection()?.removeAllRanges();
   }
@@ -858,14 +964,14 @@ export default class EditorModel extends Backbone.Model
    * @return {Component}
    */
   getWrapper() {
-    return this.get("DomComponents").getWrapper();
+    return this.DomComponents.getWrapper();
   }
 
   setCurrentFrame(frameView: any) {
     return this.set("currentFrame", frameView);
   }
 
-  getCurrentFrame() {
+  getCurrentFrame(): any {
     return this.get("currentFrame");
   }
 
@@ -883,11 +989,11 @@ export default class EditorModel extends Backbone.Model
   }
 
   getZoomDecimal() {
-    return this.get("Canvas").getZoomDecimal();
+    return this.Canvas.getZoomDecimal();
   }
 
   getZoomMultiplier() {
-    return this.get("Canvas").getZoomMultiplier();
+    return this.Canvas.getZoomMultiplier();
   }
 
   setDragMode(value: any) {
@@ -895,8 +1001,8 @@ export default class EditorModel extends Backbone.Model
     return this;
   }
 
-  t(...args: any[]) {
-    return this.get("I18n").t(...args);
+  t(key: string, opts: { l?: string; params?: any; lFlb?: string } = {}) {
+    return this.I18n.t(key, opts);
   }
 
   /**
@@ -914,13 +1020,13 @@ export default class EditorModel extends Backbone.Model
     const { config, view } = this;
     const editor = this.getEditor();
     const { editors = [] } = config.grapesjs || {};
-    this.stopListening();
     this.stopDefault();
     this.modules
       .slice()
       .reverse()
-      .forEach((mod) => mod.destroy());
+      .forEach(mod => mod.destroy());
     view && view.remove();
+    this.stopListening();
     this.clear({ silent: true });
     this.destroyed = true;
     ["config", "view", "_previousAttributes", "_events", "_listeners"].forEach(
@@ -980,7 +1086,7 @@ export default class EditorModel extends Backbone.Model
       chooseText: "Ok",
       cancelText: "⨯",
       ...opts,
-      ...colorPicker,
+      ...colorPicker
     });
   }
 

@@ -5,13 +5,11 @@ export default class SelectorManagerConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
     const config = em.getConfig();
-    const ppfx = config.stylePrefix;
 
-    if (ppfx) {
-      this.stylePrefix = ppfx + "clm-";
-    }
   }
   name = "SelectorManager";
+
+  stylePrefix = "clm-";
 
   // Specify the element to use as a container, string (query) or HTMLElement
   // With the empty value, nothing will be rendered

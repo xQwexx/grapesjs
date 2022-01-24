@@ -4,7 +4,6 @@ import EditorModel from "editor/model/Editor";
 export default class DomComponentsConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
-    this.stylePrefix += "comp-";
     //@ts-ignore
     this.components = em.config.components || this.components;
 
@@ -15,6 +14,7 @@ export default class DomComponentsConfig extends ModuleConfig {
       this.components = [];
     }
   }
+  stylePrefix = "comp-";
 
   name = "DomComponents";
 

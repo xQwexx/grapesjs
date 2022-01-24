@@ -13,7 +13,7 @@ export default Backbone.View.extend({
     this.atRules = {};
     this.config = config;
     this.em = config.em;
-    this.pfx = config.stylePrefix || '';
+    this.pfx = this.config.pfx;
     this.className = this.pfx + 'rules';
     const coll = this.collection;
     this.listenTo(coll, 'add', this.addTo);

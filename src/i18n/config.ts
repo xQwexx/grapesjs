@@ -13,6 +13,7 @@ export default class I18nConfig extends ModuleConfig {
       ...(config.messages || {})
     };
   }
+  stylePrefix = undefined;
   name = "I18n";
   // Locale value
   locale = "en";

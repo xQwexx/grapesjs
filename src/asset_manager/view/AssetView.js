@@ -7,8 +7,8 @@ export default Backbone.View.extend({
     this.collection = o.collection;
     const config = o.config || {};
     this.config = config;
-    this.pfx = config.stylePrefix || '';
-    this.ppfx = config.pStylePrefix || '';
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     this.em = config.em;
     this.className = this.pfx + 'asset';
     this.listenTo(this.model, 'destroy remove', this.remove);

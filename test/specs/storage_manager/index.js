@@ -1,12 +1,13 @@
 import StorageManager from 'storage_manager';
 import Models from './model/Models';
+import utils from '../../test_utils';
 
 describe('Storage Manager', () => {
   describe('Main', () => {
     var obj;
 
     beforeEach(() => {
-      obj = new StorageManager().init();
+      obj = new StorageManager(utils.mockEditor).init();
     });
 
     afterEach(() => {
@@ -74,9 +75,18 @@ describe('Storage Manager', () => {
 
       beforeEach(() => {
         storeValue = [];
-        obj = new StorageManager().init({
+        obj = new StorageManager({
+          ...utils.mockEditor,
+          config: { storageManager: { type: storageId } }
+        }).init({
           type: storageId
         });
+        console.log(
+          {
+            ...utils.mockEditor,
+            config: { storageManager: { type: storageId } }
+          }.getConfig().storageManager.type
+        );
         obj.add(storageId, storage);
       });
 
@@ -90,7 +100,7 @@ describe('Storage Manager', () => {
           item2: 'testData2'
         };
         var data2 = {};
-        var id = obj.getConfig().id;
+        var id = obj.config.id;
         data2[id + 'item'] = 'testData';
         data2[id + 'item2'] = 'testData2';
 

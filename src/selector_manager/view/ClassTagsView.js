@@ -47,8 +47,8 @@ export default Backbone.View.extend({
 
   initialize(o = {}) {
     this.config = o.config || {};
-    this.pfx = this.config.stylePrefix || '';
-    this.ppfx = this.config.pStylePrefix || '';
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     this.className = this.pfx + 'tags';
     this.stateInputId = this.pfx + 'states';
     this.stateInputC = this.pfx + 'input-c';

@@ -40,6 +40,8 @@ export default class ParserConfig extends ModuleConfig
   }
   name = "Parser";
 
+  protected stylePrefix = undefined;
+
   keepEmptyTextNodes: any;
 
   textTags = ["br", "b", "i", "u", "a", "ul", "ol"];

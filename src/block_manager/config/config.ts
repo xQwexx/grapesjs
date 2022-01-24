@@ -2,6 +2,8 @@ import { ModuleConfig } from "common/module";
 
 export default class BlockManagerConfig extends ModuleConfig {
   name = "BlockManager";
+
+  protected stylePrefix = undefined;
   // Specify the element to use as a container, string (query) or HTMLElement
   // With the empty value, nothing will be rendered
   appendTo = "";
@@ -23,5 +25,5 @@ export default class BlockManagerConfig extends ModuleConfig {
   blocks = [];
 
   // Avoid rendering the default block manager.
-  custom = false;
+  custom:false| {open?: Function, close?: Function} = false;
 }

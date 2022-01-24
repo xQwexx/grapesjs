@@ -1,11 +1,11 @@
-import { isFunction } from 'underscore';
-import Backbone from 'backbone';
+import { extend, isFunction } from 'underscore';
+import Backbone, { Collection } from 'backbone';
 
 const Model = Backbone.Model;
 const View = Backbone.View;
 
-export default {
-  types: [],
+export default class TypeableCollection extends Collection {
+  types = [];
 
   initialize(models, opts) {
     this.model = (attrs = {}, options = {}) => {
@@ -30,7 +30,7 @@ export default {
     };
     const init = this.init && this.init.bind(this);
     init && init();
-  },
+  }
 
   /**
    * Recognize type by any value
@@ -61,7 +61,7 @@ export default {
       type: this.getBaseType(),
       attributes: value
     };
-  },
+  }
 
   /**
    * Returns the base type (last object in the stack)
@@ -70,7 +70,7 @@ export default {
   getBaseType() {
     const types = this.getTypes();
     return types[types.length - 1];
-  },
+  }
 
   /**
    * Get types
@@ -78,7 +78,7 @@ export default {
    */
   getTypes() {
     return this.types;
-  },
+  }
 
   /**
    * Get type
@@ -94,7 +94,7 @@ export default {
         return type;
       }
     }
-  },
+  }
 
   /**
    * Add new type
@@ -147,4 +147,4 @@ export default {
       this.getTypes().unshift(definition);
     }
   }
-};
+}

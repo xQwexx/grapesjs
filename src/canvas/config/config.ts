@@ -4,9 +4,8 @@ import EditorModel from "editor/model/Editor";
 export default class CanvasConfig extends ModuleConfig {
   constructor(em: EditorModel, module: Module) {
     super(em, module);
-    this.stylePrefix += "cv-";
   }
-  //stylePrefix = 'cv-';
+  protected stylePrefix = 'cv-';
   name = "Canvas";
 
   /*
@@ -44,7 +43,7 @@ export default class CanvasConfig extends ModuleConfig {
   autoscrollLimit = 50;
 
   // Experimental: external highlighter box
-  extHl = 0;
+  extHl = false;
 
   /**
    * When some textable component is selected and focused (eg. input or text component) the editor

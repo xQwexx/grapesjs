@@ -6,7 +6,6 @@ export default class Pages extends Collection<Page> {
 
   initialize(models: any, config = {}) {
     this.config = config;
-    console.log(config);
     this.on("reset", this.onReset);
     this.on("remove", this.onRemove);
   }
@@ -25,7 +24,6 @@ export default class Pages extends Collection<Page> {
 
   add(m: unknown, o?: unknown): unknown {
     const { config } = this;
-    console.log(config);
     return Collection.prototype.add.call(this, m as any, {
       ...(o as any),
       config: config

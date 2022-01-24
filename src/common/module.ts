@@ -1,6 +1,7 @@
+import { Collection } from "backbone";
 import { EditorConfig } from "editor/config/config";
 import EditorModel from "editor/model/Editor";
-import { isString, isElement } from "underscore";
+import { isString, isElement, isArray } from "underscore";
 import { createId } from "utils/mixins";
 
 export interface IModule {
@@ -10,6 +11,7 @@ export interface IModule {
   getConfig(): ModuleConfig;
   onLoad?(): void;
   name: string;
+  postRender?(view: any): void;
 }
 export interface IViewableModule extends IModule {
   onLoad(): void;
@@ -19,17 +21,30 @@ export interface IViewableModule extends IModule {
   postRender(view: any): void;
 }
 export abstract class ModuleConfig {
-  stylePrefix: string;
+  protected abstract stylePrefix?: string;
   private: boolean = false;
   abstract name: string;
   module: Module;
   em: EditorModel;
+  pfx: string;
+  public get ppfx() {return this.pfx + this.stylePrefix || ''}
 
   constructor(em: EditorModel, module: Module) {
     const config = em.getConfig();
-    this.stylePrefix = config.stylePrefix || "";
+    this.pfx = config.stylePrefix || "";
     this.module = module;
     this.em = em;
+    //console.log(module.name)
+    const moduleConfig:{[id: string]: any} = config[module.name as keyof EditorConfig]
+    if (moduleConfig){
+      for (const key in moduleConfig) {
+        if (Object.prototype.hasOwnProperty.call(this, key)) {
+          console.log(key)
+          const element = moduleConfig[key];
+          
+        }
+      }
+    }
   }
 }
 
@@ -46,9 +61,7 @@ export abstract class Module<T extends ModuleConfig = ModuleConfig>
     confClass: { new (em: EditorModel, module: Module<T>): T }
   ) {
     this.em = em;
-    console.log(confClass);
     this.config = new confClass(em, this);
-    console.log(this.config);
   }
   //abstract name: string;
   private: boolean = false;
@@ -67,7 +80,9 @@ export abstract class Module<T extends ModuleConfig = ModuleConfig>
   __logWarn(str: string) {
     this.em.logWarning(`[${this.name}]: ${str}`);
   }
+  postRender?(view: any): void;
 }
+
 export interface IStorableModule extends IModule {
   storageKey: string[] | string;
   store(result: any): any;
@@ -82,19 +97,20 @@ export interface ICollectionModule {
   init(cfg: any): void;
   destroy(): void;
   postLoad(key: any): any;
-  postRender(view: any): void;
+  postRender?(view: any): void;
 }
 
 export default abstract class CollectionModule<
-  T extends ModuleConfig
-> extends Module<T> {
+  TConf extends ModuleConfig,
+  TModel extends Collection
+> extends Module<TConf> {
   cls: any[] = [];
-  protected all: any;
+  protected all: TModel;
   events: any;
 
   constructor(
     em: EditorModel,
-    confClass: { new (em: EditorModel, module: Module<T>): T },
+    confClass: { new (em: EditorModel, module: Module<TConf>): TConf },
     all: any,
     events: any
   ) {
@@ -112,12 +128,11 @@ export default abstract class CollectionModule<
   abstract render(): any;
 
   getAll() {
-    return this.all ? this.all : [];
+    return this.all;
   }
 
   getAllMap() {
-    return this.getAll().reduce((acc: any[], i: any) => {
-      console.log(i);
+    return this.getAll().reduce((acc: { [id: string]: TModel }, i: any) => {
       acc[i.get(i.idAttribute)] = i;
       return acc;
     }, {});

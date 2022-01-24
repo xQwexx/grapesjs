@@ -1,5 +1,6 @@
 import Command from 'commands/model/Command';
 import Commands from 'commands';
+import mockEditor from '../index';
 
 describe('Command', () => {
   let obj;
@@ -21,7 +22,7 @@ describe('Commands', () => {
   var obj;
 
   beforeEach(() => {
-    obj = new Commands();
+    obj = new Commands(mockEditor);
   });
 
   afterEach(() => {

@@ -207,7 +207,6 @@ export default class DomComponentsModule extends Module<DomComponentsConfig>
    */
   get storageKey() {
     var keys = [];
-    console.log(this);
     var smc = this.config.stm?.getConfig() || {};
     if (smc.storeHtml) keys.push("html");
     if (smc.storeComponents) keys.push("components");

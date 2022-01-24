@@ -22,7 +22,6 @@ export default class Button extends Model {
   }
 
   initialize(options: any) {
-    console.log(this.get("buttons"));
     //@ts-ignore
     if (this.get("buttons").length) {
       var Buttons = require("./Buttons").default;

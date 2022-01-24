@@ -6,8 +6,8 @@ export default Backbone.View.extend({
     const config = o.config || {};
     const model = this.model;
     this.config = config;
-    this.pfx = config.stylePrefix || '';
-    this.ppfx = config.pStylePrefix || '';
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     this.buttons = model.get('buttons');
     this.className = this.pfx + 'panel';
     this.id = this.pfx + model.get('id');

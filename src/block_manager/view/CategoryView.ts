@@ -33,7 +33,7 @@ export default class CategoryView extends View {
 
   constructor(o = {}, config: any = {}) {
     super(o);
-    const pfx = config.pStylePrefix || "";
+    const pfx = config.pfx;
     this.em = config.em;
     this.pfx = pfx;
 

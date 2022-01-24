@@ -209,6 +209,8 @@ export interface EditorConfig {
   // Configurations for Trait Manager
   traitManager?: any;
 
+  pageManager?: any;
+
   // Texts
   textViewCode?: string;
 
@@ -537,6 +539,8 @@ export const defaultConfig: EditorConfig = {
 
   // Configurations for Trait Manager
   traitManager: {},
+
+  pageManager: {},
 
   // Texts
   textViewCode: "Code",

@@ -9,7 +9,7 @@ describe('SelectorManager', () => {
 
     beforeEach(() => {
       em = new Editor({});
-      obj = new SelectorManager().init({ em });
+      obj = new SelectorManager(em.getModel()).init({ em });
     });
 
     afterEach(() => {

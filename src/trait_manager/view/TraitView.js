@@ -32,8 +32,8 @@ export default Backbone.View.extend({
     const { type } = model.attributes;
     this.config = config;
     this.em = config.em;
-    this.pfx = config.stylePrefix || '';
-    this.ppfx = config.pStylePrefix || '';
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     this.target = target;
     const { ppfx } = this;
     this.clsField = `${ppfx}field ${ppfx}field-${type}`;

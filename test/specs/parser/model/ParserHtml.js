@@ -1,15 +1,16 @@
-import ParserHtml from 'parser/model/ParserHtml';
+import { ParserHtml } from 'parser/model/ParserHtml';
 import ParserCss from 'parser/model/ParserCss';
-import DomComponents from 'dom_components';
+import { DomComponents } from 'dom_components';
+import utils from '../../test_utils';
 
 describe('ParserHtml', () => {
   var obj;
 
   beforeEach(() => {
-    var dom = new DomComponents();
+    var dom = new DomComponents(utils.mockEditor);
     obj = new ParserHtml({
       textTags: ['br', 'b', 'i', 'u'],
-      pStylePrefix: 'gjs-'
+      StylePrefix: 'gjs-'
     });
     obj.compTypes = dom.componentTypes;
   });

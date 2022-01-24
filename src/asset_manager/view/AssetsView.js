@@ -34,8 +34,8 @@ export default Backbone.View.extend({
   initialize(o) {
     this.options = o;
     this.config = o.config;
-    this.pfx = this.config.stylePrefix || '';
-    this.ppfx = this.config.pStylePrefix || '';
+    this.pfx = this.config.pfx;
+    this.ppfx = this.config.ppfx;
     this.em = this.config.em;
     const coll = this.collection;
     this.listenTo(coll, 'reset', this.renderAssets);

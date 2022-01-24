@@ -41,6 +41,7 @@ hasWin() && keymaster.init(window);
 
 class KeymapsConfig extends ModuleConfig {
   name = "Keymaps";
+  stylePrefix = undefined;
 
   defaults: { [id: string]: IKeyBinding } = {
     "core:undo": {

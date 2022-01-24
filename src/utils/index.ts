@@ -7,6 +7,7 @@ import { extend } from "underscore";
 import EditorModel from "editor/model/Editor";
 class UtilsConfig extends ModuleConfig {
   name = "Utils";
+  protected stylePrefix = undefined;
 }
 export default class UtilsModule extends Module<UtilsConfig> {
   constructor(em: EditorModel) {
@@ -23,4 +24,5 @@ export default class UtilsModule extends Module<UtilsConfig> {
 
   helpers = { ...mixins };
   Sorter = Sorter;
+  Resizer = Resizer;
 }

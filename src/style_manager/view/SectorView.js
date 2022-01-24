@@ -21,7 +21,7 @@ export default class SectorView extends View {
   initialize(o) {
     this.config = o.config || {};
     this.em = this.config.em;
-    this.pfx = this.config.stylePrefix || '';
+    this.pfx = this.config.pfx || '';
     this.target = o.target || {};
     this.propTarget = o.propTarget || {};
     this.caretR = 'fa-caret-right';
