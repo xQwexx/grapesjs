@@ -8,6 +8,7 @@ import TraitCheckboxView from './view/TraitCheckboxView';
 import TraitNumberView from './view/TraitNumberView';
 import TraitColorView from './view/TraitColorView';
 import TraitButtonView from './view/TraitButtonView';
+import TraitListView from './view/TraitListView';
 
 export const evAll = 'trait';
 export const evPfx = `${evAll}:`;
@@ -21,6 +22,7 @@ export default () => {
     checkbox: TraitCheckboxView,
     color: TraitColorView,
     button: TraitButtonView,
+    list: TraitListView,
   };
 
   return {
@@ -141,16 +143,15 @@ export default () => {
     render() {
       let { view } = this;
       const config = this.getConfig();
+      console.log(config);
       const el = view && view.el;
-      view = new TraitsView(
-        {
-          el,
-          collection: [],
-          editor: config.em,
-          config,
-        },
-        this.getTypes()
-      );
+      view = new TraitsView({
+        el,
+        collection: [],
+        editor: config.em,
+        config,
+      });
+      view.updatedCollection(config.em.getSelected()?.get('traits'));
       this.view = view;
       return view.el;
     },

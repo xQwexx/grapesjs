@@ -23,11 +23,10 @@ export default class TraitsView extends DomainViews {
    * Update view collection
    * @private
    */
-  updatedCollection() {
-    const { ppfx, className, em } = this;
-    const comp = em.getSelected();
+  updatedCollection(traits = []) {
+    const { ppfx, className } = this;
     this.el.className = `${className} ${ppfx}one-bg ${ppfx}two-color`;
-    this.collection = comp ? comp.get('traits') : [];
+    this.collection = traits ?? [];
     this.render();
   }
 }

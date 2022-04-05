@@ -6,9 +6,24 @@ const $ = Backbone.$;
 
 export default class TraitView extends Backbone.View {
   events = {};
-  // protected eventCapture = ['change'];
 
   appendInput = true;
+
+  get em() {
+    return this.config.em;
+  }
+
+  get pfx() {
+    return this.config.stylePrefix || '';
+  }
+
+  get ppfx() {
+    return this.config.pStylePrefix || '';
+  }
+
+  get target() {
+    return this.model.target;
+  }
 
   attributes() {
     return this.model.get('attributes');
@@ -29,13 +44,8 @@ export default class TraitView extends Backbone.View {
     super(o);
     const { config = {} } = o;
     const { model, eventCapture } = this;
-    const { target } = model;
     const { type } = model.attributes;
     this.config = config;
-    this.em = config.em;
-    this.pfx = config.stylePrefix || '';
-    this.ppfx = config.pStylePrefix || '';
-    this.target = target;
     const { ppfx } = this;
     this.clsField = `${ppfx}field ${ppfx}field-${type}`;
     [
@@ -257,19 +267,21 @@ export default class TraitView extends Backbone.View {
     const hasLabel = this.hasLabel && this.hasLabel();
     const cls = `${pfx}trait`;
     this.$input = null;
+    const context = this.templateInput
+      ? isFunction(this.templateInput)
+        ? this.templateInput(this.getClbOpts())
+        : this.templateInput
+      : '';
+
     let tmpl = `<div class="${cls} ${cls}--${type}">
       ${hasLabel ? `<div class="${ppfx}label-wrp" data-label></div>` : ''}
       <div class="${ppfx}field-wrp ${ppfx}field-wrp--${type}" data-input>
-        ${
-          this.templateInput
-            ? isFunction(this.templateInput)
-              ? this.templateInput(this.getClbOpts())
-              : this.templateInput
-            : ''
-        }
       </div>
     </div>`;
-    $el.empty().append(tmpl);
+    console.log($el);
+    console.log('--------------------------------------------');
+    console.log(context);
+    $el.empty().append(tmpl).find(`.${ppfx}field-wrp.${ppfx}field-wrp--${type}`).empty().append(context);
     hasLabel && this.renderLabel();
     this.renderField();
     this.el.className = `${cls}__wrp ${cls}__wrp-${id}`;

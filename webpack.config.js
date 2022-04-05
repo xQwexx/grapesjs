@@ -9,6 +9,7 @@ export default ({ config }) => ({
   ...config,
   output: {
     ...config.output,
+    publicPath: "/dist/",
     filename: 'grapes.min.js',
     libraryExport: 'default',
   },

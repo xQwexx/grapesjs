@@ -78,6 +78,7 @@
       </style>
     </div>
 
+   
     <script type="text/javascript">
       var editor = grapesjs.init({
         showOffsets: 1,
@@ -121,6 +122,12 @@
         attributes: { class:'gjs-fonts gjs-f-b1' },
         content: `<div style="padding-top:50px; padding-bottom:50px; text-align:center">Test block</div>`
       })
+      //import comp from "./componentTest";
+     // comp(editor.DomComponents, editor)
+     
     </script>
+     <script src="componentTest.js"></script>
+
+     <script  type="text/javascript">editor.getModel().attributes["DomComponents"].addComponent({type: 'kanban-board'})</script>
   </body>
 </html>
