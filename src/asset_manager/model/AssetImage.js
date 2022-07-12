@@ -1,9 +1,9 @@
 import Asset from './Asset';
 
 export default class AssetImage extends Asset {
-  defaults() {
+  get defaults() {
     return {
-      ...Asset.getDefaults(),
+      ...super.defaults,
       type: 'image',
       unitDim: 'px',
       height: 0,

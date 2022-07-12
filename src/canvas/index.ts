@@ -80,13 +80,17 @@ export default class CanvasModule extends Module<typeof defaults> {
   model: Canvas;
   private canvasView?: CanvasView;
 
+  protected get defaults() {
+    return defaults;
+  }
+
   /**
    * Initialize module. Automatically called with a new instance of the editor
    * @param {Object} config Configurations
    * @private
    */
   constructor(em: EditorModel) {
-    super(em, 'Canvas', defaults);
+    super(em, 'Canvas');
 
     this.canvas = new Canvas(this);
     this.model = this.canvas;

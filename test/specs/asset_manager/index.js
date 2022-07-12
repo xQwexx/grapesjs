@@ -1,7 +1,9 @@
 import AssetManager from 'asset_manager';
+import Editor from 'editor';
 
 describe('Asset Manager', () => {
   describe('Main', () => {
+    let em;
     let obj;
     let imgObj;
 
@@ -13,8 +15,8 @@ describe('Asset Manager', () => {
         width: 101,
         height: 102,
       };
-      obj = new AssetManager();
-      obj.init();
+      em = new Editor({});
+      obj = new AssetManager(em);
       document.body.querySelector('#asset-c').appendChild(obj.render());
     });
 

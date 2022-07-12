@@ -88,8 +88,12 @@ export default class LayerManager extends Module<typeof defaults> {
 
   events = events;
 
+  protected get defaults() {
+    return defaults;
+  }
+
   constructor(em: EditorModel) {
-    super(em, 'LayerManager', defaults);
+    super(em, 'LayerManager');
     bindAll(this, 'componentChanged', '__onRootChange', '__onComponent');
     this.model = new Model(this, { opened: {} });
     // @ts-ignore
