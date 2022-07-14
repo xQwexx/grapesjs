@@ -1,26 +1,26 @@
 import TraitView from './TraitView';
 import InputColor from '../../domain_abstract/ui/InputColor';
 
-export default class TraitColorView extends TraitView {
+export default class TraitColorView extends TraitView<any> {
+  get type() {
+    return 'color';
+  }
   protected get templateInput() {
     return '';
   }
 
-  protected getInputEl() {
-    if (!this.input) {
-      const model = this.model;
-      const value = this.getModelValue();
-      const inputColor = new InputColor({
-        model,
-        target: this.config.em,
-        contClass: this.ppfx + 'field-color',
-        ppfx: this.ppfx,
-      });
-      const input = inputColor.render();
-      input.setValue(value, { fromTarget: 1 });
-      this.input = input.el as HTMLInputElement;
-    }
+  /*protected getInput() {
+    const model = this.model;
+    const value = this.target;
+   const inputColor = new InputColor({
+      model: model,//{...this, value: this.target},
+      target: this.config.em,
+      contClass: this.ppfx + 'field-color',
+      ppfx: this.ppfx,
+    });
+    const $input = inputColor.render().inputEl as JQuery<HTMLInputElement>;
+    $input.val(value);
 
-    return this.input;
-  }
+    return $input;
+  }*/
 }

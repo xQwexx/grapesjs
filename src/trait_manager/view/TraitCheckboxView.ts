@@ -1,8 +1,20 @@
-import { isUndefined } from 'underscore';
+import { isBoolean, isUndefined } from 'underscore';
 import TraitView from './TraitView';
 
-export default class TraitCheckboxView extends TraitView {
+export default class TraitCheckboxView extends TraitView<boolean | string> {
   appendInput = false;
+  valueTrue?: boolean | string;
+  valueFalse?: boolean | string;
+  get type() {
+    return 'checkbox';
+  }
+
+  constructor(opts?: any) {
+    super(opts);
+    console.log('checkbox');
+    this.valueTrue = opts.valueTrue;
+    this.valueFalse = opts.valueFalse;
+  }
 
   protected get templateInput() {
     const { ppfx, clsField } = this;
@@ -11,14 +23,9 @@ export default class TraitCheckboxView extends TraitView {
   </label>`;
   }
 
-  protected onChange() {
-    const value = this.getInputElem().checked;
-    this.model.set('value', this.getCheckedValue(value));
-  }
-
-  private getCheckedValue(checked: boolean) {
-    let result = checked;
-    const { valueTrue, valueFalse } = this.model.attributes;
+  protected parseValueFromEl(el: HTMLInputElement) {
+    let result: boolean | string = el.checked;
+    const { valueTrue, valueFalse } = this;
 
     if (result && !isUndefined(valueTrue)) {
       result = valueTrue;
@@ -31,31 +38,8 @@ export default class TraitCheckboxView extends TraitView {
     return result;
   }
 
-  protected getInputEl() {
-    const toInit = !this.$input;
-    const el = super.getInputEl();
-
-    if (toInit) {
-      let checked, targetValue;
-      const { model, target } = this;
-      const { valueTrue, valueFalse } = model.attributes;
-      const name = model.get('name');
-
-      if (model.get('changeProp')) {
-        checked = target.get(name);
-        targetValue = checked;
-      } else {
-        targetValue = target.get('attributes')[name];
-        checked = targetValue || targetValue === '' ? !0 : !1;
-      }
-
-      if (!isUndefined(valueFalse) && targetValue === valueFalse) {
-        checked = !1;
-      }
-
-      el.checked = checked;
-    }
-
-    return el;
+  protected updateValueView(el: HTMLInputElement, value: boolean | string) {
+    const { valueFalse } = this;
+    el.checked = isBoolean(value) ? value : !isUndefined(valueFalse) && value === valueFalse ? false : true;
   }
 }

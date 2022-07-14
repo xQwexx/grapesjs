@@ -159,9 +159,8 @@ export default class Component extends StyleableModel {
     this.on(keyUpdateInside, this.__propToParent);
     this.set('status', '');
     this.views = [];
-
     // Register global updates for collection properties
-    ['classes', 'traits', 'components'].forEach(name => {
+    ['classes', 'components'].forEach(name => {
       const events = `add remove ${name !== 'components' ? 'change' : ''}`;
       this.listenTo(this.get(name), events.trim(), (...args) => this.emitUpdate(name, ...args));
     });
@@ -910,7 +909,7 @@ export default class Component extends StyleableModel {
   }
 
   initTraits(changed) {
-    const { em } = this;
+    /*const { em } = this;
     const event = 'change:traits';
     this.off(event, this.initTraits);
     this.__loadTraits();
@@ -925,7 +924,7 @@ export default class Component extends StyleableModel {
     });
     traits.length && this.set('attributes', attrs);
     this.on(event, this.initTraits);
-    changed && em && em.trigger('component:toggled');
+    changed && em && em.trigger('component:toggled');*/
     return this;
   }
 
@@ -1104,7 +1103,7 @@ export default class Component extends StyleableModel {
   }
 
   __loadTraits(tr, opts = {}) {
-    let traitsI = tr || this.get('traits');
+    /*let traitsI = tr || this.get('traits');
 
     if (!(traitsI instanceof Traits)) {
       traitsI = isFunction(traitsI) ? traitsI(this) : traitsI;
@@ -1117,7 +1116,7 @@ export default class Component extends StyleableModel {
       }
 
       this.set({ traits }, opts);
-    }
+    }*/
 
     return this;
   }
@@ -1132,7 +1131,7 @@ export default class Component extends StyleableModel {
    */
   getTraits() {
     this.__loadTraits();
-    return [...this.get('traits').models];
+    return [...this.get('traits')];
   }
 
   /**
@@ -1488,6 +1487,7 @@ export default class Component extends StyleableModel {
    * @private
    */
   toJSON(opts = {}) {
+    console.log('Convert component into JSON');
     const obj = Model.prototype.toJSON.call(this, opts);
     obj.attributes = this.getAttributes();
     delete obj.attributes.class;
@@ -2001,7 +2001,16 @@ Component.prototype.defaults = {
   'script-props': '',
   'script-export': '',
   attributes: '',
-  traits: ['id', 'title'],
+  traits: [
+    'id',
+    'id',
+    'title',
+    { type: 'checkbox', name: 'contenteditable' },
+    { type: 'number', name: 'counter' },
+    { type: 'select', name: 'allign', options: ['left', 'right', 'center'] },
+    { type: 'button', name: 'counter' },
+    { type: 'color', name: 'counter' },
+  ],
   propagate: '',
   dmode: '',
   toolbar: null,

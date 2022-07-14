@@ -32,6 +32,7 @@ export default {
 
       this.target = editor.getModel();
       this.listenTo(this.target, 'component:toggled', this.toggleTm);
+      console.log('===========================');
     }
 
     this.toggleTm();

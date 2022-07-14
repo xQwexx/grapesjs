@@ -15,7 +15,7 @@ import EditorModel from '../editor/model/Editor';
 export const evAll = 'trait';
 export const evPfx = `${evAll}:`;
 export const evCustom = `${evPfx}custom`;
-const typesDef: { [id: string]: { new (o: any): TraitView } } = {
+const typesDef: { [id: string]: { new (o: any): TraitView<any> } } = {
   text: TraitView,
   number: TraitNumberView,
   select: TraitSelectView,

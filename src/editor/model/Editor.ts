@@ -843,7 +843,7 @@ export default class EditorModel extends Model {
     return this.set('dmode', value);
   }
 
-  t(...args: any[]) {
+  t(...args: any[]): string {
     const i18n = this.get('I18n');
     return i18n?.t(...args);
   }
