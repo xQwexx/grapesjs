@@ -7,7 +7,7 @@ export default class View<TModel extends Model = Model, TElement extends Element
   TElement
 > {
   protected get pfx() {
-    return this.ppfx + this.config.stylePrefix || '';
+    return this.ppfx + (this.config.stylePrefix || '');
   }
 
   protected get ppfx() {

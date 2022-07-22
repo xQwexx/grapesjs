@@ -1,19 +1,98 @@
+import Backbone from 'backbone';
 import { isBoolean, isUndefined } from 'underscore';
-import TraitView from './TraitView';
+import Component from '../../dom_components/model/Component';
+import TargetValueLink from '../model/TargetValueLink';
+import Input from './Input';
+import TraitInputView from './TraitInputView';
 
-export default class TraitCheckboxView extends TraitView<boolean | string> {
-  appendInput = false;
+const $ = Backbone.$;
+
+class TargetValueLinkBoolean extends TargetValueLink<boolean> {
   valueTrue?: boolean | string;
   valueFalse?: boolean | string;
-  get type() {
-    return 'checkbox';
-  }
 
-  constructor(opts?: any) {
-    super(opts);
-    console.log('checkbox');
+  constructor(model: Component, opts: TargetValueLinkBoolean.Opts) {
+    super(model, opts);
+
     this.valueTrue = opts.valueTrue;
     this.valueFalse = opts.valueFalse;
+  }
+
+  get value() {
+    const { valueFalse } = this;
+    const value = this._value;
+    return isBoolean(value)
+      ? value
+      : !isUndefined(this.valueTrue) && value === this.valueTrue
+      ? true
+      : this.default ?? false;
+  }
+
+  set value(value: boolean) {
+    const { valueTrue, valueFalse } = this;
+    if (isUndefined(value)) return;
+    let valueToSet: boolean | string = value;
+
+    if (value && !isUndefined(valueTrue)) {
+      valueToSet = valueTrue;
+    }
+
+    if (!value && !isUndefined(valueFalse)) {
+      valueToSet = valueFalse;
+    }
+
+    this._value = valueToSet;
+  }
+}
+namespace TargetValueLinkBoolean {
+  export interface Opts extends TargetValueLink.Opts {
+    valueTrue?: boolean | string;
+    valueFalse?: boolean | string;
+  }
+}
+class InputCheckbox extends Input<boolean> {
+  /**
+   * Updates the view when the model is changed
+   * */
+  onTargetChanged(model: any, value: any) {
+    const { inputEl } = this;
+    inputEl && (inputEl.checked = value);
+  }
+
+  /**
+   * Handled when the view is changed
+   */
+  handleChange(e: Event) {
+    //e.stopPropagation();
+    const { inputEl } = this;
+    const value = inputEl.checked;
+    //inputEl && (inputEl.checked = value);
+    console.log(value);
+    console.log(inputEl);
+    this.__onInputChange(value);
+  }
+
+  /**
+   * Get the input element
+   * @return {HTMLElement}
+   */
+  protected getInputEl(value: Boolean) {
+    const { placeholder, type } = this;
+    const placeholderAttr = placeholder ? `placeholder="${placeholder}">` : '';
+    const $el = $<HTMLInputElement>(`<input type="${type}" ${placeholderAttr} ${value ? 'checked' : ''}>`);
+    console.log('dummu print oit');
+    console.log($el.get(0));
+    return $el;
+  }
+}
+
+export default class TraitCheckboxView extends TraitInputView<boolean> {
+  appendInput = false;
+
+  static TargetValueLink = TargetValueLinkBoolean;
+
+  get type() {
+    return 'checkbox';
   }
 
   protected get templateInput() {
@@ -23,23 +102,15 @@ export default class TraitCheckboxView extends TraitView<boolean | string> {
   </label>`;
   }
 
-  protected parseValueFromEl(el: HTMLInputElement) {
-    let result: boolean | string = el.checked;
-    const { valueTrue, valueFalse } = this;
-
-    if (result && !isUndefined(valueTrue)) {
-      result = valueTrue;
-    }
-
-    if (!result && !isUndefined(valueFalse)) {
-      result = valueFalse;
-    }
-
-    return result;
+  protected initInput(link: TargetValueLink<boolean>, opts: any) {
+    const input = new InputCheckbox(link, opts);
+    //this.listenTo(input, "el:change", this.render)
+    return input;
   }
 
-  protected updateValueView(el: HTMLInputElement, value: boolean | string) {
-    const { valueFalse } = this;
-    el.checked = isBoolean(value) ? value : !isUndefined(valueFalse) && value === valueFalse ? false : true;
+  render() {
+    super.render();
+    console.log('Something nice');
+    return this;
   }
 }

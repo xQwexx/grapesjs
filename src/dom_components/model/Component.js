@@ -1264,7 +1264,7 @@ export default class Component extends StyleableModel {
     delete attr.attributes.id;
     attr.components = [];
     attr.classes = [];
-    attr.traits = [];
+    //attr.traits = [];
 
     if (this.__isSymbolTop()) {
       opt.symbol = 1;
@@ -1273,9 +1273,9 @@ export default class Component extends StyleableModel {
     this.get('components').each((md, i) => {
       attr.components[i] = md.clone({ ...opt, _inner: 1 });
     });
-    this.get('traits').each((md, i) => {
+    /*this.get('traits').each((md, i) => {
       attr.traits[i] = md.clone();
-    });
+    });*/
     this.get('classes').each((md, i) => {
       attr.classes[i] = md.get('name');
     });
@@ -2002,13 +2002,16 @@ Component.prototype.defaults = {
   'script-export': '',
   attributes: '',
   traits: [
-    'id',
+    /*'id',
     'id',
     'title',
-    { type: 'checkbox', name: 'contenteditable' },
-    { type: 'number', name: 'counter' },
-    { type: 'select', name: 'allign', options: ['left', 'right', 'center'] },
-    { type: 'button', name: 'counter' },
+    { type: 'checkbox', name: 'contenteditable' },*/
+    { type: 'number', name: 'counter', units: ['px', '%', 'em', 'rem', 'vh', 'vw'] },
+    /*{ type: 'select', name: 'allign', options: ['left', 'right', 'center'] },
+    { type: 'button', name: 'button' },
+    /* { type: 'sector',label: "Test", name: 'counter', contains: [    'id',
+    'id',
+    'title',] },*/
     { type: 'color', name: 'counter' },
   ],
   propagate: '',

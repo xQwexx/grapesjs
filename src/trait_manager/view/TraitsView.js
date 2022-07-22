@@ -2,7 +2,7 @@ import { View } from 'backbone';
 import { isString } from 'underscore';
 import { Collection } from '../../abstract';
 import DomainViews from '../../domain_abstract/view/DomainViews';
-import TraitView from './TraitView';
+import TraitInputView from './TraitInputView';
 
 export default class TraitsView extends View {
   reuseView = true;
@@ -38,6 +38,7 @@ export default class TraitsView extends View {
   render() {
     console.log('---------------RENDER THE LIST');
     const { config } = this;
+    console.log(this.el);
     var frag = document.createDocumentFragment();
     //this.clearItems();
     this.$el.empty();
@@ -60,4 +61,4 @@ export default class TraitsView extends View {
   }
 }
 
-TraitsView.prototype.itemView = TraitView;
+TraitsView.prototype.itemView = TraitInputView;

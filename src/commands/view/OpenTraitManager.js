@@ -11,6 +11,7 @@ export default {
     const pfx = config.stylePrefix;
     const tm = editor.TraitManager;
     const confTm = tm.getConfig();
+    this.tm = tm;
     let panelC;
 
     if (confTm.appendTo) return;
@@ -44,6 +45,8 @@ export default {
    */
   toggleTm() {
     const sender = this.sender;
+    console.log(this.tm);
+    this.$cn2.append(this.tm.render());
     if (sender && sender.get && !sender.get('active')) return;
 
     if (this.target.getSelectedAll().length === 1) {

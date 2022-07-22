@@ -7,10 +7,9 @@ import Trait from './Trait';
 import TraitFactory from './TraitFactory';
 
 export default class Traits extends Collection<Trait> {
-
   em: EditorModel;
   target!: Component;
-  constructor(coll: any, options:any = {}) {
+  constructor(coll: any, options: any = {}) {
     super(coll);
     this.em = options.em;
     this.listenTo(this, 'add', this.handleAdd);
@@ -48,19 +47,18 @@ export default class Traits extends Collection<Trait> {
       if (isString(models)) {
         models = [models] as any[];
       }
-      if (isArray(models)){
-      const traits: Trait[] =[]
-      for (var i = 0, len = models.length; i < len; i++) {
+      if (isArray(models)) {
+        const traits: Trait[] = [];
+        /*for (var i = 0, len = models.length; i < len; i++) {
         const str = models[i];
         const model = isString(str) ? tf.build(str)[0] : str;
         const trait = model instanceof Trait ? model : new Trait(model as any)
         trait.target = this.target;
         traits[i] = trait;
+      }*/
+        return super.add(traits, opt);
       }
-      return super.add(traits, opt);
-    }
     }
     return super.add(models instanceof Trait ? models : new Trait(models as any), opt);
-    
   }
-};
+}

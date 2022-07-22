@@ -1,10 +1,10 @@
 import Backbone from 'backbone';
 import { isString } from 'underscore';
-import TraitView from './TraitView';
+import TraitInputView from './TraitInputView';
 
 const $ = Backbone.$;
 
-export default class TraitButtonView extends TraitView<unknown> {
+export default class TraitButtonView extends TraitInputView<unknown> {
   full?: boolean;
   labelButton?: string;
   text?: string;

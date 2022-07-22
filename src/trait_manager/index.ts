@@ -2,7 +2,7 @@ import { debounce } from 'underscore';
 import { Model } from '../common';
 import defaults from './config/config';
 import TraitsView from './view/TraitsView';
-import TraitView from './view/TraitView';
+import TraitInputView from './view/TraitInputView';
 import TraitSelectView from './view/TraitSelectView';
 import TraitCheckboxView from './view/TraitCheckboxView';
 import TraitNumberView from './view/TraitNumberView';
@@ -11,12 +11,15 @@ import TraitButtonView from './view/TraitButtonView';
 import Module from '../abstract/Module';
 import Component from '../dom_components/model/Component';
 import EditorModel from '../editor/model/Editor';
+import TraitsSectorView from './view/TraitSectorView';
+import TraitFactory from './model/TraitFactory';
+import TargetValueLink from './model/TargetValueLink';
 
 export const evAll = 'trait';
 export const evPfx = `${evAll}:`;
 export const evCustom = `${evPfx}custom`;
-const typesDef: { [id: string]: { new (o: any): TraitView<any> } } = {
-  text: TraitView,
+const typesDef: { [id: string]: { new (link: TargetValueLink<any>, opts: any): TraitInputView<any> } } = {
+  text: TraitInputView,
   number: TraitNumberView,
   select: TraitSelectView,
   checkbox: TraitCheckboxView,
@@ -35,8 +38,8 @@ export default class TraitsModule extends Module<typeof defaults> {
     };
   }
 
-  view?: TraitsView;
-  types: { [id: string]: { new (o: any): TraitView } };
+  view?: TraitsSectorView;
+  types: { [id: string]: { new (link: any, o: any): TraitInputView } };
   model: Model;
   __ctn?: any;
 
@@ -46,7 +49,7 @@ export default class TraitsModule extends Module<typeof defaults> {
    * @private
    */
   constructor(em: EditorModel) {
-    super(em, 'TraitManager');
+    super(em, 'TraitManager', defaults);
     const model = new Model();
     this.model = model;
     this.types = typesDef;
@@ -129,18 +132,31 @@ export default class TraitsModule extends Module<typeof defaults> {
   }
 
   render() {
-    let { view } = this;
-    const config = this.getConfig();
+    let { view, config } = this;
     const el = view && view.el;
-    view = new TraitsView(
+    console.log('Render start !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    console.log(this);
+    const component = this.em.getSelected();
+    const traits = component?.get('traits');
+
+    //this.em.off( 'component:toggled', this.render, this);
+    view?.remove();
+    view = new TraitsSectorView(
       {
         el,
-        collection: [],
-        editor: this.em,
+        type: 'sector',
+        em: this.em,
+        module: this,
         config,
+        model: component,
+        contains: traits,
       },
-      this.getTypes()
-    );
+      new TraitFactory(this)
+    ).render();
+    this.em.on('traits:updated', this.render, this);
+    //this.em.on( 'component:toggled', this.render, this);
+    console.log(view.el);
+    console.log(component);
     this.view = view;
     return view.el;
   }
