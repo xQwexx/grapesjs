@@ -2848,10 +2848,10 @@
   dependencies:
     "underscore" ">=1.7.0"
 
-"backbone@1.3.3":
-  "integrity" "sha512-aK+k3TiU4tQDUrRCymDDE7XDFnMVuyE6zbZ4JX7mb4pJbQTVOH997/kyBzb8wB2s5Y/Oh7EUfj+sZhwRPxWwow=="
-  "resolved" "https://registry.npmjs.org/backbone/-/backbone-1.3.3.tgz"
-  "version" "1.3.3"
+"backbone@1.4.1":
+  "integrity" "sha512-ADy1ztN074YkWbHi8ojJVFe3vAanO/lrzMGZWUClIP7oDD/Pjy2vrASraUP+2EVCfIiTtCW4FChVow01XneivA=="
+  "resolved" "https://registry.npmjs.org/backbone/-/backbone-1.4.1.tgz"
+  "version" "1.4.1"
   dependencies:
     "underscore" ">=1.8.3"
 
@@ -6187,7 +6187,7 @@
   "resolved" "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.9.tgz"
   "version" "4.2.9"
 
-"grapesjs-cli@^3.0.0":
+"grapesjs-cli@^3.0.1":
   "integrity" "sha512-6pKAM3K3QGqiQtdS9v/vBAwaSn1r9nonwULWYHBcqGBgIKhuEVHlYb468KxlZAHlWSFHsNsUPKTVdzdWFgaWRg=="
   "resolved" "https://registry.npmjs.org/grapesjs-cli/-/grapesjs-cli-3.0.1.tgz"
   "version" "3.0.1"
@@ -11981,7 +11981,7 @@
     "webpack-sources" "^1.4.0"
     "worker-farm" "^1.7.0"
 
-"terser-webpack-plugin@^5.1.3", "terser-webpack-plugin@^5.3.1":
+"terser-webpack-plugin@^5.1.3":
   "integrity" "sha512-GvlZdT6wPQKbDNW/GDQzZFg/j4vKU96yl2q6mcUkzKOgW4gwf1Z8cZToUCrz31XHlPWH8MVb1r2tFtdDtTGJ7g=="
   "resolved" "https://registry.npmjs.org/terser-webpack-plugin/-/terser-webpack-plugin-5.3.1.tgz"
   "version" "5.3.1"

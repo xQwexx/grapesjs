@@ -66,8 +66,8 @@ export default abstract class Module<T extends ModuleConfig = ModuleConfig> impl
   isPrivate: boolean = false;
   onLoad?(): void;
   init(cfg: T) {}
-  destroy() {}
-
+  abstract destroy(): void;
+  abstract render(): HTMLElement | JQuery<HTMLElement> | undefined;
   postLoad(key: any): void {}
 
   get name(): string {
@@ -82,10 +82,6 @@ export default abstract class Module<T extends ModuleConfig = ModuleConfig> impl
   __logWarn(str: string, opts = {}) {
     this.em.logWarning(`[${this.name}]: ${str}`, opts);
   }
-
-  render() {}
-
-  postRender?(view: any): void;
 
   /**
    * Move the main DOM element of the module.

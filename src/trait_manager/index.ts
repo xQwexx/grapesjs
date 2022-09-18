@@ -28,6 +28,8 @@ const typesDef: { [id: string]: { new (link: TargetValueLink<any>, opts: any): T
 };
 
 export default class TraitsModule extends Module<typeof defaults> {
+  destroy(): void {}
+
   TraitsView = TraitsView;
 
   //@ts-ignore
