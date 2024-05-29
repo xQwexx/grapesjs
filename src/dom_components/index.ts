@@ -131,15 +131,20 @@ export interface ComponentViewDefinition extends IComponentView {
   [key: string]: any;
 }
 
-export interface AddComponentTypeOptions {
+interface AddComponentModelObjectOpts{
   isComponent?: (el: HTMLElement) => boolean | ComponentDefinitionDefined | undefined;
   model?: Partial<ComponentModelDefinition> & ThisType<ComponentModelDefinition & Component>;
-  view?: Partial<ComponentViewDefinition> & ThisType<ComponentViewDefinition & ComponentView>;
   extend?: string;
-  extendView?: string;
   extendFn?: string[];
+}
+interface AddComponentViewObjectOpts{
+  view?: Partial<ComponentViewDefinition> & ThisType<ComponentViewDefinition & ComponentView>;
+  extendView?: string;
   extendFnView?: string[];
 }
+
+export type AddComponentTypeOptions = ( AddComponentModelObjectOpts | { model: ComponentStackItem['model']}) & 
+( AddComponentViewObjectOpts | {view: ComponentStackItem['view']})
 
 /** @private */
 export enum CanMoveReason {
@@ -489,13 +494,7 @@ export default class ComponentManager extends ItemManagerModule<DomComponentsCon
    */
   addType(type: string, methods: AddComponentTypeOptions) {
     const { em } = this;
-    const { model = {}, view = {}, isComponent, extend, extendView, extendFn = [], extendFnView = [] } = methods;
     const compType = this.getType(type);
-    const extendType = this.getType(extend!);
-    const extendViewType = this.getType(extendView!);
-    const typeToExtend = extendType ? extendType : compType ? compType : this.getType('default');
-    const modelToExt = typeToExtend.model;
-    const viewToExt = extendViewType ? extendViewType.view : typeToExtend.view;
 
     // Function for extending source object methods
     const getExtendedObj = (fns: any[], target: any, srcToExt: any) =>
@@ -511,11 +510,26 @@ export default class ComponentManager extends ItemManagerModule<DomComponentsCon
         return res;
       }, {});
 
+    function isSimpleModelObject(opts: AddComponentTypeOptions):opts is AddComponentModelObjectOpts{
+      return typeof opts.model === 'undefined' || typeof opts.model === 'object';
+    }
+
+    function isSimpleViewObject(opts: AddComponentTypeOptions):opts is AddComponentViewObjectOpts{
+      return typeof opts.view === 'undefined' || typeof opts.view === 'object';
+    }
+
+    let typeToExtend = compType ? compType : this.getType('default');
+    let modelType: ComponentStackItem['model']
     // If the model/view is a simple object I need to extend it
-    if (typeof model === 'object') {
+    if (isSimpleModelObject(methods)) {
+      const { model = {}, isComponent, extend, extendFn = [] } = methods;
+      const extendType = extend && this.getType(extend);
+      typeToExtend = extendType ? extendType : typeToExtend;
+      const modelToExt = typeToExtend.model;
+
       const modelDefaults = { defaults: model.defaults };
       delete model.defaults;
-      methods.model = modelToExt.extend(
+      modelType = modelToExt.extend(
         {
           ...model,
           ...getExtendedObj(extendFn, model, modelToExt),
@@ -525,32 +539,42 @@ export default class ComponentManager extends ItemManagerModule<DomComponentsCon
         }
       );
       // Reassign the defaults getter to the model
-      Object.defineProperty(methods.model!.prototype, 'defaults', {
+      Object.defineProperty(modelType.prototype, 'defaults', {
         get: () => ({
           ...(result(modelToExt.prototype, 'defaults') || {}),
           ...(result(modelDefaults, 'defaults') || {}),
         }),
       });
     }
+    else {
+      modelType = methods.model;
+    }
 
-    if (typeof view === 'object') {
-      methods.view = viewToExt.extend({
+    let viewType: ComponentStackItem['view']
+    if (isSimpleViewObject(methods)) {
+      const {view = {}, extendView, extendFnView = [] } = methods;
+      const extendViewType = extendView && this.getType(extendView);
+      const viewToExt = extendViewType ? extendViewType.view : typeToExtend.view;
+
+      viewType = viewToExt.extend({
         ...view,
         ...getExtendedObj(extendFnView, view, viewToExt),
       });
     }
-
-    if (compType) {
-      compType.model = methods.model;
-      compType.view = methods.view;
-    } else {
-      // @ts-ignore
-      methods.id = type;
-      this.componentTypes.unshift(methods as any);
+    else{
+      viewType = methods.view;
     }
-
-    const event = `component:type:${compType ? 'update' : 'add'}`;
-    em?.trigger(event, compType || methods);
+    
+    const event = `component:type:`;
+    if (compType) {
+      compType.model = modelType;
+      compType.view = viewType;
+      em?.trigger(`${event}update`, compType);
+    } else {
+      let types = { id: type, model: modelType, view: viewType};
+      this.componentTypes.unshift(types);
+      em?.trigger(`${event}add`, types);
+    }
 
     return this;
   }
@@ -561,9 +585,9 @@ export default class ComponentManager extends ItemManagerModule<DomComponentsCon
    * @param {string} type Component ID
    * @return {Object} Component type definition, eg. `{ model: ..., view: ... }`
    */
-  getType(type: 'default'): { id: string; model: any; view: any };
-  getType(type: string): { id: string; model: any; view: any } | undefined;
-  getType(type: string) {
+  getType(type: 'default'): ComponentStackItem;
+  getType(type: string): ComponentStackItem | undefined;
+  getType(type: string){
     var df = this.componentTypes;
 
     for (var it = 0; it < df.length; it++) {

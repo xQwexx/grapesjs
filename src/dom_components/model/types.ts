@@ -21,12 +21,18 @@ export interface AddComponentsOption extends AddOptions, OptionAsDocument {}
 interface ComponentWithCheck<C extends Component>{
   new (props: any, opt: ComponentOptions): C;
   isComponent(node: HTMLElement, opts?: ParseNodeOptions): ComponentDefinitionDefined|undefined|boolean;
+  extend(properties: any, classProperties?: any): ComponentWithCheck<C>;
 }
 
-export interface ComponentStackItem<C extends Component = Component, CV extends ComponentView<C> = ComponentView<C>>{
-  id: string;
+interface ComponentViewWithCheck<C extends Component>{
+  new (props: any): ComponentView<C>;
+  extend(properties: any, classProperties?: any): ComponentViewWithCheck<C>;
+}
+
+export interface ComponentStackItem<T extends string = string, C extends Component = Component>{
+  id: T;
   model: ComponentWithCheck<C>;
-  view: new (opt: any) => CV;
+  view: ComponentViewWithCheck<C>;
 }
 
 /**
