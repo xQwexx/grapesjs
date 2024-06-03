@@ -1,4 +1,4 @@
-import { bindAll, isArray, isNumber, isObject } from 'underscore';
+import { any, bindAll, isArray, isNumber, isObject } from 'underscore';
 import { ModuleView } from '../../abstract';
 import { BoxRect, Coordinates, CoordinatesTypes, ElementRect } from '../../common';
 import Component from '../../dom_components/model/Component';
@@ -19,7 +19,7 @@ import Frame from '../model/Frame';
 import { GetBoxRectOptions, ToWorldOption } from '../types';
 import FrameView from './FrameView';
 import FramesView from './FramesView';
-import ScriptSubComponent from '../../dom_components/model/modules/ScriptSubComponent';
+import ScriptSubComponent, { SlotType } from '../../dom_components/model/modules/ScriptSubComponent';
 
 export interface MarginPaddingOffsets {
   marginTop?: number;
@@ -79,6 +79,7 @@ export default class CanvasView extends ModuleView<Canvas> {
   cvStyle?: HTMLElement;
   clsUnscale: string;
   ready = false;
+  updatingScriptTimout: Record<string, ReturnType<typeof setTimeout>> = {};
 
   frames!: FramesView;
   frame?: FrameView;
@@ -588,15 +589,77 @@ export default class CanvasView extends ModuleView<Canvas> {
       const script = document.createElement('script');
       console.log(ScriptSubComponent.renderJs(scriptComponent));
       script.innerHTML = `
-      setTimeout(function() {
+        setTimeout(function() {
         ${ScriptSubComponent.renderJs(scriptComponent)}
-      }, 1);`;
+        }, 1);`;
+
+
+        //   //@ts-ignore
+        //   const scriptParams = window.globalScriptParams
+  
+        //   if(scriptParams){
+        //     console.log(scriptParams)
+        //     ${Object.entries<SlotType>(scriptComponent.previous('slots')).map(([name, slot]) => {
+        //       console.log("fromSiteRenderScriptSlots", id, slot.subscription?.componentId, slot.subscription?.name)
+        //       return slot.subscription?.componentId && slot.subscription?.name ? 
+        //        `scriptParams[${slot.subscription?.componentId}]?.el?.removeEventListener(${slot.subscription.name}, scriptParams[${scriptComponent.dataId}]?.slots[${name}]);`
+        //        : ''
+        //     }).join('')
+        //     }
+        //     ${Object.entries<SlotType>(scriptComponent.get('slots')).map(([name, slot]) => {
+        //       console.log("fromSiteRenderScriptSlots", id, slot.subscription?.componentId, slot.subscription?.name)
+        //       return slot.subscription?.componentId && slot.subscription?.name ? 
+        //        `scriptParams[${slot.subscription?.componentId}]?.el?.removeEventListener(${slot.subscription.name}, scriptParams[${scriptComponent.dataId}]?.slots[${name}]);`
+        //        : ''
+        //     }).join('')
+        //     }
+        //  }
+
+
+
+
+      // if(window.globalScriptParams){ ${Object.keys(scriptComponent.slots).map(name => 
+      //   `window.globalScriptParams['${scriptComponent.dataId}']?.el?.
+      //   removeEventListener('${name}', window.globalScriptParams['${scriptComponent.dataId}'].slots['${name}']);`
+      // ).join()}}
+      //${Object.keys(scriptComponent.slots).map(name => `window.globalScriptParams['${scriptComponent.dataId}'].el?.removeEventListener('${name}')`).join()}
+      // window.$ && window.$(`#${scriptComponent.dataId}`).replaceWith(window.$(`#${scriptComponent.dataId}`).clone());
+      
+      //@ts-ignore
+      console.log("eventcancel", window.globalScriptParams &&  window?.globalScriptParams[scriptComponent.dataId]?.abortController)
+      //@ts-ignore
+      window.globalScriptParams && window.globalScriptParams[scriptComponent.dataId]?.abortController?.abort()
+
+      this.updatingScriptTimout[id] && clearTimeout(this.updatingScriptTimout[id])
+
+      console.log("fromSiteRenderScript", id, scriptComponent)
       // #873
       // Adding setTimeout will make js components work on init of the editor
-      setTimeout(() => {
+      this.updatingScriptTimout[id] = setTimeout(() => {
         const scr = view.scriptContainer;
-        scr?.appendChild(script);
+        const window = view.em.Canvas.getWindow()
+          //@ts-ignore
+          const scriptParams = window.globalScriptParams
+  
+          if(scriptParams){
+            console.log(scriptParams)
+            Object.entries<SlotType>(scriptComponent.previous('slots')).forEach(([name, slot]) => {
+              console.log("fromSiteRenderScriptSlots", id, slot.subscription?.componentId, slot.subscription?.name)
+               slot.subscription?.componentId && slot.subscription?.name && 
+               scriptParams[slot.subscription?.componentId]?.el?.removeEventListener(slot.subscription.name, scriptParams[scriptComponent.dataId]?.slots[name]);
+ 
+            })
+            Object.entries<SlotType>(scriptComponent.get('slots')).forEach(([name, slot]) => {
+              console.log("fromSiteRenderScriptSlots", id, slot.subscription?.componentId, slot.subscription?.name)
+               slot.subscription?.componentId && slot.subscription?.name && 
+               scriptParams[slot.subscription?.componentId]?.el?.removeEventListener(slot.subscription.name, scriptParams[scriptComponent.dataId]?.slots[name]);
+ 
+            })
+          }
+        scr?.replaceChildren(script);
+        scriptComponent.component.trigger('script:updated');
       }, 0);
+      // scriptComponent.component.trigger('onrender');
     }
   }
 

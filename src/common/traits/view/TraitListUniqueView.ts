@@ -3,13 +3,6 @@ import EditorModel from '../../../editor/model/Editor';
 import InputFactory from '..';
 import TraitView, { TraitViewOpts } from './TraitView';
 import { isArray, isUndefined, times } from 'underscore';
-import TraitRoot from '../model/TraitRoot';
-import TraitObjectItem from '../model/TraitObjectItem';
-import Trait from '../model/Trait';
-import TraitFactory from '../model/TraitFactory';
-import TraitListItem from '../model/TraitListItem';
-import TraitObject from '../model/TraitObject';
-import TraitList from '../model/TraitList';
 import TraitListUnique from '../model/TraitListUnique';
 import TraitsView from './TraitsView';
 
@@ -18,7 +11,6 @@ export interface TraitListUniqueViewOpts<T extends string = 'object'> extends Tr
 }
 
 export default class TraitListUniqueView extends TraitsView<TraitListUnique> {
-  protected type = 'list';
   templates: any[];
   private toolbarEl?: HTMLDivElement;
   private itemsEl?: JQuery<HTMLDivElement>[];
@@ -40,10 +32,13 @@ export default class TraitListUniqueView extends TraitsView<TraitListUnique> {
     this.itemsEl?.forEach(el => {
       el.find('.data-item').get(0)!.style.display = 'none';
     });
+    console.log("Tryed to select", e, selectedEl)
     if (!isUndefined(e)) {
       var selected = $(e.target).closest(`.${ppfx}item-title`).parent().find('.data-item');
+      console.log("Tryed to select", selected)
       this.selectedEl = selected;
       selected.get(0)!.style.display = '';
+      console.log("Tryed to select", selected.get(0).style)
     } else if (!isUndefined(selectedEl)) {
       selectedEl.get(0)!.style.display = '';
     }
@@ -54,10 +49,6 @@ export default class TraitListUniqueView extends TraitsView<TraitListUnique> {
   constructor(em: EditorModel, opts: TraitListUniqueViewOpts) {
     super(em, { ...opts });
     this.templates = opts.traits;
-  }
-
-  get children() {
-    return this.target.children as TraitObjectItem[];
   }
 
   get editable() {
@@ -118,7 +109,8 @@ export default class TraitListUniqueView extends TraitsView<TraitListUnique> {
     var itemDataEl = document.createElement('div');
     itemDataEl.className = 'data-item';
     itemDataEl.setAttribute('item-id', view.target.name);
-    $(itemDataEl).append(view.$el);
+    $(itemDataEl).append(view.el);
+    console.log("Tryed to selectView",view)
     console.log(itemEl);
 
     const $itemEl = $(itemEl);
@@ -131,7 +123,7 @@ export default class TraitListUniqueView extends TraitsView<TraitListUnique> {
     const hasLabel = this.hasLabel();
     const cls = `${pfx}trait`;
     var frag = document.createDocumentFragment();
-    console.log('aaa', 'render');
+    console.log('Tryed to selectaaa', items);
     this.$el.empty();
     this.itemsEl = items.map(view => this.renderItem(view));
     this.itemsEl?.forEach(el => frag.appendChild(el.get(0)!));

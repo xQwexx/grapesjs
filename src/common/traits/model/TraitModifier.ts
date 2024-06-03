@@ -1,12 +1,12 @@
 import Trait from './Trait';
+import TraitElement from './TraitElement';
+import TraitParent from './TraitParent';
 
-export default abstract class TraitModifier<TraitValueType> extends Trait<TraitValueType> {
-  target: Trait<TraitValueType>;
+export default abstract class TraitModifier<TraitValueType> extends TraitParent<TraitElement, TraitValueType> {
   protected abstract overrideValue(value: TraitValueType): any;
 
   constructor(target: Trait<TraitValueType>) {
-    super(target.opts);
-    this.target = target;
+    super(target);
     this.value = this.value;
     this.children = this.initChildren();
   }
@@ -15,17 +15,8 @@ export default abstract class TraitModifier<TraitValueType> extends Trait<TraitV
     return this.target.name;
   }
 
-  protected initChildren(): Trait[] {
+  protected initChildren(): TraitElement[] {
     return [];
-  }
-
-  setValueFromModel() {
-    console.log('setValueFromModel', this.updatingValue);
-    if (!this.updatingValue) {
-      this.children = this.initChildren();
-      console.log('setValueFromModel', this.children);
-      this.onUpdateEvent();
-    }
   }
 
   get em() {
@@ -41,7 +32,7 @@ export default abstract class TraitModifier<TraitValueType> extends Trait<TraitV
     console.log('sss', this.target.value);
   }
 
-  refreshTrait() {
+  refreshTrait(forced: boolean) {
     const children = this.initChildren();
     console.log(
       'setValueRefreshTrait',

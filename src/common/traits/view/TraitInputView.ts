@@ -10,6 +10,7 @@ import TraitView, { TraitViewOpts } from './TraitView';
 
 export interface TraitInputViewOpts<Type> extends TraitViewOpts<Type> {
   default?: any;
+  traits?: any;
   paceholder?: string;
 }
 
@@ -69,10 +70,11 @@ export default abstract class TraitInputView<Target extends Trait = Trait>
    * @private
    */
   onChange(e: any) {
-    console.log('setValueOnchange');
+    console.log('setValueOnchange', this.target);
     e?.stopPropagation();
     e?.preventDefault();
     this.target.value = this.inputValue;
+    console.log('setValueOnchange', this.target);
   }
 
   onUpdateEvent(value: ValueFromTrait<Target>, fromTarget: boolean) {

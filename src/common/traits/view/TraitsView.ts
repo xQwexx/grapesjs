@@ -4,12 +4,13 @@ import TraitView, { TraitViewOpts } from './TraitView';
 import TraitObjectItem from '../model/TraitObjectItem';
 import TraitParent from '../model/TraitParent';
 import Trait from '../model/Trait';
+import TraitElement from '../model/TraitElement';
 
 export interface TraitListUniqueViewOpts<T extends string = 'object'> extends TraitViewOpts<T> {
   traits: any[] | any;
 }
 
-export default abstract class TraitsView<T extends TraitParent> extends TraitView<T> {
+export default abstract class TraitsView<T extends TraitParent<TraitElement>> extends TraitView<T> {
   protected type = 'list';
   templates: any[];
   private _items?: TraitView[];
@@ -22,10 +23,11 @@ export default abstract class TraitsView<T extends TraitParent> extends TraitVie
   constructor(em: EditorModel, opts: TraitListUniqueViewOpts) {
     super(em, { ...opts });
     this.templates = opts.traits;
+    console.log("Tryed to select Object", this.templates)
   }
 
   get children() {
-    return this.target.children as TraitObjectItem[];
+    return this.target.children as TraitElement[];
   }
 
   onUpdateEvent(value: any, fromTarget: boolean): void {
@@ -44,9 +46,10 @@ export default abstract class TraitsView<T extends TraitParent> extends TraitVie
 
   renderItems(traits?: Trait[]) {
     if (!this._items) {
-      console.log('important', traits);
+      console.log('important', traits, this.target, this.target?.children);
       this._items = (traits ?? this.children).map(trait => {
-        const view = InputFactory.buildView(trait, trait.em, { ...trait.opts, noLabel: true }).render();
+        console.log('///TraitView/////', trait);
+        const view = InputFactory.buildView(trait, trait.em, {...trait.opts  }).render();
         //   traits ?? view.on('render', this.onItemRender, this)
         return view;
       });

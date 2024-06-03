@@ -509,8 +509,7 @@ TComp> {
    */
   reset() {
     const { el } = this;
-    // @ts-ignore
-    this.el = '';
+    this.$el.empty();
     this._ensureElement();
     this._setData();
     replaceWith(el, this.el);
@@ -563,8 +562,9 @@ TComp> {
   render() {
     this.renderAttributes();
     if (this.modelOpt.temporary) return this;
-    this.renderChildren();
     this.updateScript();
+    this.renderChildren();
+
     setViewEl(this.el, this);
     this.postRender();
 

@@ -3,6 +3,7 @@ import TraitModifier from '../TraitModifier';
 import { jsModifier, jsVariable } from '../TraitModifierJs';
 import TraitObject from '../TraitObject';
 import TraitObjectItem from '../TraitObjectItem';
+import TraitParent from '../TraitParent';
 
 export default class TraitEventSelector extends TraitObject<{ componentId: string; eventName: string }> {
   constructor(target: Trait<{ componentId: string; eventName: string }>) {
@@ -39,7 +40,7 @@ export default class TraitEventSelector extends TraitObject<{ componentId: strin
     ];
   }
   private onComponentIdChange(value: string) {
-    this.setValueFromModel();
+    // this.setValueFromModel();
   }
   protected overrideValue(value: { componentId: string; eventName: string }) {
     console.log(value);
@@ -61,7 +62,7 @@ export default class TraitEventSelector extends TraitObject<{ componentId: strin
 
   protected setValue(value: { componentId: string; eventName: string }): void {
     super.setValue(value);
-    const variablesTrait = this.target.children.find(tr => tr.opts.name == 'eventName');
+    const variablesTrait = (this.target as TraitObject)?.children.find(tr => tr.opts.name == 'eventName');
     if (variablesTrait) {
       const compId = value?.componentId;
       if (compId) {

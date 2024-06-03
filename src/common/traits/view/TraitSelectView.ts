@@ -5,7 +5,7 @@ import Trait from '../model/Trait';
 import TraitInputView, { TraitInputViewOpts } from './TraitInputView';
 
 export type SelectOption =
-  | string
+  |  string 
   | {
       name: string;
       value: string;
@@ -13,7 +13,7 @@ export type SelectOption =
     };
 
 export interface TraitSelectViewOpts extends TraitInputViewOpts<'select'> {
-  options: SelectOption[];
+  readonly options: SelectOption[] | ((em: EditorModel) => SelectOption[]);
 }
 
 export default class TraitSelectView extends TraitInputView<Trait<string>> {
@@ -32,6 +32,7 @@ export default class TraitSelectView extends TraitInputView<Trait<string>> {
 
   get inputValue(): string {
     const el = this.getInputElem();
+    console.log('Text input value ' + el?.value);
     return el?.value ?? this.target.value;
   }
 
@@ -78,6 +79,8 @@ export default class TraitSelectView extends TraitInputView<Trait<string>> {
           attrs += style ? ` style="${style}"` : '';
         }
         const resultName = em.t(`traitManager.traits.options.${name}.${value}`) || name;
+        console.log("Try fix select",value, this.target, this.target.value)
+        // const selected = this.target.value == value ? 'selected' : '';
         input += `<option value="${value}"${attrs}>${resultName}</option>`;
         values.push(value);
       });

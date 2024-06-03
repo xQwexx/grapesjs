@@ -1,16 +1,8 @@
 import { isArray, isObject, isString } from 'underscore';
 import { Model } from '../..';
-import { TraitButtonViewOpts } from '../view/TraitButtonView';
-import { TraitNumberUnitViewOpts, TraitNumberViewOpts } from '../view/TraitNumberView';
-import { TraitSelectViewOpts } from '../view/TraitSelectView';
-import { TraitInputViewOpts } from '../view/TraitInputView';
 import Trait, { TraitProperties } from './Trait';
-import TraitListItem from './TraitListItem';
 import TraitRoot from './TraitRoot';
-import { TraitListViewOpts } from '../view/TraitListView';
-import TraitObjectItem from './TraitObjectItem';
 import { InputViewProperties } from '..';
-import Component from '../../../dom_components/model/Component';
 import EditorModel from '../../../editor/model/Editor';
 import TraitModifier from './TraitModifier';
 import TraitDataLink from './js-traits/TraitDataLink';
@@ -22,6 +14,9 @@ import TraitList from './TraitList';
 import TraitListUnique from './TraitListUnique';
 import TraitSignal from './js-traits/TraitSignal';
 import TraitVariable from './js-traits/TraitVariable';
+import TraitSlot from './js-traits/TraitSlot';
+import TraitElement from './TraitElement';
+import TraitComponent from './TraitComponent';
 
 // export type InputViewProperties =
 //   | TraitInputViewOpts<'text'>
@@ -85,14 +80,18 @@ export default abstract class TraitFactory {
         //     //   }
         //     return trait;
         // }
-        console.log('asdfasdf', trait, TraitFactory.buildNestedTraits(tr));
-        return TraitFactory.buildNestedTraits(tr);
+        // console.log('asdfasdf', trait, TraitFactory.buildNestedTraits(tr));
+        const newTrait = TraitFactory.buildNestedTraits(tr);
+        // tr.setTraitElement(newTrait as any);
+        return newTrait
       }
     } else {
       return trait;
     }
   }
 
+  static buildNestedTraits<CT extends Trait>(trait: CT & { name: string }): CT & { name: string }
+  static buildNestedTraits(trait: Trait & { name: string }): Trait & { name: string }
   static buildNestedTraits(trait: Trait & { name: string }): Trait & { name: string } {
     console.log('asdfasdf', trait.type);
     switch (trait.type) {
@@ -110,10 +109,14 @@ export default abstract class TraitFactory {
         return new TraitAjax(trait);
       case 'signal':
         return new TraitSignal(trait);
+      case 'slot':
+        return new TraitSlot(trait);
       case 'variable':
         return new TraitVariable(trait);
       case 'event':
         return new TraitEventSelector(trait);
+      case 'component':
+        return new TraitComponent(trait);
       default:
         return trait;
     }

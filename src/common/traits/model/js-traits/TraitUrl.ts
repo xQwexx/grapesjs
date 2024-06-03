@@ -22,17 +22,35 @@ export default class TraitUrl extends TraitObject<{ url: string; variables: { [i
   protected initChildren() {
     const { target } = this;
 
+    const variablesTrait = new TraitObjectItem('variables', this, {
+        type: 'unique-list',
+        traits: { type: 'variable' },
+        label: false,
+        editable: false,
+      })
     return [
-      new TraitObjectItem('url', this, { type: 'text', label: 'url' }),
-      new TraitListUnique(
-        new TraitObjectItem('variables', this, {
-          type: 'unique-list',
-          traits: { type: 'variable' },
-          label: false,
-          editable: false,
-        })
-      ),
+      new TraitObjectItem('url', this, { type: 'text', label: 'url' }, this.onUrlChange(this)),
+      variablesTrait
     ];
+  }
+
+  private onUrlChange(urlTrait: TraitUrl){
+    return (value: { url: string; variables: { [id: string]: VariableType } }) => {
+      // this.setValueFromModel();
+
+      // console.log("setValueFromModel",this)
+      // const variablesTrait = this.children.find(tr => tr.name == 'variables')! as TraitListUnique;
+      // const variableNames = TraitUrl.parseUrlToVariables(value.url);
+      // console.log("setValueFromModel",value, Object.fromEntries(variableNames.map(name => [name, variablesTrait.value[name]])))
+      // console.log("setValueFromModel",variablesTrait.value)
+      // variablesTrait.childrenChanged();
+      // variablesTrait.value = {}//Object.fromEntries(variableNames.map(name => [name, variablesTrait.value[name]]));
+      // console.log("setValueFromModel",variablesTrait.value)
+
+      // variablesTrait?.setValueFromModel()
+      // variablesTrait.onUpdateEvent();
+      // variablesTrait.refreshChildren()
+    }
   }
 
   // private static overrideValue(value: { url: string; variables: { [id: string]: string } }) {
@@ -64,19 +82,19 @@ export default class TraitUrl extends TraitObject<{ url: string; variables: { [i
     return { url, variables };
   }
 
-  static renderJs(value: { url: string; variables: { [id: string]: VariableType } }, paramJsName: string) {
+  static renderJs(value: { url: string; variables: { [id: string]: VariableType } }, paramJsName?: string) {
     let url = value.url;
     console.log(value);
     console.log(value.url);
     const variableNames = TraitUrl.parseUrlToVariables(value.url);
     console.log(variableNames);
     variableNames.forEach(name => {
-      let variable = TraitVariable.renderJs(value.variables[name], `${paramJsName}?.${name}`);
-      console.log(variable);
+      let variable = TraitVariable.renderJs(value.variables[name], paramJsName && `${paramJsName}?.${name}`);
+      console.log(",variable",variable);
       url = url.replaceAll(`<${name}>`, `\${${variable}}`);
     });
     console.log('urlTest', url, variableNames, value.variables);
-    return '`' + url + '`';
+    return url ? '`' + url + '`': undefined;
   }
 
   private static parseUrlToVariables(url?: string): string[] {
@@ -95,11 +113,20 @@ export default class TraitUrl extends TraitObject<{ url: string; variables: { [i
     //   Object.keys(this.value.variables).map(name => new TraitObjectItem(name, variablesTrait, {type: "variable"}))
     // }
 
-    variablesTrait?.setValueFromModel();
+    // variablesTrait?.setValueFromModel()
+    variablesTrait?.refreshChildren();
+    
     // this.setValueFromModel();
     this.onUpdateEvent();
     // this.target.view?.onUpdateEvent(this.value, true);
 
     console.log('aaa', this.value);
   }
+
+  get defaultValue(): { url: string; variables: { [id: string]: VariableType } }{
+    // console.log('importantValueDefault', keypars)
+    // console.log('importantValueDefault', keyparsDefault)
+    return Object.fromEntries(this.children.map(tr => [tr.name, tr.defaultValue])) as any
+  }
+
 }

@@ -7,7 +7,8 @@ export default abstract class TraitElement<TraitValueType = any> extends Trait<T
   constructor(target: Trait<TraitValueType>, opts?: any) {
     super(opts ?? target.opts);
     this.target = target;
-    this.refreshTrait(true)
+    this.refreshChildren();
+    
     target.setTraitElement(this);
   }
 
@@ -29,10 +30,6 @@ export default abstract class TraitElement<TraitValueType = any> extends Trait<T
 
   protected setValue(value: TraitValueType): void {
     this.target.value = value;
-  }
-
-  refreshTrait(forced: boolean) {
-
   }
 
   triggerTraitChanged(event: string){

@@ -25,9 +25,9 @@ describe('TraitModels', () => {
   afterEach(() => {});
 
   test('Set title', () => {
-    trait = new TraitAjax(trait);
+    var traitAjax = new TraitAjax(trait);
     // trait.opts = { traits: [{name: "test", type: "text"}]}
-    trait.children[0].children[0].value = title;
+    (traitAjax.children[0] as any).children[0].value = title;
     console.log(expect(renderVariableValue(trait.value)).toBe(title));
   });
   //   test('Trait undo property', () => {

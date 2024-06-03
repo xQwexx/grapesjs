@@ -79,12 +79,13 @@ export default class TraitObjectView extends TraitsView<TraitObject> {
       }
       // frag.appendChild(rendered.get(0)!);
     });
-
+    lineFrag && frag.append(lineFrag)
+    console.log('setValueFromModel5', frag.childElementCount);
     this.$el.empty().append(frag);
     this.$el.addClass(`${className} ${ppfx}one-bg ${ppfx}two-color`);
     console.log('setValueinitChildren', this.target);
     console.log('setValueFromModel5', this.$el.get(0));
-    console.log('setValueFromModel5', this.el, this.target?.children);
+    console.log('setValueFromModel5', this.el, traits, this.target?.children);
     return this;
   }
 }

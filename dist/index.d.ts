@@ -3074,7 +3074,7 @@ export interface ToolbarButtonProps {
 }
 export type PropsType = {
 	name: string;
-	type: "link";
+	type: "link" | "url";
 	render?: (value: any) => any;
 };
 declare class PropComponent {
@@ -3141,6 +3141,16 @@ export interface ISignal {
 	optType?: ParamType;
 	params?: Record<string, VariableType>;
 }
+export type includeType = {
+	globalName: string;
+	files: ({
+		type: "js";
+		src: string;
+	} | {
+		type: "style";
+		href: string;
+	})[];
+};
 export type SlotType = {
 	script: string | ((...params: any[]) => any);
 	event: {
@@ -3160,6 +3170,7 @@ export type SlotType = {
 };
 export interface ScriptData {
 	main: string | ((...params: any[]) => any);
+	includes?: includeType[];
 	props: (string | {
 		name: string;
 		render: (value: any) => any;
@@ -3175,6 +3186,11 @@ export interface ScriptData {
 		params: Record<string, ParamType>;
 	}>;
 }
+export type MapJsItem = {
+	ids: string[];
+	code: string;
+	includes: includeType[];
+};
 declare class ScriptSubComponent extends Model {
 	defaults(): {
 		main: string;
@@ -3218,6 +3234,7 @@ declare class ScriptSubComponent extends Model {
 	}, em: EditorModel): string;
 	static renderComponentSignals(script: ScriptSubComponent): string;
 	static renderSlots(scripts: ScriptSubComponent[]): string;
+	static renderRefreshJs(js: MapJsItem, scriptParam: string): string;
 	static renderJs(script: ScriptSubComponent | ScriptSubComponent[]): string;
 	private static mapScripts;
 	get variables(): any;
@@ -3230,6 +3247,7 @@ declare class ScriptSubComponent extends Model {
 			name: string;
 		};
 	}>;
+	get includes(): any[];
 	addStateRef(key: string, subscription: {
 		componentId?: string;
 		name?: string;

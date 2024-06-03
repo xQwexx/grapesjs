@@ -21,8 +21,9 @@ export default class TraitListView extends TraitView<TraitList> {
   protected type = 'list';
   templates: any[];
   private toolbarEl?: HTMLDivElement;
-  private itemsEl?: JQuery<HTMLDivElement>[];
-  private selectedEl?: JQuery<HTMLDivElement>;
+  private itemsEl?: JQuery<HTMLDivElement>;
+  // private selectedEl?: JQuery<HTMLDivElement>;
+  private selectedIndex?: number;
   protected traitOps?: any;
   events() {
     return {
@@ -30,22 +31,34 @@ export default class TraitListView extends TraitView<TraitList> {
       'click [removeButton]': this.removeItem,
       'click [data-item-title]': this.select,
     };
+    
   }
 
   private select(e?: any) {
     e?.stopPropagation();
     e?.preventDefault();
-    const { model, ppfx, selectedEl } = this;
+    const { model, ppfx } = this;
     // model.setOpen(!model.get('open'));
-    this.itemsEl?.forEach(el => {
-      el.find('.data-item').get(0)!.style.display = 'none';
+    // this.itemsEl?.find('').css({ "display": 'none' }).get(0)
+    this.itemsEl?.children().each((i, el) => {
+      $(el).find('.data-item')?.css({ "display": 'none' });
     });
     if (!isUndefined(e)) {
-      var selected = $(e.target).closest(`.${ppfx}item-title`).parent().find('.data-item');
-      this.selectedEl = selected;
-      selected.get(0)!.style.display = '';
-    } else if (!isUndefined(selectedEl)) {
-      selectedEl.get(0)!.style.display = '';
+      const selectedEl: JQuery<HTMLDivElement> = $(e.target).closest(`.${ppfx}item-title`).parent()
+      console.log("aaaa", selectedEl.index())
+      this.selectedIndex = selectedEl.index()
+      // var selected = $(e.target).closest(`.${ppfx}item-title`).parent().find('.data-item');
+      // this.selectedEl = selected;
+      // selected.get(0)!.style.display = '';
+    }
+    //  else if (!isUndefined(selectedEl)) {
+    //   selectedEl.get(0)!.style.display = '';
+    // }
+    console.log("aaaaIndex", this.selectedIndex)
+    if (!isUndefined(this.selectedIndex)){
+      const el = this.itemsEl?.children()[this.selectedIndex]
+      console.log("aaaaEl", el)
+      $(el).find('.data-item')?.css({ "display": '' });
     }
     // $el[isOpen ? 'addClass' : 'removeClass'](`${pfx}open`);
     // this.getPropertiesEl().style.display = isOpen ? '' : 'none';
@@ -59,21 +72,9 @@ export default class TraitListView extends TraitView<TraitList> {
     this.title = opts.title;
   }
   get children() {
-    return this.target.children as TraitObjectItem[];
+    return this.target.children;
   }
-  //   get traits() {
-  //     return Object.entries(this.target.value).map(([id, value]) => this.initTrait(id, {...this.traitOps?.value, ...value}))
-  //   }
 
-  private initTrait(index: string, value?: any) {
-    const { templates } = this;
-    const traits = this.templates;
-    if (isArray(templates) && templates.length > 1) {
-      return new TraitObjectItem(index, this.target, { name: index, traits, value, ...this.traitOps });
-    } else {
-      return new TraitObjectItem(index, this.target, { name: index, ...traits, value, ...this.traitOps });
-    }
-  }
   get editable() {
     return this.target.opts.editable ?? true;
   }
@@ -92,23 +93,18 @@ export default class TraitListView extends TraitView<TraitList> {
 
   private addItem(e: any) {
     e.preventDefault();
-    const name = this.$el.find('[variableName]').val() as any;
-    console.log('alamr', this.target.opts.traits);
-    if (this.target.type == 'list') {
-      this.target.children.push(new TraitListItem(this.target.children.length, this.target, this.target.opts.traits));
-    }
-    this.render();
+    this.selectedIndex = this.target.children.length
+    this.target.add();
+    
+    // this.render();
   }
 
   private removeItem(e: any) {
     e.preventDefault();
-    const { value } = this.target;
-    const name = this.selectedEl?.attr('item-id') as any;
-    if (typeof value[name] != 'undefined') {
-      delete value[name];
-      this.target.value = value;
-    }
-    this.render();
+    // const id = this.selectedEl?.attr('item-id') as any;
+    this.selectedIndex && this.target.remove(this.selectedIndex);
+    this.selectedIndex = undefined;
+    // this.render();
   }
 
   renderToolbar() {
@@ -116,7 +112,6 @@ export default class TraitListView extends TraitView<TraitList> {
       let el = document.createElement('div');
       el.append(document.createElement('button'));
       let tmpl = `<div class="">
-      <input type="$text" variableName/>
       <button addButton> Add </button>
       <button removeButton> Remove </button>
     </div>`;
@@ -127,7 +122,7 @@ export default class TraitListView extends TraitView<TraitList> {
 
   onItemRender(e: any) {}
 
-  renderItem(trait: TraitObjectItem) {
+  renderItem(trait: TraitListItem) {
     const { em, ppfx, title } = this;
     const icons = em?.getConfig().icons;
     const iconCaret = icons?.caret || '';
@@ -153,23 +148,25 @@ export default class TraitListView extends TraitView<TraitList> {
     return $(itemEl);
   }
 
-  renderItems() {
-    this.itemsEl = this.children.map(trait => this.renderItem(trait));
+  renderItems(): JQuery<HTMLDivElement> {
+    const {ppfx, type } = this;
+    let itemsEl = document.createElement('div');
+    this.children.forEach(trait => itemsEl.appendChild(this.renderItem(trait).get(0)!));
+    console.log(this.itemsEl);
+    itemsEl.className = `${ppfx}field-${type}-items`;
+
+    return $(itemsEl);
   }
 
   render() {
     const { $el, pfx, ppfx, name, type, className } = this;
     const hasLabel = this.hasLabel();
     const cls = `${pfx}trait`;
-    var frag = document.createDocumentFragment();
+    // var frag = document.createDocumentFragment();
     console.log('aaa', 'render');
     this.$el.empty();
-    this.renderItems();
-    this.itemsEl?.forEach(el => frag.appendChild(el.get(0)!));
-    console.log(this.itemsEl);
-    let itemsEl = document.createElement('div');
-    itemsEl.className = `${ppfx}field-${type}-items`;
-    itemsEl.append(frag);
+    this.itemsEl = this.renderItems();
+
     // el.className += model.isFull() ? ` ${className}--full` : '';
     let tmpl = `<div class="${cls} ${cls}--${type}">
     ${hasLabel ? `<div class="${ppfx}label" data-label></div>` : ''}
@@ -182,7 +179,7 @@ export default class TraitListView extends TraitView<TraitList> {
     if (this.editable) {
       dataInput.append(this.renderToolbar());
     }
-    dataInput.append(itemsEl);
+    dataInput.append(this.itemsEl.get(0)!);
     // ${this.renderToolbar()}
     // ${itemsEl}
     // console.log(frag);

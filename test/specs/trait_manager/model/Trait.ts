@@ -25,6 +25,7 @@ describe('TraitModels', () => {
     trait.value = title;
     expect(target.getAttributes()[modelName]).toBe(title);
   });
+  
   test('Trait undo property', () => {
     em.loadOnStart();
 
@@ -37,9 +38,11 @@ describe('TraitModels', () => {
 
   test('Trait object property', () => {
     trait.opts = { traits: [{ name: 'test', type: 'text' }] };
-    trait = new TraitObject(trait);
-    trait.children[0].value = title;
+    var traitObject = new TraitObject(trait);
+    traitObject.children[0].value = title;
 
     expect(target.get(modelName)).toEqual({ test: title });
   });
+
+  
 });

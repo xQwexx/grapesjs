@@ -153,7 +153,7 @@ export abstract class ItemManagerModule<
     const obj: any = {};
     const key = this.storageKey;
     if (key) {
-      obj[key] = data || this.getAll();
+      obj[key] = (data || this.getAll()).map((d: any) => delete d['em']) ;
     }
     return obj;
   }

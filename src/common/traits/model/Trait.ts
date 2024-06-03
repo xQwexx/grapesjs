@@ -1,7 +1,8 @@
 import EditorModel from '../../../editor/model/Editor';
-import Category from '../../../abstract/ModuleCategory';
+// import Category from '../../../abstract/ModuleCategory';
 import { LocaleOptions, Model, SetOptions } from '../../../common';
-import TraitFactory from './TraitFactory';
+import Component from '../../../dom_components/model/Component';
+import TraitElement from './TraitElement';
 
 export interface OnUpdateView<TraitValueType> {
   onUpdateEvent(value: TraitValueType, fromTarget: boolean): void;
@@ -16,7 +17,7 @@ export interface TraitProperties {
 
 export default abstract class Trait<TraitValueType = any, Type extends string = string> {
   opts: any;
-  private view?: OnUpdateView<TraitValueType>;
+  protected view?: OnUpdateView<TraitValueType>;
 
   get name(): string {
     return '';
@@ -25,20 +26,22 @@ export default abstract class Trait<TraitValueType = any, Type extends string = 
     return this.opts.type;
   }
 
-  get templates(): unknown {
+  get templates(): any[] {
     return this.opts.traits ?? [];
   }
 
-  private _children: Trait[] = [];
-  get children() {
-    return this._children;
-  }
+  // private _children: Trait[] = [];
+  // get children() {
+  //   return this._children;
+  // }
 
-  set children(children: Trait[]) {
-    this._children = children;
-    console.log('aaaa', children);
-    console.log('aaaa', this.value);
-  }
+  // set children(children: Trait[]) {
+  //   this._children = children;
+  //   console.log('aaaa', children);
+  //   console.log('aaaa', this.value);
+  // }
+
+  abstract get component(): Component
 
   constructor(opts: TraitProperties) {
     this.opts = { ...opts };
@@ -46,6 +49,7 @@ export default abstract class Trait<TraitValueType = any, Type extends string = 
 
   public registerForUpdateEvent(view: OnUpdateView<TraitValueType>) {
     this.view = view;
+    // this.onUpdateEvent();
   }
 
   protected abstract getValue(): TraitValueType;
@@ -70,14 +74,26 @@ export default abstract class Trait<TraitValueType = any, Type extends string = 
     console.log('setvalue ', this);
     this.setValue(value);
     this.updatingValue = false;
-    this.refreshTrait();
+    this.triggerTraitChanged(this.updateEventName)
+    // this.onUpdateEvent()
   }
 
-  refreshTrait() {}
+  refreshChildren() {
+    // this.children.forEach(tr => tr.refreshTrait(forced))
+  }
 
-  setValueFromModel() {
-    if (!this.updatingValue) {
+  setValueFromModel(model: Component, opts: any) {
+    const { name, component } = this;
+    console.log('ChangeScriptEVENTSetTryasdfasdfasd', model, opts)
+    console.log('ChangeScriptEVENTSetTry', this.updatingValue)
+    if (!this.updatingValue && model) {
+      console.log('ChangeScriptEVENTSet', this.value)
+      //@ts-ignore
+      console.log('ChangeScriptEVENTSetInit', this.view, this.target?.view)
+      component.off('change:' + name, this.setValueFromModel, this);
+      this.refreshChildren();
       this.onUpdateEvent();
+      component.on('change:' + name, this.setValueFromModel, this);
     }
   }
 
@@ -93,10 +109,10 @@ export default abstract class Trait<TraitValueType = any, Type extends string = 
     return this.type ?? 'text';
   }
 
-  get category(): Category | undefined {
-    const cat = this.opts.category;
-    return cat instanceof Category ? cat : undefined;
-  }
+  // get category(): Category | undefined {
+  //   const cat = this.opts.category;
+  //   return cat instanceof Category ? cat : undefined;
+  // }
 
   /**
    * Get category label.
@@ -104,11 +120,19 @@ export default abstract class Trait<TraitValueType = any, Type extends string = 
    * @param {Boolean} [opts.locale=true] Use the locale string from i18n module.
    * @returns {String}
    */
-  getCategoryLabel(opts: LocaleOptions = {}): string {
-    const { em, category } = this;
-    const { locale = true } = opts;
-    const catId = category?.getId();
-    const catLabel = category?.getLabel();
-    return (locale && em?.t(`traitManager.categories.${catId}`)) || catLabel || '';
-  }
+  // getCategoryLabel(opts: LocaleOptions = {}): string {
+  //   const { em, category } = this;
+  //   const { locale = true } = opts;
+  //   const catId = category?.getId();
+  //   const catLabel = category?.getLabel();
+  //   return (locale && em?.t(`traitManager.categories.${catId}`)) || catLabel || '';
+  // }
+
+
+  abstract triggerTraitChanged(event?: string): void
+
+  abstract get updateEventName(): string 
+
+  setTraitElement(trait: Trait) {}
+  
 }

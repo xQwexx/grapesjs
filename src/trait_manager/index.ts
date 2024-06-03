@@ -39,6 +39,7 @@ import TraitView from '../common/traits/view/TraitView';
 import InputFactory from '../common/traits';
 import TraitsEvents, { TraitCustomData, TraitModuleStateProps } from './types';
 import { Model } from '../common';
+import TraitFactory from '../common/traits/model/TraitFactory';
 
 export const evAll = 'trait';
 export const evPfx = `${evAll}:`;
@@ -51,6 +52,7 @@ export default class TraitManager extends Module<TraitManagerConfig & { pStylePr
   types: { [id: string]: { new (o: any): TraitView } } = {};
   __ctn?: HTMLElement;
   TraitsView = TraitObjectView;
+  TraitFactory = TraitFactory;
   events = TraitsEvents;
   state = new Model<TraitModuleStateProps>({ traits: [] });
 

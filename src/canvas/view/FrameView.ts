@@ -504,13 +504,13 @@ export default class FrameView extends ModuleView<Frame, HTMLIFrameElement> {
 
     if (hasDnd(em)) {
       this.droppable = new Droppable(em, this.wrapper?.el);
-      root?.on(
-        'rerender',
-        wrp => {
-          this.droppable = new Droppable(em, wrp?.el);
-        },
-        this
-      );
+      // root?.on(
+      //   'onrender',
+      //   wrp => {
+      //     this.droppable = new Droppable(em, this.wrapper?.el);
+      //   },
+      //   this
+      // );
     }
 
     this.loaded = true;

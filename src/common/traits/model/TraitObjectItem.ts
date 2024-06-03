@@ -1,31 +1,28 @@
 import { isArray, isObject } from 'underscore';
-import { Model } from '../..';
 import Trait, { OnUpdateView, TraitProperties } from './Trait';
-import TraitFactory from './TraitFactory';
-import TraitRoot from './TraitRoot';
+import TraitElement from './TraitElement';
 
-export default class TraitObjectItem<TraitValueType extends { [id: string]: any } = any> extends Trait<any> {
-  target: Trait<TraitValueType>;
+export default class TraitObjectItem<TraitValueType extends { [id: string]: any } = any> extends TraitElement<any> {
   onValueChange?: (value: any) => void;
   _name: string;
   get name(): string {
     return this._name;
   }
   constructor(name: string, target: Trait<TraitValueType>, opts: any, onValueChange?: (value: any) => void) {
-    super(opts);
-    this.target = target;
+    super(target, opts);
     this._name = name;
-    console.log(this.value);
-    if (!isObject(this.target.value)) {
-      this.target.value = {} as TraitValueType;
-    }
+    // if (!isObject(this.target.value)) {
+    //   this.target.value = {} as TraitValueType;
+    // }
     this.onValueChange = onValueChange;
     // this.value = this.value;
   }
 
-  get em() {
-    return this.target.em;
+  get defaultValue(){
+    const { name } = this;
+    return undefined//this.target.value?.hasOwnProperty(name) ? this.value : undefined;
   }
+
 
   protected getValue(): any {
     const { name } = this;
@@ -37,9 +34,23 @@ export default class TraitObjectItem<TraitValueType extends { [id: string]: any 
     console.log('setValueTarget', this.target);
     const { name } = this;
     const values = { ...this.target.value, [name]: value };
+    // this.target.value[name] = value;
+    // const values = this.target.value;
+    console.log('setValue', values);
     this.target.value = values;
     this.onValueChange && this.onValueChange(values);
 
     // this.target.onUpdateEvent()
   }
+
+  onUpdateEvent() {
+    this.target.onUpdateEvent();
+  }
+
+  // triggerTraitChanged(event?: string){
+  //   const {name} = this
+  //   this.target.triggerTraitChanged(event?.replace(/^/, name + ':') ?? name)
+  // }
+
+
 }

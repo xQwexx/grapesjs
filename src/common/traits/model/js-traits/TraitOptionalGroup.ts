@@ -35,7 +35,7 @@ export default class TraitOptionalGroup extends TraitObject<{ type: string; _js:
     ];
     //    return [new TraitObject( "componentId", targetJsModifier, {type: "select", options: compOptions,  default: data?.id, noLabel: true, width: 50}),
     //            new TraitObject( "variableName", targetJsModifier, {type: "select", options, noLabel: true, width: 50})]
-    target.children = [
+    (this.target as TraitObject).children = [
       new TraitObjectItem('componentId', this, {
         type: 'select',
         options: compOptions,
@@ -72,7 +72,7 @@ export default class TraitOptionalGroup extends TraitObject<{ type: string; _js:
 
   protected setValue(value: { type: string; _js: string }): void {
     super.setValue(value);
-    const variablesTrait = this.target.children.find(tr => tr.opts.name == 'eventName');
+    const variablesTrait = (this.target as TraitObject).children.find(tr => tr.opts.name == 'eventName');
     if (variablesTrait) {
       const compId = value?.type;
       if (compId) {

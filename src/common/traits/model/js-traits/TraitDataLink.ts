@@ -1,8 +1,7 @@
 import Trait from '../Trait';
-import TraitModifier from '../TraitModifier';
 import { jsModifier, jsVariable } from '../TraitModifierJs';
-import TraitObject from '../TraitObject';
 import TraitObjectItem from '../TraitObjectItem';
+import TraitObject from '../TraitObject';
 
 export default class TraitDataLink extends TraitObject<{ componentId: string; variableName: string }> {
   constructor(target: Trait<{ componentId: string; variableName: string }>) {
@@ -57,7 +56,7 @@ export default class TraitDataLink extends TraitObject<{ componentId: string; va
 
   protected setValue(value: { componentId: string; variableName: string }): void {
     super.setValue(value);
-    const variablesTrait = this.target.children.find(tr => tr.opts.name == 'variableName');
+    const variablesTrait = (this.target as TraitObject).children.find(tr => tr.opts.name == 'variableName');
     if (variablesTrait) {
       const compId = value?.componentId;
       if (compId) {

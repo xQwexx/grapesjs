@@ -1,7 +1,7 @@
 {
   "name": "grapesjs",
   "description": "Free and Open Source Web Builder Framework",
-  "version": "0.21.11",
+  "version": "0.21.75",
   "author": "Artur Arseniev",
   "license": "BSD-3-Clause",
   "homepage": "http://grapesjs.com",
@@ -135,7 +135,7 @@
     "start:js": "grapesjs-cli serve",
     "start:css": "npm run build:css -- --watch",
     "format": "prettier --single-quote --write './{src,test}/**/*.js'",
-    "test": "jest",
+    "test": "jest --silent",
     "test:dev": "jest --watch"
   }
 }

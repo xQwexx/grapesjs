@@ -82,7 +82,7 @@ export default abstract class TraitView<Target extends Trait = Trait>
   }
 
   render(): typeof this {
-    this.trigger('render');
+    // this.trigger('render');
     return this;
   }
 }

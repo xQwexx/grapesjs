@@ -4,40 +4,49 @@ import TraitFactory from './TraitFactory';
 import TraitObjectItem from './TraitObjectItem';
 import TraitParent from './TraitParent';
 
-export default class TraitListUnique extends TraitParent<{ [id: string]: any }> {
+export default class TraitListUnique extends TraitParent<TraitObjectItem, { [id: string]: any }> {
   constructor(target: Trait<{ [id: string]: any }>) {
     target.opts.changeProp = true;
     super(target);
-    console.log(this.value);
-    if (!isObject(this.value)) {
-      this.value = {};
-    }
+    // if (!isObject(this.value)) {
+    //   this.setValue({});
+    // }
   }
 
   protected initChildren() {
-    return Object.keys(this.value).map(id => {
+    console.log("urlTestTriggerParentValue", this.value)
+    const values = (isObject(this.value)) ? Object.keys(this.value) : [];
+
+    return values.map(key => {
       // const opts = isArray(trait.templates) ? trait.templates.find(tr => tr.name ==id) : trait.templates;
-      return TraitFactory.buildNestedTraits(new TraitObjectItem(id, this, this.target.templates));
+      return new TraitObjectItem(key, this, this.target.templates);
     });
   }
 
+  get defaultValue(){
+    return Object.fromEntries(this.children.map(tr => [tr.name, tr.defaultValue]))
+  }
+
   add(name: string) {
-    console.log('qwerr', name);
-    if (typeof this.value[name] == 'undefined') {
-      this.children.push(
-        TraitFactory.buildNestedTraits(new TraitObjectItem(name, this.target, this.target.opts.traits))
-      );
-    }
-    this.onUpdateEvent();
+    // if (typeof this.value[name] == 'undefined') {
+    //   this.childrenChanged();
+    //   this.value = { ...this.value, [name]: this.defaultValue}
+    //   this.refreshChildren();
+    // }
+    this.addChildren(new TraitObjectItem(name, this, this.target.templates))
+    console.log("Tryed to select", this)
+    console.log("Tryed to select", this.children)
+    
   }
 
   remove(name: string) {
-    console.log('qwerr', name);
     const { value } = this;
-    if (typeof value[name] != 'undefined') {
-      delete value[name];
-      this.value = value;
-    }
-    this.onUpdateEvent();
+    this.removeChildren(name)
+    // if (typeof value[name] != 'undefined') {
+    //   delete value[name];
+    //   this.childrenChanged();
+    //   this.value = value;
+    //   // this.refreshChildren();
+    // }
   }
 }

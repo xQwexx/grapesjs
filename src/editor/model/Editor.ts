@@ -853,6 +853,7 @@ export default class EditorModel extends Model {
     this.storables.forEach(m => {
       result = { ...result, ...m.store(1) };
     });
+    console.log(result)
     return JSON.parse(JSON.stringify(result));
   }
 

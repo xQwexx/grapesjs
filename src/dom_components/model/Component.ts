@@ -36,9 +36,11 @@ import CssRule, { CssRuleJSON } from '../../css_composer/model/CssRule';
 import Trait from '../../common/traits/model/Trait';
 import { ToolbarButtonProps } from './ToolbarButton';
 import { TraitProperties } from '../../trait_manager/types';
-import ScriptSubComponent, { ScriptData } from './modules/ScriptSubComponent';
 import TraitRoot from '../../common/traits/model/TraitRoot';
 import InputFactory, { InputViewProperties } from '../../common/traits';
+import ScriptSubComponent, { ScriptData } from './modules/ScriptSubComponent';
+import TraitUrl from '../../common/traits/model/js-traits/TraitUrl';
+
 
 export interface IComponent extends ExtractMethods<Component> {}
 
@@ -145,35 +147,101 @@ export default class Component extends StyleableModel<ComponentProperties> {
       style: '',
       styles: '', // Component related styles
       classes: '', // Array of classes
-      script: {
+      script: 
+      {
         main: function (prop: any) {
-          prop.signals.onload();
+          // prop.signals.onload();
+          // prop.el.addEventListener("dblclick", () => {
+          // console.log("dblclick onload", prop.signals);
+          prop.signals.onload({test: "azta", data: "easy"})
+
+          // })
         },
-        signals: { onload: {} },
+        signals: { onload: { optType: { type: 'list'}}, onloadObject: { optType: { type: 'object'}}  },
         slots: {
-          // test: {
-          //   script: (params: any) => {
-          //     alert(params.el);
-          //   },
-          // },
+          testList: {
+            script: (opts: any) => {
+              console.log(opts)
+              return (params: any)=>{
+                console.log(params)
+                alert(JSON.stringify(params.data));
+              }
+              
+            },
+            params: {'list': { type: 'string'}}
+          },
+          testObject: {
+            script: (opts: any) => {
+              console.log(opts)
+              return (params: any)=>{
+                console.log(params)
+                alert(JSON.stringify(params.data));
+              }
+              
+            },
+            params: {'object': { type: 'string'}}
+          },
         },
       },
-      // 'script-props': ['usersAjax'],
+      'script-props': [{name: 'url', render: TraitUrl.renderJs}],
       'script-events': [],
       'script-global': [],
       'script-export': '',
       usersAjax: () => {},
-      list: [],
+      list: [ {}, {}],
       attributes: {},
       //@ts-ignore
       traits: [
         'id',
         'title',
+        // {
+        //   type: 'object',
+        //   name: 'components',
+        //   traits: [{type: 'unique-list', name: 'models'}]//, traits:  { type: 'component'}}]
+        //   },
+          // {
+          //   type: 'object',
+          //   name: 'components',
+          //   traits: [{type: 'list', name: 'models', traits: [{type: "object"}]}]//, traits:  { type: 'component'}}]
+          //   },
         { type: 'variable', name: 'teste' },
+        { type: 'url', name: 'url' },
+        { type: 'object', name: 'sfed', traits: [{ name: "title",
+        type: "text",}]},
+        {type: 'list', name: 'list2', traits:{ type: 'object', traits: [{type: "url", name: "aef"},{type: 'text', name: 'al'}]}},
+        { type: 'list', name: 'list', title: 'title', traits:                   {
+          type: 'object',
+          traits: [
+          {
+              name: "title",
+              type: "text",
+          },
+          {
+              name: "data",
+              type: "text",
+          },
+          {
+              name: "render",
+              nolabel: true,
+              type: "function",
+              variables: ['data', 'type', 'row'],
+          },
+          {
+              name: "visible",
+              type: "checkbox",
+              default: true,
+          }]
+      } },
+
+        // {
+        //   type: 'object',
+        //   name: 'script',
+        //   traits: [{ type: 'unique-list', name: 'signals', traits: { type: 'signal' } }],
+        // },
         {
           type: 'object',
           name: 'script',
-          traits: [{ type: 'unique-list', name: 'signals', traits: { type: 'signal' } }],
+          traits: [{ type: 'unique-list', name: 'slots', traits: { type: 'slot' } }],
         },
       ], // {type: 'event', name: 'usersAjax'}], //{type: 'list', name: 'list', traits:{ type: 'object', traits: [{type: "url", name: "aef"},{type: 'text', name: 'al'}]}}],// {type: 'link', name: 'test'}, {type: "link", name: "aef"}],//, {type: 'list', name: 'list', traits:{ type: 'object', traits: [{type: "url", name: "aef"},{type: 'text', name: 'al'}]}}],
       propagate: '',
@@ -193,11 +261,11 @@ export default class Component extends StyleableModel<ComponentProperties> {
   }
 
   get traits(): ({ name: string } & Trait<any>)[] {
-    return this.get('traits')! as any;
+    return this.get('traits') as any ?? [];
   }
 
-  get slots(): { [name: string]: { script: (el: string, param: any) => void } } {
-    return (this.scriptSubComp?.get('slots')! as any) ?? {};
+  get slots() {
+    return this.scriptSubComp?.slots ?? {};
   }
 
   get content() {
@@ -302,7 +370,7 @@ export default class Component extends StyleableModel<ComponentProperties> {
     this.on(keyUpdateInside, this.__propToParent);
     this.set('status', '');
     this.views = [];
-
+    // this.on('all', e => console.log("fromSiteEvent", e));
     // Register global updates for collection properties
     ['classes', 'components'].forEach(name => {
       const events = `add remove ${name !== 'components' ? 'change' : ''}`;
@@ -1099,13 +1167,17 @@ export default class Component extends StyleableModel<ComponentProperties> {
   initScript() {
     if (this.opt.temporary) return;
 
-    let scriptData: ScriptData | string | ((...params: any[]) => any) | undefined =
-      this.get('script-export') || (this.get('script') as any);
-    if (scriptData) {
-      if (isString(scriptData) || isFunction(scriptData)) {
-        scriptData = { main: scriptData, props: this.get('script-props') ?? [], signals: {}, slots: {}, variables: {} };
+    if (!this.scriptSubComp){
+      let scriptData: ScriptData | string | ((...params: any[]) => any) | undefined =
+        this.get('script-export') || (this.get('script') as any);
+      if (scriptData) {
+        if (isString(scriptData) || isFunction(scriptData)) {
+          scriptData = { main: scriptData, props: this.get('script-props') ?? [], signals: {}, slots: {}, variables: {} };
+        }
+        scriptData.props = scriptData.props ?? this.get('script-props') ?? []
+        // this.scriptSubComp?.deregister()
+        this.scriptSubComp = new ScriptSubComponent(this, scriptData);
       }
-      this.scriptSubComp = new ScriptSubComponent(this, scriptData);
     }
   }
 

@@ -2,6 +2,9 @@ import Component from './Component';
 import ScriptSubComponent, { ScriptData } from './modules/ScriptSubComponent';
 import { ComponentOptions } from './types';
 import TaitUrl from '../../common/traits/model/js-traits/TraitUrl';
+import { getMetaVariable } from './modules/MetaVariableTypes';
+import { isString } from 'underscore';
+import Signal from './modules/Signal';
 
 export default class ComponentWrapper extends Component {
   get defaults() {
@@ -18,10 +21,80 @@ export default class ComponentWrapper extends Component {
       'script-global': [{ id: 'ajax', type: 'data-list' }],
       'script-events': [{ id: 'ajax', params: { type: 'object', inner: { data: { type: 'single' } } } }],
       ajax: {
-        test: {
+        users: {
+          url: {
+            "url": "https://reqres.in/api/users?page=<page>",
+            "variables": {
+                "page": {
+                    "variableType": "parameter",
+                    "data": {
+                        "default": "1"
+                    }
+                }
+            }
+        },
           urlRaw: 'https://reqres.in/api/users?page=2',
           dataSrc: 'data',
           dataIds: ['id', 'email', 'first_name', 'last_name', 'avatar'],
+          optType : {
+            "type": "list",
+            "itemType": {
+                "type": "object",
+                "params": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "first_name": {
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+        },
+        user: {
+          url: {
+            "url": "https://reqres.in/api/users/<page>",
+            "variables": {
+                "page": {
+                    "variableType": "parameter",
+                    "data": {
+                        "default": "1"
+                    }
+                }
+            }
+        },
+          urlRaw: 'https://reqres.in/api/users/2',
+          dataSrc: 'data',
+          dataIds: ['id', 'email', 'first_name', 'last_name', 'avatar'],
+          optType : {
+                "type": "object",
+                "params": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "first_name": {
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    }
+                }
+        }
         },
       },
       traits: [
@@ -34,7 +107,8 @@ export default class ComponentWrapper extends Component {
             type: 'object',
             traits: [
               { name: 'url', type: 'url' },
-              { name: 'signal', label: 'onLoad', type: 'signal' },
+              { name: 'dataType', type: 'select', options: ["single", 'list']}
+              // { name: 'signal', label: 'onLoad', type: 'signal' },
             ],
           },
         },
@@ -62,11 +136,12 @@ export default class ComponentWrapper extends Component {
 
   constructor(props = {}, opt: ComponentOptions = {}) {
     super(props, opt);
+    console.log("fromSiteComponentReset")
     this.renderAjaxScripts();
     this.on(
       'change:ajax change:variables',
       () => {
-        console.log('urlTestTriggerChange', this);
+        console.log('fromSiteurlTestTriggerChange', this);
         this.renderAjaxScripts();
         //.map(([name, params]) => { return[name, function(){}]})});
         this.dataIds = {};
@@ -81,28 +156,67 @@ export default class ComponentWrapper extends Component {
 
   private renderAjaxScripts() {
     const { ajax, variables } = this;
+
     const slots = Object.fromEntries(
-      Object.entries(ajax).map(([name, params]) => [
+      Object.entries(ajax).map(([name, slot]) => [
         name,
         {
-          script: `(opts, i) => {
+          script: `(opts)=>{
+            var cachedInput;
+            var cachedData;
+            const loadedSignal = opts.signals['${name}']
+            return (i, done)=>{
       ${
-        params.url
-          ? `$.get(${TaitUrl.renderJs(params.url, 'i')}).done(data => opts.signals.${name}(${
-              params.url['dataSrc'] ? `data["${params.url['dataSrc']}"]` : 'data'
-            }, data))`
-          : ''
+        slot.url
+          ? `const url = ${TaitUrl.renderJs(slot.url, 'i.data')};
+          if (cachedInput != i.data || typeof cachedData == 'undefined'){
+            url && $.get(url).done(data => {
+              console.log("fromSite", data)
+              loadedSignal(${slot.url['dataSrc'] ? `data["${slot.url['dataSrc']}"]` : 'data'}, data)
+              cachedData = data;
+              cachedInput = i.data;
+            });
+          }
+          else {
+            loadedSignal(${slot.url['dataSrc'] ? `cachedData["${slot.url['dataSrc']}"]` : 'cachedData'}, cachedData)
+          }
+            ` : ''
       }
-    }`,
+          }
+        }`,
+      params: Object.fromEntries<{type: 'string'}>(Object.entries<any>(slot?.url?.variables ?? {})
+          .filter(([name, variable]) => variable?.variableType == 'parameter' ).map(([name, a]) => [name, {type: 'string'}]))
         },
       ])
     );
-    const signals = Object.fromEntries(Object.entries(ajax).map(([name, params]) => [name, params.signal]));
-    this.set('script', { main: '', props: [], signals, slots, variables });
-    console.log('setValueValScript', variables);
-    console.log('testtestAjaxSignals', signals);
-    console.log('testtestAjaxVariables', variables);
-    console.log('testtestAjax', this.slots);
+    
+    const window: any & Window = this.em.Canvas.getWindow();
+    const signals = Object.fromEntries(Object.keys(ajax).map(key =>  [`${key}`,
+    new Signal(this.getId(), key, {}).asyncMetaData((async ()=>{
+      const url = TaitUrl.renderJs(this.ajax[key].url);
+      const result = await $?.get(isString(url) && window.eval(url))
+      return getMetaVariable(result.data)
+    })())
+  //   { componentId: this.getId(), 
+  //     slot: key, 
+  //     optType: {type: 'unkown'} as any,
+  //     refresh: this.ajax[key].url && (() => { 
+  //       var results = {type: 'unkown'}
+  //       const url = TaitUrl.renderJs(this.ajax[key].url);
+  //        return $?.get && $?.get(isString(url) && eval(url)).then(
+  //         r => results = getMetaVariable(r.data)
+  //       );
+  //     })()
+  // }
+]));
+
+    const main =  `((opts) =>{
+     ${Object.keys(ajax).map(name => `opts.slots['${name}']({});`).join('')}})`
+    this.set('script', { main, props: [], signals, slots, variables });
+    // console.log('setValueValScript', variables);
+    // console.log('testtestAjaxSignals', signals);
+    // console.log('testtestAjaxVariables', variables);
+    // console.log('fromSitetesttestAjax', this.slots);
   }
   //   (class {
   //     static data = (()=>{
