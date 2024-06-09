@@ -2613,17 +2613,17 @@ export type SelectOption = string | {
 export interface TraitSelectViewOpts extends TraitInputViewOpts<"select"> {
 	readonly options: SelectOption[] | ((em: EditorModel) => SelectOption[]);
 }
-declare abstract class TraitParent<CT extends Trait, TraitValueType = any> extends TraitElement<TraitValueType> {
+declare abstract class TraitParent<TraitValueType = any> extends TraitElement<TraitValueType> {
 	private updateChildren;
 	constructor(target: Trait<TraitValueType>);
 	get name(): string;
-	children: CT[];
-	protected abstract initChildren(): CT[];
+	children: TraitElement[];
+	protected abstract initChildren(): TraitElement[];
 	refreshChildren(): void;
 	protected getValue(): TraitValueType;
 	protected setValue(value: TraitValueType): void;
 	childrenChanged(): void;
-	protected addChildren(tr: CT): void;
+	protected addChildren(tr: TraitElement): void;
 	protected removeChildren(key: string): void;
 	get updateEventName(): string;
 }
@@ -3072,9 +3072,64 @@ export interface ToolbarButtonProps {
 	attributes?: ObjectAny;
 	events?: ObjectAny;
 }
+declare class TraitObjectItem<TraitValueType extends {
+	[id: string]: any;
+} = any> extends TraitElement<any> {
+	onValueChange?: (value: any) => void;
+	_name: string;
+	get name(): string;
+	constructor(name: string, target: Trait<TraitValueType>, opts: any, onValueChange?: (value: any) => void);
+	get defaultValue(): any;
+	protected getValue(): any;
+	protected setValue(value: any): void;
+	onUpdateEvent(): void;
+}
+declare class TraitObject<TraitValueType extends {
+	[id: string]: any;
+} = any> extends TraitParent<TraitValueType> {
+	constructor(target: Trait<TraitValueType>);
+	protected initChildren(): TraitObjectItem<TraitValueType>[];
+	get defaultValue(): TraitValueType;
+	get viewType(): string;
+	get editable(): boolean;
+	protected getValue(): TraitValueType;
+}
+export type ParamType = {
+	type: "list";
+	itemType: ParamType;
+} | {
+	type: "object";
+	params: Record<string, ParamType>;
+} | {
+	type: "string";
+} | {
+	type: "unkown";
+};
+export type StateRef = {
+	componentId: string;
+	stateName: string;
+};
+export type VariableType = {
+	selectType: ParamType;
+	params: Record<string, ParamType>;
+} & ({
+	variableType: "global";
+	data: StateRef;
+} | {
+	variableType: "parameter";
+	data: {
+		param: string;
+		default: string;
+	};
+} | {
+	variableType: "fixed";
+	data: {
+		default: string;
+	};
+});
 export type PropsType = {
 	name: string;
-	type: "link" | "url";
+	type: "link" | "url" | "state-ref";
 	render?: (value: any) => any;
 };
 declare class PropComponent {
@@ -3088,99 +3143,61 @@ declare class PropComponent {
 	private propChange;
 	static linkToComponent(comp: ScriptSubComponent, name: string): PropComponent;
 	get value(): any;
+	private renderValueWithFunction;
 	render(): string | undefined;
 }
-export type ParamType = {
-	type: "list";
-	itemType: ParamType;
-} | {
-	type: "object";
-	params: Record<string, ParamType>;
-} | {
-	type: "string";
-} | {
-	type: "unkown";
-};
-declare class TraitObjectItem<TraitValueType extends {
-	[id: string]: any;
-} = any> extends TraitElement<any> {
-	onValueChange?: (value: any) => void;
-	_name: string;
-	get name(): string;
-	constructor(name: string, target: Trait<TraitValueType>, opts: any, onValueChange?: (value: any) => void);
-	get defaultValue(): undefined;
-	protected getValue(): any;
-	protected setValue(value: any): void;
-	onUpdateEvent(): void;
-}
-declare class TraitObject<TraitValueType extends {
-	[id: string]: any;
-} = any> extends TraitParent<TraitElement, TraitValueType> {
-	constructor(target: Trait<TraitValueType>);
-	protected initChildren(): TraitObjectItem<TraitValueType>[];
-	get defaultValue(): TraitValueType;
-	get viewType(): string;
-	get editable(): boolean;
-	protected getValue(): TraitValueType;
-}
-export type VariableType = {
-	variableType: "global";
-	data: {
-		componentId: string;
-		name: string;
-	};
-} | {
-	variableType: "parameter";
-	data: {
-		default: string;
-	};
-};
 export interface ISignal {
 	componentId?: string;
 	slot?: string;
 	optType?: ParamType;
-	params?: Record<string, VariableType>;
+	params?: Record<string, ParamType>;
 }
+export type UrlType = {
+	url: string;
+	variables: {
+		[id: string]: VariableType;
+	};
+};
+export type StateType = {
+	meta: ParamType;
+} & ({
+	type: "default";
+	default: any;
+} | {
+	type: "query";
+	url: UrlType;
+	dataSrc: string;
+});
 export type includeType = {
 	globalName: string;
 	files: ({
 		type: "js";
 		src: string;
+		integrity?: string;
 	} | {
 		type: "style";
 		href: string;
+		integrity?: string;
 	})[];
 };
 export type SlotType = {
 	script: string | ((...params: any[]) => any);
-	event: {
-		type: string;
-	};
-	params: {
-		type: "list";
-		itemType: ParamType;
-	} | {
-		type: "object";
-		params: Record<string, ParamType>;
-	};
-	subscription: {
+	params: Record<string, ParamType>;
+	subscription?: {
 		componentId?: string;
 		name?: string;
 	};
 };
 export interface ScriptData {
-	main: string | ((...params: any[]) => any);
+	main: string | ((params: any) => ((params: any) => any));
 	includes?: includeType[];
 	props: (string | {
 		name: string;
 		render: (value: any) => any;
 	})[];
 	variables: Record<string, any | (() => any)>;
-	signals: Record<string, {
-		componentId?: string;
-		slot?: string;
-		optType: ParamType;
-	}>;
+	states?: Record<string, StateType>;
+	signals: Record<string, ISignal>;
 	slots: Record<string, {
 		script: string | ((...params: any[]) => any);
 		params: Record<string, ParamType>;
@@ -3209,7 +3226,7 @@ declare class ScriptSubComponent extends Model {
 	get props(): PropComponent[];
 	setProps(props: (string | {
 		name: string;
-		render: (value: any) => any;
+		render?: (value: any) => any;
 	})[]): void;
 	get dataId(): string;
 	initScriptProps(): void;
@@ -3227,10 +3244,8 @@ declare class ScriptSubComponent extends Model {
 	 * @private
 	 */
 	getScriptString(script?: string | Function): string;
-	static renderComponentSignal(signal: {
-		componentId: string;
-		slot: string;
-		params: Record<string, any>;
+	static renderComponentSignal(signal: ISignal & {
+		variables: Record<string, any>;
 	}, em: EditorModel): string;
 	static renderComponentSignals(script: ScriptSubComponent): string;
 	static renderSlots(scripts: ScriptSubComponent[]): string;
@@ -3238,9 +3253,22 @@ declare class ScriptSubComponent extends Model {
 	static renderJs(script: ScriptSubComponent | ScriptSubComponent[]): string;
 	private static mapScripts;
 	get variables(): any;
-	get signals(): Record<string, ISignal>;
+	get signals(): Record<string, ISignal & {
+		variables: Record<string, VariableType>;
+	}>;
+	removeSlot(name: string): void;
+	addSlot(name: string, slot: SlotType): void;
 	get slots(): Record<string, SlotType>;
-	get states(): Record<string, string>;
+	getStateMeta(stateName: string): {
+		type: "list";
+		itemType: ParamType;
+	} | {
+		type: "object";
+		params: Record<string, ParamType>;
+	} | {
+		type: string;
+	};
+	get states(): Record<string, StateType>;
 	get stateRefs(): Record<string, {
 		subscription: {
 			componentId: string;
@@ -3250,9 +3278,10 @@ declare class ScriptSubComponent extends Model {
 	get includes(): any[];
 	addStateRef(key: string, subscription: {
 		componentId?: string;
-		name?: string;
+		stateName?: string;
 	}): void;
 	removeStateRef(name: string): void;
+	getId(): string;
 }
 export type DragMode = "translate" | "absolute" | "";
 export type DraggableDroppableFn = (source: Component, target: Component, index?: number) => boolean | void;
@@ -3525,115 +3554,14 @@ declare class ComponentWrapper extends Component {
 				};
 			};
 		}[];
-		ajax: {
-			users: {
-				url: {
-					url: string;
-					variables: {
-						page: {
-							variableType: string;
-							data: {
-								default: string;
-							};
-						};
-					};
-				};
-				urlRaw: string;
-				dataSrc: string;
-				dataIds: string[];
-				optType: {
-					type: string;
-					itemType: {
-						type: string;
-						params: {
-							id: {
-								type: string;
-							};
-							email: {
-								type: string;
-							};
-							first_name: {
-								type: string;
-							};
-							last_name: {
-								type: string;
-							};
-							avatar: {
-								type: string;
-							};
-						};
-					};
-				};
-			};
-			user: {
-				url: {
-					url: string;
-					variables: {
-						page: {
-							variableType: string;
-							data: {
-								default: string;
-							};
-						};
-					};
-				};
-				urlRaw: string;
-				dataSrc: string;
-				dataIds: string[];
-				optType: {
-					type: string;
-					params: {
-						id: {
-							type: string;
-						};
-						email: {
-							type: string;
-						};
-						first_name: {
-							type: string;
-						};
-						last_name: {
-							type: string;
-						};
-						avatar: {
-							type: string;
-						};
-					};
-				};
-			};
-		};
-		traits: ({
-			name: string;
-			label: string;
-			type: string;
-			changeProp: boolean;
-			traits: {
-				type: string;
-				traits: ({
-					name: string;
-					type: string;
-					options?: undefined;
-				} | {
-					name: string;
-					type: string;
-					options: string[];
-				})[];
-			};
-		} | {
-			name: string;
-			label: string;
-			type: string;
-			changeProp: boolean;
-			traits: {
-				type: string;
-				traits?: undefined;
-			};
-		})[];
+		ajax: {};
 		stylable: string[];
+		traits?: (string | Partial<{} | InputViewProperties>)[] | undefined;
 	};
 	dataIds: {
 		[id: string]: string[];
 	};
+	states: Record<string, StateType>;
 	constructor(props?: {}, opt?: ComponentOptions);
 	private renderAjaxScripts;
 	private ajaxFunctionTemplate;
@@ -9406,7 +9334,7 @@ declare class StorageManager extends Module<StorageManagerConfig & {
 export interface TraitListUniqueViewOpts<T extends string = "object"> extends TraitViewOpts<T> {
 	traits: any[] | any;
 }
-declare abstract class TraitsView<T extends TraitParent<TraitElement>> extends TraitView<T> {
+declare abstract class TraitsView<T extends TraitParent> extends TraitView<T> {
 	protected type: string;
 	templates: any[];
 	private _items?;
