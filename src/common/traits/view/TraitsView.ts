@@ -10,7 +10,7 @@ export interface TraitListUniqueViewOpts<T extends string = 'object'> extends Tr
   traits: any[] | any;
 }
 
-export default abstract class TraitsView<T extends TraitParent<TraitElement>> extends TraitView<T> {
+export default abstract class TraitsView<T extends TraitParent> extends TraitView<T> {
   protected type = 'list';
   templates: any[];
   private _items?: TraitView[];

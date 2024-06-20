@@ -6,7 +6,7 @@ import TraitParent from './TraitParent';
 
 export default class TraitObject<
   TraitValueType extends { [id: string]: any } = any
-> extends TraitParent<TraitElement, TraitValueType> {
+> extends TraitParent<TraitValueType> {
   constructor(target: Trait<TraitValueType>) {
     target.opts.changeProp = true;
     super(target);
@@ -17,8 +17,6 @@ export default class TraitObject<
   }
 
   protected initChildren() {
-    console.error("really important stasfrf",this)
-
     const values = isArray(this.templates) ? this.templates : [this.templates];
     return values.map(tr => { return new TraitObjectItem(tr.name, this, tr) });
   }
@@ -28,6 +26,7 @@ export default class TraitObject<
     const keypars = this.target.templates.map(tr => [tr.name, this.children.find(c => c.name == tr.name)?.defaultValue])
     const keyparsDefault = keypars.filter((keypar)=> keypar[1] != undefined)
     if (keyparsDefault.length > 0){
+      this.childrenChanged()
       return {...Object.fromEntries(keyparsDefault), ...this.value}
     }
     // console.log('importantValueDefault', keypars)

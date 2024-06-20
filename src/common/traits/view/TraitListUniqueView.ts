@@ -56,6 +56,7 @@ export default class TraitListUniqueView extends TraitsView<TraitListUnique> {
   }
 
   private addItem(e: any) {
+    e?.stopPropagation();
     e.preventDefault();
     const name = this.$el.find('[variableName]').val() as any;
     this.target.add(name);
@@ -63,6 +64,7 @@ export default class TraitListUniqueView extends TraitsView<TraitListUnique> {
   }
 
   private removeItem(e: any) {
+    e?.stopPropagation();
     e.preventDefault();
     const { value } = this.target;
     const name = this.selectedEl?.attr('item-id') as any;

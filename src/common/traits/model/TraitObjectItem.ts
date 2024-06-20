@@ -20,7 +20,7 @@ export default class TraitObjectItem<TraitValueType extends { [id: string]: any 
 
   get defaultValue(){
     const { name } = this;
-    return undefined//this.target.value?.hasOwnProperty(name) ? this.value : undefined;
+    return this.value ?? this.opts.default ?? undefined//this.target.value?.hasOwnProperty(name) ? this.value : undefined;
   }
 
 
@@ -44,6 +44,7 @@ export default class TraitObjectItem<TraitValueType extends { [id: string]: any 
   }
 
   onUpdateEvent() {
+    console.log('ChangeScriptEVENTSetInitElement',this.view, this, this.target)
     this.target.onUpdateEvent();
   }
 

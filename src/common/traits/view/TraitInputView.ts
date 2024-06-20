@@ -98,7 +98,7 @@ export default abstract class TraitInputView<Target extends Trait = Trait>
    */
   protected getLabel(): string {
     const { em, name } = this;
-    const label = name ?? this.label;
+    const label =  this.label ?? name;
     return em.t(`traitManager.traits.labels.${label}`) || capitalize(label).replace(/-/g, ' ');
   }
 

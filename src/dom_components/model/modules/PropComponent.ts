@@ -1,9 +1,10 @@
 import { Model } from "../../../common";
+import TraitStateRef from "../../../common/traits/model/js-traits/TraitStateRef";
 import TraitUrl from "../../../common/traits/model/js-traits/TraitUrl";
 import Component from "../Component";
 import ScriptSubComponent from "./ScriptSubComponent";
 
-export type PropsType = {name: string, type: 'link'|'url', render?: (value: any) => any}
+export type PropsType = {name: string, type: 'link'|'url'|'state-ref', render?: (value: any) => any}
 
 
 export default class PropComponent {
@@ -18,6 +19,9 @@ export default class PropComponent {
         this.renderValue = opts.render;
         if (opts.type == "url"){
             this.renderValue = TraitUrl.renderJs;
+        }
+        if (opts.type == "state-ref"){
+            this.renderValue = TraitStateRef.renderJs
         }
     }
 
@@ -41,7 +45,23 @@ export default class PropComponent {
 
     get value(){
         const value = this.model!.get(this.name)
+        // console.log("asdfasdfasdfasdfasdfsadfasdf", value , this.renderValue!(value))
         return this.renderValue ? this.renderValue(value) : value;
+    }
+
+    private renderValueWithFunction(value: any){
+        const tmpFunc: string[] = [];
+        function jsonReplacer(key: any, val: any) {
+            if (typeof val === 'function' || val && val.constructor === RegExp) {
+                tmpFunc.push(val.toString());
+                return `{func_${tmpFunc.length - 1}}`;
+            }
+            return val
+          }
+        function funcReplacer(match: any, id: number) {
+            return tmpFunc[id];
+         };
+        return JSON.stringify(value, jsonReplacer).replace(/"\{func_(\d+)\}"/g, funcReplacer)
     }
 
     render(){
@@ -52,7 +72,7 @@ export default class PropComponent {
             return `get ${this.name}(){return ${this.value}}`
         }
         else {
-            return `${this.name}: ${JSON.stringify(this.value) }`
+            return `${this.name}: ${this.renderValueWithFunction(this.value)}`
         }
     }
 }

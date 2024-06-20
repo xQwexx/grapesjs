@@ -6,8 +6,10 @@ import TraitObject from '../TraitObject';
 import TraitObjectItem from '../TraitObjectItem';
 import TraitVariable, { VariableType } from './TraitVariable';
 
-export default class TraitUrl extends TraitObject<{ url: string; variables: { [id: string]: VariableType } }> {
-  constructor(target: Trait<{ url: string; variables: { [id: string]: VariableType } }>) {
+export type UrlType = { url: string; variables: { [id: string]: VariableType } };
+
+export default class TraitUrl extends TraitObject<UrlType> {
+  constructor(target: Trait<UrlType>) {
     super(target);
     // target.opts.type = 'object';
     const variables = Object.entries(target.value.variables ?? {});
@@ -35,7 +37,7 @@ export default class TraitUrl extends TraitObject<{ url: string; variables: { [i
   }
 
   private onUrlChange(urlTrait: TraitUrl){
-    return (value: { url: string; variables: { [id: string]: VariableType } }) => {
+    return (value: UrlType) => {
       // this.setValueFromModel();
 
       // console.log("setValueFromModel",this)
@@ -62,11 +64,11 @@ export default class TraitUrl extends TraitObject<{ url: string; variables: { [i
   //   return { ...value, variables };
   // }
 
-  protected static overrideValue(value: { url: string; variables: { [id: string]: VariableType } }) {
-    let url = value.url;
+  protected static overrideValue(value: UrlType) {
+    let {url = ''} = value;
     console.log(value);
     console.log(value.url);
-    const variableNames = TraitUrl.parseUrlToVariables(value.url);
+    const variableNames = TraitUrl.parseUrlToVariables(url);
     console.log(variableNames);
     // variableNames.forEach(name => {
     //   let variable = value.variables[name] ?? '';
@@ -76,24 +78,25 @@ export default class TraitUrl extends TraitObject<{ url: string; variables: { [i
     // console.log(url);
 
     const oldVariables = value.variables ?? {};
-    const variables = Object.fromEntries(variableNames.map(name => [name, oldVariables[name]]));
+    const variables: { [id: string]: VariableType } = 
+      Object.fromEntries(variableNames.map(name => [name, {...oldVariables[name], selectType: {type: 'string'}, params: {}}]));
     console.log('urlTe', variables);
     // return jsModifier(jsVariable('`' + url + '`'))({ ...value, variables });
     return { url, variables };
   }
 
-  static renderJs(value: { url: string; variables: { [id: string]: VariableType } }, paramJsName?: string) {
-    let url = value.url;
+  static renderJs(value?: UrlType, paramJsName?: string) {
+    let {url, variables = {}} = value ?? {};
     console.log(value);
-    console.log(value.url);
-    const variableNames = TraitUrl.parseUrlToVariables(value.url);
+    console.log(value?.url);
+    const variableNames = TraitUrl.parseUrlToVariables(url);
     console.log(variableNames);
     variableNames.forEach(name => {
-      let variable = TraitVariable.renderJs(value.variables[name], paramJsName && `${paramJsName}?.${name}`);
+      let variable = TraitVariable.renderJs(variables[name], paramJsName && `${paramJsName}?.${name}`);
       console.log(",variable",variable);
-      url = url.replaceAll(`<${name}>`, `\${${variable}}`);
+      url = url?.replaceAll(`<${name}>`, `\${${variable}}`);
     });
-    console.log('urlTest', url, variableNames, value.variables);
+    console.log('urlTest', url, variableNames, value?.variables);
     return url ? '`' + url + '`': undefined;
   }
 
@@ -101,7 +104,7 @@ export default class TraitUrl extends TraitObject<{ url: string; variables: { [i
     return url ? Array.from(url.matchAll(/(?<=<)[\w\d]+(?=>)/g), m => m[0]) : [];
   }
 
-  protected setValue(value: { url: string; variables: { [id: string]: VariableType } }): void {
+  protected setValue(value: UrlType): void {
     super.setValue(TraitUrl.overrideValue(value));
     console.log('setValue', value);
     console.log('setValue', this.children);
@@ -123,7 +126,7 @@ export default class TraitUrl extends TraitObject<{ url: string; variables: { [i
     console.log('aaa', this.value);
   }
 
-  get defaultValue(): { url: string; variables: { [id: string]: VariableType } }{
+  get defaultValue(): UrlType{
     // console.log('importantValueDefault', keypars)
     // console.log('importantValueDefault', keyparsDefault)
     return Object.fromEntries(this.children.map(tr => [tr.name, tr.defaultValue])) as any

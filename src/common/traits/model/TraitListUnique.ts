@@ -4,7 +4,7 @@ import TraitFactory from './TraitFactory';
 import TraitObjectItem from './TraitObjectItem';
 import TraitParent from './TraitParent';
 
-export default class TraitListUnique extends TraitParent<TraitObjectItem, { [id: string]: any }> {
+export default class TraitListUnique extends TraitParent<{ [id: string]: any }> {
   constructor(target: Trait<{ [id: string]: any }>) {
     target.opts.changeProp = true;
     super(target);
@@ -19,12 +19,12 @@ export default class TraitListUnique extends TraitParent<TraitObjectItem, { [id:
 
     return values.map(key => {
       // const opts = isArray(trait.templates) ? trait.templates.find(tr => tr.name ==id) : trait.templates;
-      return new TraitObjectItem(key, this, this.target.templates);
+      return new TraitObjectItem(key, this, this.templates);
     });
   }
 
   get defaultValue(){
-    return Object.fromEntries(this.children.map(tr => [tr.name, tr.defaultValue]))
+    return Object.fromEntries(this.children.map(tr => [tr.name, tr.value ?? tr.defaultValue]))
   }
 
   add(name: string) {
@@ -33,7 +33,7 @@ export default class TraitListUnique extends TraitParent<TraitObjectItem, { [id:
     //   this.value = { ...this.value, [name]: this.defaultValue}
     //   this.refreshChildren();
     // }
-    this.addChildren(new TraitObjectItem(name, this, this.target.templates))
+    this.addChildren(new TraitObjectItem(name, this, this.templates))
     console.log("Tryed to select", this)
     console.log("Tryed to select", this.children)
     

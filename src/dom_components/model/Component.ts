@@ -147,43 +147,45 @@ export default class Component extends StyleableModel<ComponentProperties> {
       style: '',
       styles: '', // Component related styles
       classes: '', // Array of classes
-      script: 
-      {
-        main: function (prop: any) {
-          // prop.signals.onload();
-          // prop.el.addEventListener("dblclick", () => {
-          // console.log("dblclick onload", prop.signals);
-          prop.signals.onload({test: "azta", data: "easy"})
+      script: '',
+      // script: 
+      // {
+      //   main: function (prop: any) {
+      //     // prop.signals.onload();
+      //     // prop.el.addEventListener("dblclick", () => {
+      //     // console.log("dblclick onload", prop.signals);
+      //     prop.signals.onload({test: "azta", data: "easy"})
+      //     console.log("asdfasdfasdfasdfasdfsadfasdf", prop.props.testRef)
 
-          // })
-        },
-        signals: { onload: { optType: { type: 'list'}}, onloadObject: { optType: { type: 'object'}}  },
-        slots: {
-          testList: {
-            script: (opts: any) => {
-              console.log(opts)
-              return (params: any)=>{
-                console.log(params)
-                alert(JSON.stringify(params.data));
-              }
+      //     // })
+      //   },
+      //   signals: { onload: { optType: { type: 'list'}, params: {'object': { type: 'string'}}}, onloadObject: { optType: { type: 'object'}, params: {'object': { type: 'string'}}}  },
+      //   slots: {
+      //     testList: {
+      //       script: (opts: any) => {
+      //         console.log(opts)
+      //         return (params: any)=>{
+      //           console.log(params)
+      //           alert(JSON.stringify(params.data));
+      //         }
               
-            },
-            params: {'list': { type: 'string'}}
-          },
-          testObject: {
-            script: (opts: any) => {
-              console.log(opts)
-              return (params: any)=>{
-                console.log(params)
-                alert(JSON.stringify(params.data));
-              }
+      //       },
+      //       params: {'list': { type: 'string'}}
+      //     },
+      //     testObject: {
+      //       script: (opts: any) => {
+      //         console.log(opts)
+      //         return (params: any)=>{
+      //           console.log(params)
+      //           alert(JSON.stringify(params.data));
+      //         }
               
-            },
-            params: {'object': { type: 'string'}}
-          },
-        },
-      },
-      'script-props': [{name: 'url', render: TraitUrl.renderJs}],
+      //       },
+      //       params: {'object': { type: 'string'}}
+      //     },
+      //   },
+      // },
+      'script-props': [],//{name: 'url', render: TraitUrl.renderJs}],
       'script-events': [],
       'script-global': [],
       'script-export': '',
@@ -203,46 +205,49 @@ export default class Component extends StyleableModel<ComponentProperties> {
           //   type: 'object',
           //   name: 'components',
           //   traits: [{type: 'list', name: 'models', traits: [{type: "object"}]}]//, traits:  { type: 'component'}}]
-          //   },
-        { type: 'variable', name: 'teste' },
-        { type: 'url', name: 'url' },
-        { type: 'object', name: 'sfed', traits: [{ name: "title",
-        type: "text",}]},
-        {type: 'list', name: 'list2', traits:{ type: 'object', traits: [{type: "url", name: "aef"},{type: 'text', name: 'al'}]}},
-        { type: 'list', name: 'list', title: 'title', traits:                   {
-          type: 'object',
-          traits: [
-          {
-              name: "title",
-              type: "text",
-          },
-          {
-              name: "data",
-              type: "text",
-          },
-          {
-              name: "render",
-              nolabel: true,
-              type: "function",
-              variables: ['data', 'type', 'row'],
-          },
-          {
-              name: "visible",
-              type: "checkbox",
-              default: true,
-          }]
-      } },
+      //     //   },state-ref
+      //     { type: 'class', name: 'classes', changeProp: true, label: 'Size', options: [{name: 'Small', value: 'modal-sm'}, {name: 'Default', value: ''}, {name: 'Large', value: 'modal-lg'}, {name: 'Extra large', value: 'modal-xl'}] },
+      //     // { type: 'class', name: 'class', options: ['panel', 'description'] },
+      //   { type: 'variable', name: 'teste' },
+      //   { type: 'state-ref', name: 'testRef', selectType: {type: 'list'} },
+      //   { type: 'url', name: 'url' },
+      //   { type: 'object', name: 'sfed', traits: [{ name: "title",
+      //   type: "text",}]},
+      //   {type: 'list', name: 'list2', traits:{ type: 'object', traits: [{type: "url", name: "aef"},{type: 'text', name: 'al'}]}},
+      //   { type: 'list', name: 'list', title: 'title', traits:                   {
+      //     type: 'object',
+      //     traits: [
+      //     {
+      //         name: "title",
+      //         type: "text",
+      //     },
+      //     {
+      //         name: "data",
+      //         type: "text",
+      //     },
+      //     {
+      //         name: "render",
+      //         nolabel: true,
+      //         type: "function",
+      //         variables: ['data', 'type', 'row'],
+      //     },
+      //     {
+      //         name: "visible",
+      //         type: "checkbox",
+      //         default: true,
+      //     }]
+      // } },
 
         // {
         //   type: 'object',
         //   name: 'script',
         //   traits: [{ type: 'unique-list', name: 'signals', traits: { type: 'signal' } }],
         // },
-        {
-          type: 'object',
-          name: 'script',
-          traits: [{ type: 'unique-list', name: 'slots', traits: { type: 'slot' } }],
-        },
+        // {
+        //   type: 'object',
+        //   name: 'script',
+        //   traits: [{ type: 'unique-list', name: 'slots', traits: { type: 'slot' } }],
+        // },
       ], // {type: 'event', name: 'usersAjax'}], //{type: 'list', name: 'list', traits:{ type: 'object', traits: [{type: "url", name: "aef"},{type: 'text', name: 'al'}]}}],// {type: 'link', name: 'test'}, {type: "link", name: "aef"}],//, {type: 'list', name: 'list', traits:{ type: 'object', traits: [{type: "url", name: "aef"},{type: 'text', name: 'al'}]}}],
       propagate: '',
       dmode: '',

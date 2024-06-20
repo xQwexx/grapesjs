@@ -1,7 +1,7 @@
 import Trait from './Trait';
 import TraitElement from './TraitElement';
 
-export default abstract class TraitParent<CT extends Trait, TraitValueType = any> extends TraitElement<TraitValueType> {
+export default abstract class TraitParent<TraitValueType = any> extends TraitElement<TraitValueType> {
   private updateChildren: boolean = false;
   // static  TraitFactory = () => (async () => {
   //   const factory = (await import('./TraitFactory')).default;
@@ -15,7 +15,7 @@ export default abstract class TraitParent<CT extends Trait, TraitValueType = any
     return this.target.name;
   }
 
-  children!: CT[];
+  children!: TraitElement[];
 
   // get children() {
   //   return this._children ?? [];
@@ -27,7 +27,7 @@ export default abstract class TraitParent<CT extends Trait, TraitValueType = any
   // }
 
 
-  protected abstract initChildren(): CT[];
+  protected abstract initChildren(): TraitElement[];
 
    
   refreshChildren(){
@@ -42,7 +42,7 @@ export default abstract class TraitParent<CT extends Trait, TraitValueType = any
 
     console.log("urlTestTriggerParentValueChildren", this.name, this.children, this.value)
     // this.children.forEach(tr => tr.registerForUpdateEvent(()=> ))
-    // this.onUpdateEvent();
+    this.onUpdateEvent();
   }
 
 
@@ -52,10 +52,15 @@ export default abstract class TraitParent<CT extends Trait, TraitValueType = any
 
   protected setValue(value: TraitValueType): void {
     console.log('urlTestTriggerParent', this, value);
-    this.target.value = value;
+    
     if (this.updateChildren) {
       this.updateChildren = false;
+      //@ts-ignore
+      // this.target.childrenChanged && this.target.childrenChanged()
+      this.target.value = value;
       this.refreshChildren();
+    }else {
+      this.target.value = value;
     }
   }
 
@@ -63,8 +68,8 @@ export default abstract class TraitParent<CT extends Trait, TraitValueType = any
     this.updateChildren = true;
   }
 
-  protected addChildren(tr: CT){
-    this.children.push(this.em.Traits.TraitFactory.buildNestedTraits<CT>(tr));
+  protected addChildren(tr: TraitElement){
+    this.children.push(this.em.Traits.TraitFactory.buildNestedTraits<TraitElement>(tr));
     this.value = this.defaultValue;
     this.onUpdateEvent()
   }

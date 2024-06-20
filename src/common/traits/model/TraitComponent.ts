@@ -5,7 +5,7 @@ import TraitRoot from './TraitRoot';
 
 export default class TraitComponent<
   TraitValueType extends Component = Component
-> extends TraitParent<TraitRoot<any>, TraitValueType> {
+> extends TraitParent<TraitValueType> {
   constructor(target: Trait<TraitValueType>) {
     target.opts.changeProp = true;
     super(target);

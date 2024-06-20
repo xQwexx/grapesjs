@@ -5,6 +5,7 @@ import TaitUrl from '../../common/traits/model/js-traits/TraitUrl';
 import { getMetaVariable } from './modules/MetaVariableTypes';
 import { isString } from 'underscore';
 import Signal from './modules/Signal';
+import { StateType } from '../../common/traits/model/js-traits/TraitState';
 
 export default class ComponentWrapper extends Component {
   get defaults() {
@@ -21,23 +22,140 @@ export default class ComponentWrapper extends Component {
       'script-global': [{ id: 'ajax', type: 'data-list' }],
       'script-events': [{ id: 'ajax', params: { type: 'object', inner: { data: { type: 'single' } } } }],
       ajax: {
-        users: {
-          url: {
-            "url": "https://reqres.in/api/users?page=<page>",
-            "variables": {
-                "page": {
-                    "variableType": "parameter",
-                    "data": {
-                        "default": "1"
-                    }
-                }
-            }
+        // users: {
+        //   url: {
+        //     "url": "https://reqres.in/api/users?page=<page>",
+        //     "variables": {
+        //         "page": {
+        //             "variableType": "parameter",
+        //             "data": {
+        //                 "default": "1"
+        //             }
+        //         }
+        //     }
+        // },
+        //   urlRaw: 'https://reqres.in/api/users?page=2',
+        //   dataSrc: 'data',
+        //   dataIds: ['id', 'email', 'first_name', 'last_name', 'avatar'],
+        //   optType : {
+        //     "type": "list",
+        //     "itemType": {
+        //         "type": "object",
+        //         "params": {
+        //             "id": {
+        //                 "type": "string"
+        //             },
+        //             "email": {
+        //                 "type": "string"
+        //             },
+        //             "first_name": {
+        //                 "type": "string"
+        //             },
+        //             "last_name": {
+        //                 "type": "string"
+        //             },
+        //             "avatar": {
+        //                 "type": "string"
+        //             }
+        //         }
+        //     }
+        // }
+        // },
+        // user: {
+        //   url: {
+        //     "url": "https://reqres.in/api/users/<page>",
+        //     "variables": {
+        //         "page": {
+        //             "variableType": "parameter",
+        //             "data": {
+        //                 "default": "1"
+        //             }
+        //         }
+        //     }
+        // },
+        //   urlRaw: 'https://reqres.in/api/users/2',
+        //   dataSrc: 'data',
+        //   dataIds: ['id', 'email', 'first_name', 'last_name', 'avatar'],
+        //   optType : {
+        //         "type": "object",
+        //         "params": {
+        //             "id": {
+        //                 "type": "string"
+        //             },
+        //             "email": {
+        //                 "type": "string"
+        //             },
+        //             "first_name": {
+        //                 "type": "string"
+        //             },
+        //             "last_name": {
+        //                 "type": "string"
+        //             },
+        //             "avatar": {
+        //                 "type": "string"
+        //             }
+        //         }
+        // }
+        // },
+      },
+      // traits: [
+      //   // {
+      //   //   name: 'ajax',
+      //   //   label: 'ajax',
+      //   //   type: 'unique-list',
+      //   //   changeProp: true,
+      //   //   traits: {
+      //   //     type: 'object',
+      //   //     traits: [
+      //   //       { name: 'url', type: 'url' },
+      //   //       { name: 'dataType', type: 'select', options: ["single", 'list']}
+      //   //       // { name: 'signal', label: 'onLoad', type: 'signal' },
+      //   //     ],
+      //   //   },
+      //   // },
+      //   // {
+      //   //   name: 'variables',
+      //   //   label: 'variables',
+      //   //   type: 'unique-list',
+      //   //   changeProp: true,
+      //   //   traits: { type: 'function' },
+      //   // },
+      // ],
+      stylable: [
+        'background',
+        'background-color',
+        'background-image',
+        'background-repeat',
+        'background-attachment',
+        'background-position',
+        'background-size',
+      ],
+    };
+  }
+
+  dataIds: { [id: string]: string[] } = {};
+
+  states: Record<string, StateType> = {users: {
+        type: 'query',
+        url: {
+          "url": "https://reqres.in/api/users?page=<page>",
+          "variables": {
+              "page": {
+                  "variableType": "fixed",
+                  selectType: {type: 'string'},
+                  params: {},
+                  data: {
+                      "default": "1"
+                  }
+              }
+          }
         },
-          urlRaw: 'https://reqres.in/api/users?page=2',
-          dataSrc: 'data',
-          dataIds: ['id', 'email', 'first_name', 'last_name', 'avatar'],
-          optType : {
-            "type": "list",
+        dataSrc: 'data',
+        meta: {
+          "type": "object",
+          "params": { 
+            'data':
+            {"type": "list",
             "itemType": {
                 "type": "object",
                 "params": {
@@ -58,82 +176,50 @@ export default class ComponentWrapper extends Component {
                     }
                 }
             }
+          }
         }
-        },
-        user: {
-          url: {
-            "url": "https://reqres.in/api/users/<page>",
-            "variables": {
-                "page": {
-                    "variableType": "parameter",
-                    "data": {
-                        "default": "1"
-                    }
+    }}, user: {
+      type: 'query',
+      url: {
+        "url": "https://reqres.in/api/users/<id>",
+        "variables": {
+            "id": {
+                "variableType": "fixed",
+                selectType: {type: 'string'},
+                params: {},
+                data: {
+                    "default": "1"
                 }
             }
-        },
-          urlRaw: 'https://reqres.in/api/users/2',
-          dataSrc: 'data',
-          dataIds: ['id', 'email', 'first_name', 'last_name', 'avatar'],
-          optType : {
-                "type": "object",
-                "params": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "email": {
-                        "type": "string"
-                    },
-                    "first_name": {
-                        "type": "string"
-                    },
-                    "last_name": {
-                        "type": "string"
-                    },
-                    "avatar": {
-                        "type": "string"
-                    }
-                }
         }
-        },
       },
-      traits: [
-        {
-          name: 'ajax',
-          label: 'ajax',
-          type: 'unique-list',
-          changeProp: true,
-          traits: {
-            type: 'object',
-            traits: [
-              { name: 'url', type: 'url' },
-              { name: 'dataType', type: 'select', options: ["single", 'list']}
-              // { name: 'signal', label: 'onLoad', type: 'signal' },
-            ],
-          },
-        },
-        {
-          name: 'variables',
-          label: 'variables',
-          type: 'unique-list',
-          changeProp: true,
-          traits: { type: 'function' },
-        },
-      ],
-      stylable: [
-        'background',
-        'background-color',
-        'background-image',
-        'background-repeat',
-        'background-attachment',
-        'background-position',
-        'background-size',
-      ],
-    };
-  }
-
-  dataIds: { [id: string]: string[] } = {};
-
+      dataSrc: 'data',
+      meta: {
+        "type": "object",
+        "params": { 
+          'data':
+          {
+            "type": "object",
+            "params": {
+                "id": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string"
+                }
+            }
+          }
+        }
+  }}}
   constructor(props = {}, opt: ComponentOptions = {}) {
     super(props, opt);
     console.log("fromSiteComponentReset")
@@ -155,8 +241,7 @@ export default class ComponentWrapper extends Component {
   }
 
   private renderAjaxScripts() {
-    const { ajax, variables } = this;
-
+    const { ajax, states } = this;
     const slots = Object.fromEntries(
       Object.entries(ajax).map(([name, slot]) => [
         name,
@@ -174,6 +259,7 @@ export default class ComponentWrapper extends Component {
               console.log("fromSite", data)
               loadedSignal(${slot.url['dataSrc'] ? `data["${slot.url['dataSrc']}"]` : 'data'}, data)
               cachedData = data;
+              opts.slots['updateState'](data);
               cachedInput = i.data;
             });
           }
@@ -212,7 +298,7 @@ export default class ComponentWrapper extends Component {
 
     const main =  `((opts) =>{
      ${Object.keys(ajax).map(name => `opts.slots['${name}']({});`).join('')}})`
-    this.set('script', { main, props: [], signals, slots, variables });
+    this.set('script', { main, props: [], signals, slots, variables: [], states });
     // console.log('setValueValScript', variables);
     // console.log('testtestAjaxSignals', signals);
     // console.log('testtestAjaxVariables', variables);

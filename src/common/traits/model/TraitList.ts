@@ -4,7 +4,7 @@ import TraitFactory from './TraitFactory';
 import TraitListItem from './TraitListItem';
 import TraitParent from './TraitParent';
 
-export default class TraitList extends TraitParent<TraitListItem, any[]> {
+export default class TraitList extends TraitParent<any[]> {
   constructor(target: Trait<any[]>) {
     target.opts.changeProp = true;
     super(target);
@@ -19,7 +19,7 @@ export default class TraitList extends TraitParent<TraitListItem, any[]> {
   }
 
   get defaultValue(){
-    return this.value ?? this.children.map(tr => tr.defaultValue).filter(value => value != undefined)
+    return isArray(this.value) ? this.value : this.children.map(tr => tr.defaultValue).filter(value => value != undefined)
   }
 
   add() {

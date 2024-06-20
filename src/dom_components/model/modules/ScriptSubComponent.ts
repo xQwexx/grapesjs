@@ -1,26 +1,28 @@
-import { isArray, isFunction, isObject } from 'underscore';
+import { isArray, isFunction, isObject, isString } from 'underscore';
 import { Model } from '../../../common';
 
 import EditorModel from '../../../editor/model/Editor';
 import Component from '../Component';
 import { ComponentProperties } from '../types';
- import TraitVariable, { renderJsTraitVariable, VariableType } from '../../../common/traits/model/js-traits/TraitVariable';
+ import TraitVariable, { VariableType } from '../../../common/traits/model/js-traits/TraitVariable';
 import PropComponent from './PropComponent';
 import { ParamType } from './MetaVariableTypes';
 import { ISignal } from './Signal';
 import TraitFactory from '../../../common/traits/model/TraitFactory';
+import TraitState, { StateType } from '../../../common/traits/model/js-traits/TraitState';
 
 type includeType = {
   globalName: string;
-  files: ({type: 'js', src: string}|{type:'style', href: string})[]
+  files: ({type: 'js', src: string, integrity?: string}|{type:'style', href: string, integrity?: string})[]
 }
-export type SlotType = { script: string | ((...params: any[]) => any), event: {type: string}, params:  {type: 'list', itemType: ParamType}|{type: 'object', params: Record<string, ParamType>}, subscription: {componentId?: string, name?: string}}
+export type SlotType = { script: string | ((...params: any[]) => any), params: Record<string, ParamType>, subscription?: {componentId?: string, name?: string}}
 export interface ScriptData {
-  main: string | ((...params: any[]) => any);
+  main: string | ((params: any) => ((params: any) => any));
   includes?: includeType[];
   props: (string|{name: string, render: (value: any) => any})[];
   variables: Record<string, any | (() => any)>;
-  signals: Record<string, { componentId?: string; slot?: string, optType: ParamType}>;
+  states?: Record<string, StateType> 
+  signals: Record<string, ISignal>;
   slots: Record<string, { script: string | ((...params: any[]) => any), params: Record<string, ParamType>}>;
 }
 const escapeRegExp = (str: string) => {
@@ -50,6 +52,7 @@ const updateState = function(props: any){
       console.log("Test out states",`state:change:${name}`, data[name]);
     });
     props.el.dispatchEvent(new MessageEvent(`state:change`, {data}));
+    props.slots['refresh'] && props.slots['refresh']()
   }
 }
 
@@ -72,15 +75,18 @@ export default class ScriptSubComponent extends Model {
     super({ component, ...component.scriptSubComp });
     this.set(script)
     // if(this.get("statefull")){
-      //@ts-ignore
-      this.slots["updateState"] = { script: updateState, params: Object.fromEntries(Object.keys(this.states).map(state => [state, {type: "string"}]))}
+      this.addSlot("updateState", { script: updateState, params: Object.fromEntries(Object.entries(this.states).map(([name, state]) => [name, state?.meta ?? 'undefined']))})
       this.listenTo(this, 'change:states', (e,f) => {
-        //@ts-ignore
-        this.slots["updateState"] = { script: updateState, params: Object.fromEntries(Object.keys(this.states).map(state => [state, {type: "string"}]))}
+        this.addSlot("updateState", { script: updateState, params: Object.fromEntries(Object.entries(this.states).map(([name, state]) => [name, state?.meta?? 'undefined']))});
       });
+      Object.entries(this.states).forEach(([name, state]) =>
+        state.type == 'query' && this.addSlot(`query-${name}`, TraitState.getSlot(state, name))
+        )
+      
     // }
-    
-    this.setProps(script.props ?? [])
+    const staterefs = this.component.traits.filter(tr => tr.type == 'state-ref').map(tr => {return {name: tr.name, type: 'state-ref'}})
+    // console.log("asdfasdfasdfasdfasdfsadfasdf", staterefs)
+    this.setProps([...script.props, ...staterefs] ?? [])
     this.initScriptProps()
     this.listenTo(this, 'change:main', this.scriptUpdated);
     this.listenTo(this, 'change', this.__scriptPropsChange);
@@ -105,8 +111,9 @@ export default class ScriptSubComponent extends Model {
     return this.get('props');
   }
 
-  setProps(props: (string|{name: string, render: (value: any) => any})[]){
+  setProps(props: (string|{name: string, render?: (value: any) => any})[]){
     console.log(props)
+    console.log("asdfasdfasdfasdfasdfsadfasdf", props)
     const newProps = props.map(prop => 
       isObject(prop) ? new PropComponent(this, {type: 'link', ...prop}) : 
       new PropComponent(this, {name: prop, type: 'link'})
@@ -152,7 +159,7 @@ export default class ScriptSubComponent extends Model {
     //   acc[prop.name] = modelProps[prop.name];
     //   return acc;
     // }, {} as Partial<ComponentProperties>);
-    console.log(this.props)
+    console.log("really imposrta asdstaff",this.props, `{${this.props.flatMap(p => p.render() ?? []).join(',')}}`)
     return `{${this.props.flatMap(p => p.render() ?? []).join(',')}}`;
   }
 
@@ -164,12 +171,12 @@ export default class ScriptSubComponent extends Model {
 
     this.component.on('change:script-props', this.setProps, this)
     if(!this.component.traits.find(tr => tr.name == "states")){
-      const trait = TraitFactory.build(this, {type:"unique-list", name: "states"})
+      const trait = TraitFactory.build(this, {type:"unique-list", name: "states", traits: {type: 'state'}})
       this.component.traits.push(trait)
     }
     if(!this.component.traits.find(tr => tr.name == "signals")){
       //@ts-ignore
-      const trait = TraitFactory.build(this, {type:"unique-list", name: "signals", traits: { type: 'signal' }})
+      const trait = TraitFactory.build(this, {type:"unique-list", name: "signals", traits: { type: 'signal' }, editable:false})
       this.component.traits.push(trait)
     }
   }
@@ -229,11 +236,11 @@ export default class ScriptSubComponent extends Model {
     return scr;
   }
 
-  static renderComponentSignal(signal: { componentId: string; slot: string, params: Record<string, any> }, em: EditorModel) {
-    const {componentId, slot, params} = signal;
+  static renderComponentSignal(signal: ISignal &{variables: Record<string, any> }, em: EditorModel) {
+    const {componentId, slot, variables} = signal;
     // const targetSlot = em.Components.getById(componentId).scriptSubComp!.slots[slot]
     // const a = TraitVariable.renderJs(params as any) 
-    const data =params// Object.fromEntries(Object.entries(params).map(([name, param]) => [name, TraitVariable.renderJs(param)]))
+    const data =variables// Object.fromEntries(Object.entries(params).map(([name, param]) => [name, TraitVariable.renderJs(param)]))
     return `(() => window.globalScriptParams['${componentId}'].el?.dispatchEvent(new MessageEvent('${slot}', {data: ${JSON.stringify(data)}})))`
   }
 
@@ -250,11 +257,11 @@ export default class ScriptSubComponent extends Model {
             //   : '(() => {})'
             signals[name] && signals[name].componentId && signals[name].slot ? 
             ((signals[name].componentId == script.dataId) ?
-          `(d) => window.globalScriptParams['${signals[name].componentId}'].el?.dispatchEvent(new MessageEvent('${signals[name].slot}', {data: {${Object.entries(signals[name].params ?? {})
-            .map(([name, param])=> `'${name}': ${TraitVariable.renderJs(param)},`).join('')} ...d}}))`
+          `(d) => window.globalScriptParams['${signals[name].componentId}'].el?.dispatchEvent(new MessageEvent('${signals[name].slot}', {data: {${Object.entries(signals[name].variables ?? {})
+            .map(([name, param])=> `'${name}': ${TraitVariable.renderJs(param, 'd')},`).join('')} ...d}}))`
            :
-           `(d) => window.globalScriptParams['${signals[name].componentId}'].slots['${signals[name].slot}']({data: {${Object.entries(signals[name].params ?? {})
-           .map(([name, param])=> `'${name}': ${TraitVariable.renderJs(param)},`).join('')} ...d}})`)
+           `(d) => window.globalScriptParams['${signals[name].componentId}'].slots['${signals[name].slot}']({data: {${Object.entries(signals[name].variables ?? {})
+           .map(([name, param])=> `'${name}': ${TraitVariable.renderJs(param, 'd')},`).join('')} ...d}})`)
             : '(() => {})'
           // `(d) => window.globalScriptParams['${script.dataId}'].el?.dispatchEvent(new MessageEvent('${name}', {data: {${Object.entries(signals[name].optType ?? {})
           // .map(([name, param])=> `'${name}': ${TraitVariable.renderJs(param)},`).join('')} ...d}}))`
@@ -280,7 +287,7 @@ export default class ScriptSubComponent extends Model {
             .map(name => `'${name}': (${script.variables[name]})()`)
             .concat(
               Object.keys(script.states)
-            .map(name => `'${name}': ${script.states[name]}`)
+            .map(name => `'${name}': ${TraitState.renderValueJs(script.states[name], `window.globalScriptParams['${script.dataId}'].slots['query-${name}']()`)}`)
             )
             // .concat(
             //   Object.entries(script.stateRefs)
@@ -332,7 +339,6 @@ export default class ScriptSubComponent extends Model {
       scripts
       .map(script =>{
         const components =  script.component.em.Components.allById()
-        console.log("testvariable",renderJsTraitVariable)
         // const slots = Object.values(components).flatMap(c => Object.entries(c.scriptSubComp?.slots ?? {}).map(([name, slot]) => { return  {subscription: slot.subscription, event: `window.globalScriptParams['${c.getId()}'].slots['${name}']` }} ))
            // const subscribedSlots = slots.filter((slot) => slot.subscription?.componentId == script.dataId)
 
@@ -357,31 +363,43 @@ export default class ScriptSubComponent extends Model {
               
           : ''
       })
-      .join('')}\n`;
+      .join('')}
+      ${ scripts
+        .map(script =>{
+          const states = Object.entries(script.states).filter(([_, state]) => state.type == 'query')
+          console.log("fj;alwisejf;aghbvau4hrfgppaoids",states)
+          return states.map(([name, _]) =>  `window.globalScriptParams['${script.dataId}'].slots['query-${name}']();`).join('')
+        })
+        .join('')}\n`;
   }
 
   static renderRefreshJs(js: MapJsItem, scriptParam: string): string{
-    return `${scriptParam}.slots['refresh'] = 
-    () => (${js.code}.bind(${scriptParam}.el)(${scriptParam}));
+    const returnRegex = /return\W+(function|\(.*\)\W*=>)/
+    const isNestedFunc = returnRegex.test(js.code)
+    return `${scriptParam}.slots['refresh'] = ${!isNestedFunc ? '() => ': ''}(${js.code}.bind(${scriptParam}.el)(${scriptParam}));
     ${`${js.includes.map(inc => `if (typeof ${inc.globalName}=='undefined'){
       ${inc.files.map(file => {
         switch (file.type){
           case ('js'):
-            return `const script = document.createElement('script');
+            return `{const script = document.createElement('script');
             script.onload = ${scriptParam}.slots['refresh'];
             script.src = '${file.src}';
-            document.body.appendChild(script);`
+            ${file.integrity ? `script.integrity = '${file.integrity}';` : ''}
+            script.crossOrigin = "anonymous"
+            document.body.appendChild(script);}`
           case 'style':
-            return `const style = document.createElement('link');
+            return `{const style = document.createElement('link');
             style.type="text/css" 
             style.rel="stylesheet"
             style.href = '${file.href}';
-            document.head.appendChild(style);`
+            ${file.integrity ? `style.integrity = '${file.integrity}';` : ''}
+            style.crossOrigin = "anonymous"
+            document.head.appendChild(style);}`
           }
         }).join("")
       }
-    };`).join('')};`}
-    ${js.includes.find(inc => inc.files.find(file => file.type == 'js')) == undefined && `${scriptParam}.slots['refresh']();`}`
+    } else {  setTimeout(${scriptParam}.slots['refresh'](),1);};`).join('')};`}
+    ${js.includes.find(inc => inc.files.find(file => file.type == 'js')) == undefined ? `setTimeout(${scriptParam}.slots['refresh'](),1);` : ''}`
   }
 
   static renderJs(script: ScriptSubComponent | ScriptSubComponent[]) {
@@ -449,15 +467,41 @@ export default class ScriptSubComponent extends Model {
     return this.get('variables');
   }
 
-  get signals(): Record<string, ISignal> {
+  get signals(): Record<string, ISignal & {variables: Record<string, VariableType>}> {
     return this.get('signals');
+  }
+
+  removeSlot(name: string){
+    delete this.slots[name];
+  }
+
+  addSlot(name: string, slot: SlotType){
+    this.set('slots', {...this.slots, [name]: slot});
   }
 
   get slots(): Record<string, SlotType> {
     return this.get('slots');
   }
 
-  get states(): Record<string, string> {
+  getStateMeta(stateName: string){
+    function findRec(meta: ParamType, path: string[]): ParamType{
+      if (path.length == 0){
+        return meta;
+      }
+      else if (meta.type == 'object'){
+        return findRec(meta.params[path[0]], path.slice(1))
+      }
+      return {type: 'unkown'}
+    }
+    if (isString(stateName)){
+      const [name, ...rest] = stateName.split('?.');
+      const state = this.states[name];
+      return findRec(state.meta, rest)
+    }
+    return {type: 'unkown'}
+  }
+
+  get states(): Record<string, StateType> {
     return this.get('states');
   }
 
@@ -470,11 +514,14 @@ export default class ScriptSubComponent extends Model {
     return this.get('includes') ?? [];
   }
 
-  addStateRef(key: string, subscription: {componentId?: string, name?: string}){
-    const { componentId, name } = subscription
+  addStateRef(key: string, subscription: {componentId?: string, stateName?: string}){
+    const { componentId, stateName } = subscription
     console.log("Test out states Fontos", this.component)
-    if (componentId && name){
+    if (componentId && stateName){
+      const [name] = stateName.split('?.')
       const stateRefs = {...this.stateRefs, [key]: {subscription: {componentId, name}}}
+      const component = this.em.Components.getById(componentId)
+      component.on('change:' + name, this.onChange, this)
       this.set("stateRefs", stateRefs);
       console.log("Test out states Fontos", this.stateRefs, stateRefs)
     }
@@ -490,6 +537,15 @@ export default class ScriptSubComponent extends Model {
   //   }
   // }
   removeStateRef(name: string){
-    delete this.slots[name]
+    const subscription = this.stateRefs[name]?.subscription
+    if (subscription?.componentId){
+      const component = this.em.Components.getById(subscription.componentId)
+      component.off('change:' + name, this.onChange, this)
+      delete this.stateRefs[name]
+    }
+  }
+
+  getId(){
+    return this.component.getId();
   }
 }

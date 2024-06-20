@@ -20,8 +20,6 @@ export default class TraitSlot extends TraitObject<SlotProp> {
   private getComponentWithSignals(): (em: EditorModel)=> SelectOption[] {
     const dataType = this.dataType
     return (em: EditorModel) => {
-      console.error(dataType)
-      console.error(Object.entries(em.Components.componentsById).map(([id, comp]) => Object.values(comp.scriptSubComp?.signals ?? {}).map(s => s)))
       return Object.entries(em.Components.componentsById)
       .filter(([id, comp]) => Object.values(comp.scriptSubComp?.signals ?? {}).filter(s => s?.optType?.type == dataType).length > 0)
       .map(([id, comp]) => ({ value: id, name: `${comp.getName()}-${id}` }));

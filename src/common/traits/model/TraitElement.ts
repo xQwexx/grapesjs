@@ -5,6 +5,7 @@ export default abstract class TraitElement<TraitValueType = any> extends Trait<T
   target: Trait<TraitValueType>;
 
   constructor(target: Trait<TraitValueType>, opts?: any) {
+    // console.log("really important staff", opts, target.opts)
     super(opts ?? target.opts);
     this.target = target;
     this.refreshChildren();
@@ -30,6 +31,7 @@ export default abstract class TraitElement<TraitValueType = any> extends Trait<T
 
   protected setValue(value: TraitValueType): void {
     this.target.value = value;
+    this.target.onUpdateEvent()
   }
 
   triggerTraitChanged(event: string){
@@ -45,5 +47,6 @@ export default abstract class TraitElement<TraitValueType = any> extends Trait<T
     //@ts-ignore
     console.log('ChangeScriptEVENTSetInitElement', this.view, this.target?.view)
     this.view ? this.view.onUpdateEvent(this.value, true) : this.target.onUpdateEvent();
+    // this.target.onUpdateEvent();
   }
 }

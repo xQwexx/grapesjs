@@ -2,7 +2,7 @@ import Trait from './Trait';
 import TraitElement from './TraitElement';
 import TraitParent from './TraitParent';
 
-export default abstract class TraitModifier<TraitValueType> extends TraitParent<TraitElement, TraitValueType> {
+export default abstract class TraitModifier<TraitValueType> extends TraitParent<TraitValueType> {
   protected abstract overrideValue(value: TraitValueType): any;
 
   constructor(target: Trait<TraitValueType>) {

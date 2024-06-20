@@ -1,4 +1,5 @@
 import { ParamType } from '../../../../dom_components/model/modules/MetaVariableTypes';
+import { ISignal } from '../../../../dom_components/model/modules/Signal';
 import EditorModel from '../../../../editor/model/Editor';
 import { SelectOption } from '../../view/TraitSelectView';
 import Trait from '../Trait';
@@ -7,12 +8,16 @@ import { jsModifier, jsVariable } from '../TraitModifierJs';
 import TraitObject from '../TraitObject';
 import TraitObjectItem from '../TraitObjectItem';
 import TraitParent from '../TraitParent';
-import TraitVariable from './TraitVariable';
+import TraitVariable, { VariableType } from './TraitVariable';
 
-export default class TraitSignal extends TraitObject<{ componentId: string; slot: string, params:  {type: 'list', itemType: ParamType}|{type: 'object', params: Record<string, ParamType>} }> {
-  constructor(target: Trait<{ componentId: string; slot: string, params:  {type: 'list', itemType: ParamType}|{type: 'object', params: Record<string, ParamType>} }>) {
+export default class TraitSignal extends TraitObject<ISignal & {variables: Record<string, VariableType>}> {
+  constructor(target: Trait<ISignal & {variables: Record<string, VariableType>}>) {
     super(target);
     target.opts.editable = false;
+  }
+
+  get selectType(){
+    return this.opts.selectType;
   }
 
 
@@ -39,10 +44,10 @@ export default class TraitSignal extends TraitObject<{ componentId: string; slot
   protected initChildren() {
     const { target } = this;
     const data = Object.values(target.em.Components.componentsById)[0];
-    const compId = target.value?.componentId ?? data?.id;
-
+    const compId = target.value?.componentId ?? data?.id as string;
+    console.log("really important staff2222", target.value, this.value);
     const paramsTrait =        
-    new TraitObjectItem('params', this, {
+    new TraitObjectItem('variables', this, {
       type: 'unique-list',
       traits: {type: 'variable'},
       noLabel: true,
@@ -54,7 +59,7 @@ export default class TraitSignal extends TraitObject<{ componentId: string; slot
       options: this.getSlotNames(compId),
       noLabel: true,
       width: 50,
-    },this.onSlotChange(paramsTrait))
+    },this.onSlotChange(paramsTrait, this.value.params ?? {}))
     return [
       new TraitObjectItem(
         'componentId',
@@ -76,15 +81,19 @@ export default class TraitSignal extends TraitObject<{ componentId: string; slot
     }
   }
 
-  private onSlotChange(trait: TraitObjectItem){
-    return (value: { componentId: string; slot: string, params: Record<string, string> }) =>{
+  private onSlotChange(trait: TraitObjectItem, params: Record<string, ParamType>){
+    return (value: ISignal) =>{
       const {componentId, slot} = value;
       if (componentId && slot){
         const selected = trait.em.Components.getById(componentId).slots[slot];
+        console.log("really important staff333", trait.value, value, selected, selected.params, params);
         (trait.target as any).childrenChanged()
         console.log(slot, selected.params)
         if (selected.params){
-          trait.value = Object.fromEntries(Object.keys(selected.params).map(name => [name, '']))
+          //@ts-ignore
+          // trait.opts = {...trait.opts, traits: {type: 'variable', params: this.value.params}}
+          trait.value = Object.fromEntries(Object.keys(selected.params).map(name => [name, {params, selectType: selected.params[name]}]))
+          trait.onUpdateEvent();
         } else{
           trait.value = {};
         }
@@ -99,32 +108,32 @@ export default class TraitSignal extends TraitObject<{ componentId: string; slot
     }
   }
 
-  protected overrideValue(value: { componentId: string; slot: string, params: Record<string, any> }) {
-    console.log(value);
-    console.log('/////////////////////////////////////////////////');
+  // protected overrideValue(value: ISignal & {variables: Record<string, VariableType>}) {
+  //   console.log(value);
+  //   console.log('/////////////////////////////////////////////////');
 
-    // const {componentId, slot} = value;
-    // if (componentId && slot){
-    //   const selected = this.em.Components.getById(componentId).slots[slot]
-    //   value.params = Object.fromEntries(Object.keys(selected.params).map(name => [name, '']))
-    // }
-    const {componentId, slot, params = {}} = value;
-    // const targetSlot = em.Components.getById(componentId).scriptSubComp!.slots[slot]
-    const data = Object.entries(params).map(([name, param]) => `'${name}': ${TraitVariable.renderJs(param)}`).join(",")
-    console.log("setParams", value)
-    return jsModifier(
-      jsVariable(
-        (componentId && slot &&
-          `((data) => {
-            console.log(data);
-          window.globalScriptParams['${componentId}'].el?.dispatchEvent(new MessageEvent('${slot}', {data: {${data}, ...data}}))})`) ||
-          '() => {}'
-      )
-    )(value);
-  }
+  //   // const {componentId, slot} = value;
+  //   // if (componentId && slot){
+  //   //   const selected = this.em.Components.getById(componentId).slots[slot]
+  //   //   value.params = Object.fromEntries(Object.keys(selected.params).map(name => [name, '']))
+  //   // }
+  //   const {componentId, slot, variables = {}} = value;
+  //   // const targetSlot = em.Components.getById(componentId).scriptSubComp!.slots[slot]
+  //   const data = Object.entries(variables).map(([name, param]) => `'${name}': ${TraitVariable.renderJs(param)}`).join(",")
+  //   console.log("setParams", value)
+  //   return jsModifier(
+  //     jsVariable(
+  //       (componentId && slot &&
+  //         `((data) => {
+  //           console.log(data);
+  //         window.globalScriptParams['${componentId}'].el?.dispatchEvent(new MessageEvent('${slot}', {data: {${data}, ...data}}))})`) ||
+  //         '() => {}'
+  //     )
+  //   )(value);
+  // }
 
-  protected setValue(value: { componentId: string; slot: string, params:  {type: 'list', itemType: ParamType}|{type: 'object', params: Record<string, ParamType>} }): void {
-    super.setValue(this.overrideValue(value));
+  protected setValue(value: ISignal & {variables: Record<string, VariableType>}): void {
+    super.setValue({...this.value, ...value});
     const variablesTrait = this.children.find(tr => tr.name == 'slot');
     if (variablesTrait) {
       const compId = value?.componentId;

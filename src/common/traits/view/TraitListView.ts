@@ -11,6 +11,7 @@ import TraitListItem from '../model/TraitListItem';
 import TraitObject from '../model/TraitObject';
 import TraitList from '../model/TraitList';
 import TraitListUnique from '../model/TraitListUnique';
+import TraitElement from '../model/TraitElement';
 
 export interface TraitListViewOpts<T extends string = 'object'> extends TraitViewOpts<T> {
   traits: any[] | any;
@@ -92,6 +93,7 @@ export default class TraitListView extends TraitView<TraitList> {
   }
 
   private addItem(e: any) {
+    e?.stopPropagation();
     e.preventDefault();
     this.selectedIndex = this.target.children.length
     this.target.add();
@@ -100,6 +102,7 @@ export default class TraitListView extends TraitView<TraitList> {
   }
 
   private removeItem(e: any) {
+    e?.stopPropagation();
     e.preventDefault();
     // const id = this.selectedEl?.attr('item-id') as any;
     this.selectedIndex && this.target.remove(this.selectedIndex);
@@ -122,7 +125,7 @@ export default class TraitListView extends TraitView<TraitList> {
 
   onItemRender(e: any) {}
 
-  renderItem(trait: TraitListItem) {
+  renderItem(trait: TraitElement) {
     const { em, ppfx, title } = this;
     const icons = em?.getConfig().icons;
     const iconCaret = icons?.caret || '';

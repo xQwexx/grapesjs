@@ -17,6 +17,10 @@ import TraitVariable from './js-traits/TraitVariable';
 import TraitSlot from './js-traits/TraitSlot';
 import TraitElement from './TraitElement';
 import TraitComponent from './TraitComponent';
+import TraitValueType from './js-traits/TraitValueType';
+import TraitState from './js-traits/TraitState';
+import TraitStateRef from './js-traits/TraitStateRef';
+import TraitClassSelector from './js-traits/TraitClassSelector';
 
 // export type InputViewProperties =
 //   | TraitInputViewOpts<'text'>
@@ -101,6 +105,8 @@ export default abstract class TraitFactory {
         return new TraitListUnique(trait);
       case 'object':
         return new TraitObject(trait);
+      case 'class':
+        return new TraitClassSelector(trait)
       case 'url':
         return new TraitUrl(trait);
       case 'link':
@@ -117,6 +123,12 @@ export default abstract class TraitFactory {
         return new TraitEventSelector(trait);
       case 'component':
         return new TraitComponent(trait);
+      case 'value':
+        return new TraitValueType(trait);
+      case 'state':
+        return new TraitState(trait);
+      case 'state-ref':
+        return new TraitStateRef(trait);
       default:
         return trait;
     }
