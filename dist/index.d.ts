@@ -3167,6 +3167,9 @@ export type StateType = {
 	type: "query";
 	url: UrlType;
 	dataSrc: string;
+} | {
+	type: "function";
+	default: string;
 });
 export type includeType = {
 	globalName: string;
@@ -3258,7 +3261,7 @@ declare class ScriptSubComponent extends Model {
 	}>;
 	removeSlot(name: string): void;
 	addSlot(name: string, slot: SlotType): void;
-	get slots(): Record<string, SlotType>;
+	get slots(): Readonly<Record<string, SlotType>>;
 	getStateMeta(stateName: string): {
 		type: "list";
 		itemType: ParamType;
@@ -3537,44 +3540,15 @@ declare class ComponentWrapper extends Component {
 		copyable: boolean;
 		draggable: boolean;
 		components: never[];
-		script: string;
-		"script-props": string[];
-		"script-global": {
-			id: string;
-			type: string;
-		}[];
-		"script-events": {
-			id: string;
-			params: {
-				type: string;
-				inner: {
-					data: {
-						type: string;
-					};
-				};
-			};
-		}[];
-		ajax: {};
+		script: {
+			main: string;
+			states: Record<string, StateType>;
+		};
+		"script-props": never[];
 		stylable: string[];
 		traits?: (string | Partial<{} | InputViewProperties>)[] | undefined;
 	};
-	dataIds: {
-		[id: string]: string[];
-	};
-	states: Record<string, StateType>;
 	constructor(props?: {}, opt?: ComponentOptions);
-	private renderAjaxScripts;
-	private ajaxFunctionTemplate;
-	renderJsDataUsage(id: string): {
-		dataIds: string[];
-		jsString: string;
-	} | undefined;
-	get ajax(): {
-		[id: string]: any;
-	};
-	get variables(): {
-		[id: string]: any;
-	};
 	__postAdd(): void;
 	__postRemove(): void;
 	static isComponent(): boolean;
@@ -3944,7 +3918,7 @@ export declare class Component extends StyleableModel<ComponentProperties> {
 	get traits(): ({
 		name: string;
 	} & Trait<any>)[];
-	get slots(): Record<string, SlotType>;
+	get slots(): Readonly<Record<string, SlotType>>;
 	get content(): string;
 	get toolbar(): ToolbarButtonProps[];
 	get resizable(): boolean | ResizerOptions;
